@@ -1,0 +1,18 @@
+# Dependências e builds (defesa em profundidade; app/.gitignore cobre o app)
+node_modules/
+.next/
+
+# Variáveis de ambiente — nunca versionar segredos
+.env
+.env.*
+!.env.example
+
+# Artefatos legados (site estático temporário do WordPress)
+iaheducacional-site-statico.zip
+
+# Sistema operacional / editor
+.DS_Store
+Thumbs.db
+
+# Configuração local do Claude Code (por máquina)
+.claude/settings.local.json

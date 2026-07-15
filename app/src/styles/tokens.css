@@ -1,0 +1,145 @@
+/* =====================================================================
+   IAH DESIGN SYSTEM — FONTE ÚNICA DE VERDADE (ADR-006)
+
+   Camada 1 — PRIMITIVAS DA MARCA (--iah-*): os valores brutos da
+   identidade IAH. É o ÚNICO lugar do projeto onde cores, fontes,
+   raios e sombras são definidos como literais.
+
+   Camada 2 — TOKENS SEMÂNTICOS: o contrato consumido pelos
+   componentes (shadcn/ui e CSS da Landing). Nunca contêm literais;
+   apenas referenciam primitivas. Tema claro em :root, tema escuro
+   (Premium Dark) em .dark.
+
+   Regra: nenhum arquivo fora deste pode declarar cor/hex nova.
+   Ver docs/DESIGN_SYSTEM.md.
+   ===================================================================== */
+
+:root {
+  /* ------ Camada 1: cor — escala navy (fundos escuros) ------ */
+  --iah-navy-950: #06101f;
+  --iah-navy-900: #07101d;
+  --iah-navy-850: #0a1526;
+  --iah-navy-800: #0a1728;
+  --iah-navy-700: #0c1b2c;
+  --iah-navy-600: #0e283d;
+
+  /* ------ Camada 1: cor — marca e acentos ------ */
+  --iah-cyan-400: #42e8f1; /* cor primária da marca */
+  --iah-cyan-300: #7cf2f8; /* hover do primário */
+  --iah-cyan-200: #b8fbff;
+  --iah-teal-600: #097f90; /* cyan legível sobre fundo claro */
+  --iah-green-400: #58f3bc; /* sucesso / status ativo */
+  --iah-violet-500: #8b5cf6; /* apoio para dados/gráficos */
+  --iah-amber-400: #fbbf24; /* apoio para dados/gráficos */
+  --iah-red-400: #e5484d; /* erros / destrutivo */
+  --iah-whatsapp: #25d366; /* cor institucional do WhatsApp */
+
+  /* ------ Camada 1: cor — superfícies claras e texto ------ */
+  --iah-white: #ffffff;
+  --iah-paper: #f7f9fc; /* fundo claro padrão */
+  --iah-mist: #eaf1f5; /* fundo claro alternativo */
+  --iah-fog: #f4f8fc; /* texto sobre fundo escuro */
+  --iah-ink: #07101d; /* texto sobre fundo claro */
+  --iah-ink-soft: #142237;
+  --iah-slate-600: #5b687b;
+  --iah-slate-500: #627086;
+  --iah-slate-400: #90a2b6;
+  --iah-slate-300: #aab7c8;
+  --iah-line: #dfe5ec; /* bordas sobre fundo claro */
+  --iah-line-dark: rgba(219, 235, 251, 0.1); /* bordas sobre fundo escuro */
+
+  /* ------ Camada 1: tipografia ------ */
+  --iah-font-sans: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  --iah-font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* ------ Camada 1: raio de borda ------ */
+  --iah-radius-sm: 7px; /* botões, inputs */
+  --iah-radius-md: 10px; /* cards */
+  --iah-radius-lg: 13px; /* painéis */
+  --iah-radius-xl: 17px; /* molduras grandes */
+
+  /* ------ Camada 1: sombras ------ */
+  --iah-shadow-card: 0 18px 36px rgba(31, 52, 76, 0.09);
+  --iah-shadow-panel: 0 30px 70px rgba(0, 0, 0, 0.23);
+  --iah-shadow-glow: 0 10px 30px rgba(34, 221, 230, 0.16);
+
+  /* ------ Camada 1: espaçamento de seção ------ */
+  --iah-section-y: 124px;
+  --iah-section-y-mobile: 82px;
+}
+
+/* =====================================================================
+   Camada 2 — TOKENS SEMÂNTICOS · tema claro (:root)
+   ===================================================================== */
+:root {
+  --radius: var(--iah-radius-md);
+
+  --background: var(--iah-paper);
+  --foreground: var(--iah-ink);
+  --card: var(--iah-white);
+  --card-foreground: var(--iah-ink);
+  --popover: var(--iah-white);
+  --popover-foreground: var(--iah-ink);
+  --primary: var(--iah-cyan-400);
+  --primary-foreground: var(--iah-navy-950);
+  --secondary: var(--iah-mist);
+  --secondary-foreground: var(--iah-ink-soft);
+  --muted: var(--iah-mist);
+  --muted-foreground: var(--iah-slate-500);
+  --accent: var(--iah-mist);
+  --accent-foreground: var(--iah-ink-soft);
+  --destructive: var(--iah-red-400);
+  --border: var(--iah-line);
+  --input: var(--iah-line);
+  --ring: var(--iah-teal-600);
+  --chart-1: var(--iah-teal-600);
+  --chart-2: var(--iah-green-400);
+  --chart-3: var(--iah-violet-500);
+  --chart-4: var(--iah-amber-400);
+  --chart-5: var(--iah-slate-500);
+  --sidebar: var(--iah-white);
+  --sidebar-foreground: var(--iah-ink);
+  --sidebar-primary: var(--iah-teal-600);
+  --sidebar-primary-foreground: var(--iah-white);
+  --sidebar-accent: var(--iah-mist);
+  --sidebar-accent-foreground: var(--iah-ink-soft);
+  --sidebar-border: var(--iah-line);
+  --sidebar-ring: var(--iah-teal-600);
+}
+
+/* =====================================================================
+   Camada 2 — TOKENS SEMÂNTICOS · tema escuro "Premium Dark" (.dark)
+   ===================================================================== */
+.dark {
+  --background: var(--iah-navy-900);
+  --foreground: var(--iah-fog);
+  --card: var(--iah-navy-800);
+  --card-foreground: var(--iah-fog);
+  --popover: var(--iah-navy-800);
+  --popover-foreground: var(--iah-fog);
+  --primary: var(--iah-cyan-400);
+  --primary-foreground: var(--iah-navy-950);
+  --secondary: var(--iah-navy-700);
+  --secondary-foreground: var(--iah-fog);
+  --muted: var(--iah-navy-800);
+  --muted-foreground: var(--iah-slate-300);
+  --accent: var(--iah-navy-600);
+  --accent-foreground: var(--iah-fog);
+  --destructive: var(--iah-red-400);
+  --border: var(--iah-line-dark);
+  --input: rgba(219, 235, 251, 0.14);
+  --ring: var(--iah-cyan-400);
+  --chart-1: var(--iah-cyan-400);
+  --chart-2: var(--iah-green-400);
+  --chart-3: var(--iah-violet-500);
+  --chart-4: var(--iah-amber-400);
+  --chart-5: var(--iah-slate-300);
+  --sidebar: var(--iah-navy-950);
+  --sidebar-foreground: var(--iah-fog);
+  --sidebar-primary: var(--iah-cyan-400);
+  --sidebar-primary-foreground: var(--iah-navy-950);
+  --sidebar-accent: var(--iah-navy-700);
+  --sidebar-accent-foreground: var(--iah-fog);
+  --sidebar-border: rgba(219, 235, 251, 0.07);
+  --sidebar-ring: var(--iah-cyan-400);
+}
