@@ -18,7 +18,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import { ProductionPanel } from "./production-panel";
+import { MissionWorkspace } from "./mission-workspace";
 
 /**
  * Tela de uma Missão — usada pelo professor para apresentar e pelo aluno
@@ -108,8 +108,11 @@ export default async function MissaoDetalhePage({
         </p>
       </Section>
 
-      {/* Produção do Aluno — o aluno escreve e entrega aqui */}
-      <ProductionPanel missionId={mission.id} />
+      {/* Produção, Reflexão e conclusão — o aluno trabalha aqui */}
+      <MissionWorkspace
+        missionId={mission.id}
+        reflectionPrompt={mission.reflection}
+      />
 
       {/* Competências */}
       <section className="flex flex-col gap-3 border-t border-border pt-6">

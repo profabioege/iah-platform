@@ -12,6 +12,7 @@ export {
 } from "./domain/student-work";
 
 export {
+  listAllStudentWork,
   loadStudentWork,
   saveStudentWork,
 } from "./infrastructure/local-student-work-store";

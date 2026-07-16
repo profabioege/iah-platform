@@ -38,3 +38,15 @@ export function saveStudentWork(work: StudentWork): StudentWork {
   }
   return updated;
 }
+
+/** Lista todos os trabalhos salvos neste dispositivo (todas as Missões). */
+export function listAllStudentWork(): StudentWork[] {
+  if (typeof window === "undefined") return [];
+  const works: StudentWork[] = [];
+  for (let i = 0; i < window.localStorage.length; i += 1) {
+    const key = window.localStorage.key(i);
+    if (!key || !key.startsWith(KEY_PREFIX)) continue;
+    works.push(loadStudentWork(key.slice(KEY_PREFIX.length)));
+  }
+  return works;
+}

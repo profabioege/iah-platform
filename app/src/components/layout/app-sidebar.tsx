@@ -39,7 +39,7 @@ const menuItems: { title: string; icon: typeof LayoutDashboard; href?: string }[
     { title: "Missões", icon: Rocket, href: "/missoes" },
     { title: "Laboratório", icon: FlaskConical },
     { title: "Biblioteca", icon: Library },
-    { title: "Diário do Auditor", icon: NotebookPen },
+    { title: "Diário do Auditor", icon: NotebookPen, href: "/diario" },
     { title: "Projetos", icon: FolderKanban },
     { title: "Mentor IA", icon: Sparkles },
     { title: "Agenda", icon: CalendarDays },

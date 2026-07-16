@@ -2,8 +2,9 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import { localMissionRepository } from "@/modules/library";
+import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -53,10 +54,13 @@ export default async function MissoesPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="mt-auto">
-              <Button render={<Link href={`/missoes/${mission.id}`} />}>
+              <Link
+                href={`/missoes/${mission.id}`}
+                className={cn(buttonVariants())}
+              >
                 Abrir missão
                 <ArrowRight className="size-4" />
-              </Button>
+              </Link>
             </CardContent>
           </Card>
         ))}
