@@ -18,6 +18,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+import { ProductionPanel } from "./production-panel";
+
 /**
  * Tela de uma Missão — usada pelo professor para apresentar e pelo aluno
  * para investigar. Renderiza os 11 blocos do padrão (docs/MISSION.md) a
@@ -105,6 +107,9 @@ export default async function MissaoDetalhePage({
           {mission.delivery}
         </p>
       </Section>
+
+      {/* Produção do Aluno — o aluno escreve e entrega aqui */}
+      <ProductionPanel missionId={mission.id} />
 
       {/* Competências */}
       <section className="flex flex-col gap-3 border-t border-border pt-6">
