@@ -11,6 +11,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 function sectionTitle(pathname: string): string {
   if (pathname.startsWith("/missoes")) return "Missões";
   if (pathname.startsWith("/diario")) return "Diário do Auditor";
+  if (pathname.startsWith("/professor")) return "Painel do Professor";
   return "Dashboard";
 }
 

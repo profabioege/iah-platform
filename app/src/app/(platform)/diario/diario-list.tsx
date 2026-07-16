@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /** Referência mínima de Missão passada pelo servidor. */
 export interface MissionRef {
@@ -42,7 +43,7 @@ export function DiarioList({ missions }: { missions: MissionRef[] }) {
     setEntries(recorded);
   }, [missions]);
 
-  if (entries === null) return null;
+  if (entries === null) return <DiarioSkeleton />;
 
   if (entries.length === 0) {
     return (
@@ -120,4 +121,26 @@ function formatDateTime(iso: string | null): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+/** Espelha o layout real da listagem enquanto as reflexões são lidas. */
+function DiarioSkeleton() {
+  return (
+    <div
+      className="flex flex-col gap-4"
+      aria-busy="true"
+      aria-label="Carregando seu Diário do Auditor"
+    >
+      {[0, 1].map((i) => (
+        <Card key={i}>
+          <CardHeader>
+            <Skeleton className="h-5 w-40" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-16 w-full rounded-lg" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
 }

@@ -41,7 +41,7 @@ export default async function ProfessorPage() {
               Missão {String(mission.number).padStart(2, "0")}
             </Badge>
             <span className="text-sm text-muted-foreground">
-              {mission.title} · dados simulados para demonstração
+              {mission.title} · Turma de demonstração
             </span>
           </div>
         ) : null}

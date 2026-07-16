@@ -1,14 +1,14 @@
 # Status — IAH Educacional
 
-Fotografia do estado atual do projeto. **Este é o primeiro documento a consultar antes de qualquer nova implementação.** Atualizado ao final de cada tarefa — se este arquivo diverge do código, o código manda, mas a divergência deve ser corrigida aqui imediatamente.
+Fotografia do estado atual do projeto. **Este é o primeiro documento a consultar antes de qualquer nova implementação.** Atualizado ao final de cada tarefa — se este arquivo diverge do código, o código manda, mas a divergência deve ser corrigida aqui imediatamente. Histórico entrega-a-entrega em `CHANGELOG.md`.
 
 ## Estado atual
 
-Projeto em **fase de preparação do piloto comercial de agosto/2026**. A Plataforma executa uma jornada completa de aula (aluno) e um painel de acompanhamento (professor) para a Missão 01. A Landing está publicada e capta demonstrações. Nenhuma autenticação real, nenhum banco de dados — persistência do aluno em localStorage; turma do professor é simulada (autorizada).
+Projeto em **fase de preparação do piloto comercial de agosto/2026**, agora com a experiência de ponta a ponta revisada para demonstração comercial (continuidade de fluxo, estados de carregamento, copy da Landing focada em gestores). A Plataforma executa uma jornada completa de aula (aluno) e um painel de acompanhamento (professor) para a Missão 01, com o Dossiê de Auditoria completo. Nenhuma autenticação real, nenhum banco de dados — persistência do aluno em localStorage; turma do professor é simulada (autorizada, rotulada como "Turma de demonstração").
 
 ## Último commit
 
-`1eac2f5` — *docs: consolidar memória oficial do projeto em 5 arquivos únicos* (16/07/2026), branch `main`. Conteúdo enriquecido da Missão 01 (Dossiê de Auditoria) já implementado neste momento, aguardando commit desta tarefa.
+`40f8284` — *feat(missao-01): Dossiê de Auditoria completo* (16/07/2026), branch `main`. As mudanças de experiência de demonstração comercial (Landing, continuidade de fluxo, skeletons) descritas abaixo estão implementadas neste momento, aguardando o commit desta tarefa. Ver `CHANGELOG.md` para o histórico completo.
 
 ## Último deploy
 
@@ -27,6 +27,7 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 - Painel do Professor (`/professor`) com turma simulada (11 alunos), 8 estados, filtro por status, abertura de produção/reflexão.
 - Identidade visual oficial (logo, favicon, Open Graph) aplicada em toda a superfície.
 - CI/CD completo (Git → GitHub → Vercel).
+- Fluxo de demonstração revisado ponta a ponta: continuidade Landing → Entrar → Dashboard → Missão → Produção → Reflexão → Diário → Painel do Professor sem telas brancas (skeletons em `MissionWorkspace` e `DiarioList`), header com título de seção consistente em todas as rotas, e Landing com copy comercial focada em benefício para gestores.
 
 ## Funcionalidades em andamento / lacunas conhecidas
 
@@ -37,7 +38,7 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 
 ## Próxima tarefa
 
-Ensaiar a demonstração de agosto ponta a ponta com o Dossiê real (Landing → Entrar → Dashboard → Missão → hipótese/veredito nos 4 itens → manchete gerada → Reflexão → Painel do Professor), cronometrando o tempo real de execução do Desafio — ver `ROADMAP.md`, "Sprint seguinte".
+Ensaiar a demonstração de agosto ponta a ponta com o Dossiê real e a experiência revisada (Landing → Entrar → Dashboard → Missão → hipótese/veredito nos 4 itens → manchete gerada → Reflexão → Painel do Professor), cronometrando o tempo real de execução do Desafio — ver `ROADMAP.md`, "Sprint seguinte".
 
 ## Riscos conhecidos
 

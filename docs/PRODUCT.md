@@ -134,3 +134,4 @@ Landing (`/`) → "Entrar" (demonstração da Plataforma) ou "Solicitar Demonstr
 - `DESIGN_SYSTEM.md` — organização detalhada dos tokens e regras de consumo.
 - `03_BRAND_GUIDELINES.md` — glossário de marca, tom de voz, conceitos proibidos.
 - `DEPLOY.md` — processo de versionamento e publicação (Git → GitHub → Vercel).
+- `CHANGELOG.md` — histórico de entregas, entrega a entrega.

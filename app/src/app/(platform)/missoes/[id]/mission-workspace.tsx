@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
+  ArrowRight,
   CheckCircle2,
   NotebookPen,
   PartyPopper,
@@ -26,6 +28,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * Área de trabalho do aluno na Missão. Dona única do registro StudentWork
@@ -45,7 +48,7 @@ export function MissionWorkspace({
     setWork(loadStudentWork(missionId));
   }, [missionId]);
 
-  if (!work) return null;
+  if (!work) return <WorkspaceSkeleton />;
 
   function update(partial: Partial<StudentWork>) {
     setWork((current) =>
@@ -72,6 +75,22 @@ export function MissionWorkspace({
               Você entregou sua produção e registrou sua reflexão. Missão
               auditada.
             </p>
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+              <Link
+                href="/diario"
+                className="inline-flex items-center gap-1 text-xs font-medium text-chart-2 transition-colors hover:text-foreground"
+              >
+                Ver no Diário do Auditor
+                <ArrowRight className="size-3" />
+              </Link>
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center gap-1 text-xs font-medium text-chart-2 transition-colors hover:text-foreground"
+              >
+                Voltar ao Dashboard
+                <ArrowRight className="size-3" />
+              </Link>
+            </div>
           </div>
         </div>
       ) : null}
@@ -216,4 +235,36 @@ export function MissionWorkspace({
 function formatDate(iso: string | null): string {
   if (!iso) return "";
   return new Date(iso).toLocaleDateString("pt-BR");
+}
+
+/** Espelha o layout real do workspace enquanto o trabalho salvo é lido. */
+function WorkspaceSkeleton() {
+  return (
+    <div
+      className="flex flex-col gap-4"
+      aria-busy="true"
+      aria-label="Carregando sua produção e reflexão"
+    >
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-5 w-52" />
+          <Skeleton className="mt-2 h-4 w-72" />
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <Skeleton className="h-40 w-full rounded-lg" />
+          <Skeleton className="h-8 w-40" />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-5 w-64" />
+          <Skeleton className="mt-2 h-4 w-56" />
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <Skeleton className="h-24 w-full rounded-lg" />
+          <Skeleton className="h-8 w-40" />
+        </CardContent>
+      </Card>
+    </div>
+  );
 }

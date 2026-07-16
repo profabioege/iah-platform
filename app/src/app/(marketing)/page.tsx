@@ -30,49 +30,49 @@ const differentiators = [
     icon: Layers3,
     title: "Plataforma própria",
     description:
-      "Um ambiente pensado para sustentar uma experiência de aprendizagem contínua.",
+      "Sua escola oferece a disciplina de IA sem depender de curso genérico nem desenvolver nada internamente.",
   },
   {
     icon: BookOpen,
     title: "Material didático autoral",
     description:
-      "Conteúdo que articula repertório, contexto e perguntas que merecem investigação.",
+      "Currículo pronto e testado em sala, para o professor conduzir com segurança desde a primeira aula.",
   },
   {
     icon: FileSearch,
     title: "Missões investigativas",
     description:
-      "Percursos que levam o estudante a questionar, verificar e construir argumentos.",
+      "Aulas estruturadas como investigação real — o formato que sustenta pensamento crítico, não decoreba.",
   },
   {
     icon: Bot,
-    title: "Integração com IA",
+    title: "Uso ético e crítico da IA",
     description:
-      "A Inteligência Artificial entra como objeto de estudo e parceira de reflexão.",
+      "O aluno aprende a questionar a IA, não a depender dela — a competência que as famílias já cobram.",
   },
   {
     icon: PenLine,
     title: "Diário do Auditor",
     description:
-      "Um espaço para registrar descobertas, dúvidas e mudanças de perspectiva.",
-  },
-  {
-    icon: LibraryBig,
-    title: "Biblioteca Digital",
-    description:
-      "Fontes e materiais organizados para qualificar a pesquisa e a autoria.",
+      "Evidência contínua da evolução de cada estudante, pronta para apresentar a pais e mantenedores.",
   },
   {
     icon: GraduationCap,
-    title: "Google Classroom",
+    title: "Painel do Professor",
     description:
-      "Conexão com a rotina escolar que sua equipe já conhece.",
+      "Visão em tempo real do progresso da turma — nada de descobrir o problema só na entrega final.",
   },
   {
-    icon: CalendarDays,
-    title: "Canva & Google Agenda",
+    icon: UsersRound,
+    title: "Metodologia validada em sala",
     description:
-      "Planejamento e produção conectados aos instrumentos do dia a dia.",
+      "Nascida com quem já leciona a disciplina — não é teoria de consultoria, é prática testada.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Acessibilidade desde a base",
+    description:
+      "Leitura, foco e navegação pensados para incluir todos os estudantes, não como reforma posterior.",
   },
 ];
 
@@ -131,22 +131,22 @@ const audiences = [
   {
     icon: GraduationCap,
     title: "Escolas particulares",
-    description: "Que querem oferecer uma formação contemporânea e consistente.",
+    description: "Que precisam mostrar diferencial competitivo real às famílias, não apenas discurso.",
   },
   {
     icon: Layers3,
     title: "Redes de ensino",
-    description: "Que precisam escalar um método com unidade pedagógica.",
+    description: "Que precisam escalar um método com unidade pedagógica entre unidades.",
   },
   {
     icon: UsersRound,
     title: "Coordenação pedagógica",
-    description: "Que busca acompanhar a aprendizagem sem perder profundidade.",
+    description: "Que precisa de visibilidade real do progresso da turma, sem perder profundidade.",
   },
   {
     icon: BookOpen,
     title: "Professores",
-    description: "Do Ensino Fundamental e Médio que acreditam na autoria do estudante.",
+    description: "Do Ensino Fundamental e Médio que querem conduzir a disciplina com segurança, não improvisar.",
   },
 ];
 
@@ -364,10 +364,11 @@ export default function Home() {
               <span /><span /><span />
             </div>
             <p className="eyebrow">IAH EDUCACIONAL</p>
-            <h2>Prepare sua escola para a era da Inteligência Artificial.</h2>
+            <h2>Sua escola pode ser a primeira da região com isso pronto.</h2>
             <p>
-              Agende uma demonstração e veja, na prática, como o IAH funciona
-              na sala de aula da sua instituição.
+              Agende uma demonstração de 20 minutos e veja o aluno concluindo
+              uma aula real, do início à produção — não um slide, o produto
+              funcionando.
             </p>
             <Link className="button button-primary" href="/contato">
               Solicitar demonstração
