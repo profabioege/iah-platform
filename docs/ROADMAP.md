@@ -1,6 +1,6 @@
 # Roadmap — IAH Educacional
 
-Fonte oficial e única de verdade sobre **o que já foi entregue e o que vem a seguir**. Estado em 16/07/2026, após commit `35621ed`.
+Fonte oficial e única de verdade sobre **o que já foi entregue e o que vem a seguir**. Estado em 16/07/2026.
 
 ## Norte atual do produto
 
@@ -24,20 +24,20 @@ Este norte **substitui** o sequenciamento original de Sprints temáticas (Missõ
 | Painel do Professor | `/professor` — 8 estados, contadores-filtro, último acesso, abertura de produção/reflexão (turma **simulada**, arquitetura pronta para banco) |
 | Auditoria de demonstração (3 ajustes) | Link "Entrar" na Landing; sidebar honesta ("Em breve" nos itens não construídos); Dashboard sem flash em branco (skeleton) |
 | Consolidação de contexto | Estes 5 documentos (`VISION`, `PRODUCT`, `ROADMAP`, `STATUS`, `DECISIONS`) como memória oficial única do projeto |
+| Dossiê de Auditoria da Missão 01 | 4 manchetes reais de investigação (2 autênticas, 2 fabricadas — chave só no código-fonte), Guia de Investigação (5 critérios) e Critérios de Auditoria explícitos, com hipótese inicial + veredito final incorporados ao Desafio e à Produção |
 
 ## Sprint atual
 
-**Nenhuma em execução.** Última tarefa concluída: consolidação de documentação (este conjunto de arquivos). Ver `STATUS.md` para a próxima tarefa recomendada.
+**Nenhuma em execução.** Última tarefa concluída: Dossiê de Auditoria da Missão 01. Ver `STATUS.md` para a próxima tarefa recomendada.
 
 ## Sprint seguinte (recomendada)
 
-**Dossiê de Auditoria da Missão 01** — a lacuna mais crítica identificada na auditoria de demonstração: o Desafio da Missão 01 manda "auditar as 4 manchetes do Dossiê", mas o Dossiê não existe como conteúdo navegável — Material Didático e Ferramentas de IA são texto não-clicável. Sem isso, o aluno não consegue executar o Desafio de verdade.
+**Ensaio cronometrado da demonstração de agosto** — percorrer o fluxo completo (Landing → Entrar → Dashboard → Missão → os 4 itens do Dossiê com hipótese/veredito → manchete gerada → Reflexão → Painel do Professor) como o mantenedor verá, medindo o tempo real de execução do Desafio agora que o conteúdo está rico — a meta de 15 minutos precisa ser reconfirmada com o Dossiê completo.
 
 **Critérios de aceite:**
-- [ ] As 4 manchetes do Dossiê existem como conteúdo real (parte verdadeiras, parte fabricadas), navegável/legível dentro da tela da Missão.
-- [ ] O guia de verificação (5 perguntas) está presente e consultável.
-- [ ] Segue o padrão de conteúdo versionado em arquivo (`src/content/missions/`), sem banco de dados.
-- [ ] Validado no fluxo completo Landing → Entrar → Missão → Produção → Reflexão, no ambiente de homologação.
+- [ ] Tempo total do ensaio registrado e comparado à meta de 15 minutos.
+- [ ] Nenhuma quebra visual em notebook (1366×768) e projetor (1024×768) com o conteúdo mais longo da Missão.
+- [ ] Roteiro de apresentação (o que o professor fala em cada etapa) redigido a partir do ensaio.
 
 ## Backlog (pós-piloto de agosto, sem data)
 
