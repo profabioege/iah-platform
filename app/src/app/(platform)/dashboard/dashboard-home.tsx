@@ -29,6 +29,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /** Dados da Missão que o Dashboard precisa (vindos do servidor). */
 export interface DashboardMission {
@@ -68,7 +69,10 @@ export function DashboardHome({ missions }: { missions: DashboardMission[] }) {
     setLoaded({ works, lastReflection });
   }, [missions]);
 
-  if (missions.length === 0 || !loaded) return null;
+  // O progresso vive no dispositivo e só é lido após a hidratação; até lá,
+  // mostramos o esqueleto para não piscar uma tela vazia.
+  if (!loaded) return <DashboardSkeleton />;
+  if (missions.length === 0) return null;
 
   const workOf = (id: string) => loaded.works[id] ?? emptyStudentWork(id);
 
@@ -246,6 +250,32 @@ export function DashboardHome({ missions }: { missions: DashboardMission[] }) {
             </Link>
           </CardContent>
         </Card>
+      </section>
+    </div>
+  );
+}
+
+/** Espelha o layout real do Dashboard enquanto o progresso é lido. */
+function DashboardSkeleton() {
+  return (
+    <div
+      className="mx-auto flex w-full max-w-6xl flex-col gap-6"
+      aria-busy="true"
+      aria-label="Carregando seu painel"
+    >
+      <section className="rounded-xl border border-border bg-card p-6 md:p-8">
+        <Skeleton className="h-6 w-56 rounded-full" />
+        <Skeleton className="mt-4 h-8 w-72" />
+        <Skeleton className="mt-3 h-5 w-full max-w-xl" />
+        <Skeleton className="mt-3 h-4 w-full max-w-md" />
+        <div className="mt-6 flex items-center gap-4">
+          <Skeleton className="h-8 w-36" />
+          <Skeleton className="h-2 w-28 rounded-full" />
+        </div>
+      </section>
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Skeleton className="h-48 rounded-xl" />
+        <Skeleton className="h-48 rounded-xl" />
       </section>
     </div>
   );

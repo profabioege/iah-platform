@@ -35,6 +35,10 @@ export function SiteNav() {
           ))}
         </div>
 
+        <Link className="nav-entrar" href="/entrar">
+          Entrar
+        </Link>
+
         <Link className="nav-cta" href="/contato">
           Solicitar demonstração
           <ArrowRight aria-hidden="true" />
@@ -63,6 +67,9 @@ export function SiteNav() {
                 {link.label}
               </Link>
             ))}
+            <Link href="/entrar" onClick={() => setOpen(false)}>
+              Entrar na plataforma
+            </Link>
             <Link
               className="button button-primary"
               href="/contato"

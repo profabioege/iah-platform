@@ -172,6 +172,14 @@ a {
 
 .nav-cta svg { width: 14px; height: 14px; color: var(--cyan); }
 
+.nav-entrar {
+  margin-right: 20px;
+  color: #9caabc;
+  font-size: 13px;
+  transition: color 160ms ease;
+}
+.nav-entrar:hover { color: #f4f8fc; }
+
 .nav-toggle { display: none; }
 .mobile-menu { display: none; }
 
@@ -661,6 +669,7 @@ a {
   .nav { min-height: 67px; }
   .nav-links { display: none; }
   .nav-cta { display: none; }
+  .nav-entrar { display: none; }
   .nav-toggle {
     display: inline-flex;
     align-items: center;

@@ -85,14 +85,26 @@ export function AppSidebar() {
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
-                    render={
-                      item.href ? <Link href={item.href} /> : undefined
-                    }
+                    render={item.href ? <Link href={item.href} /> : undefined}
                     isActive={item.href ? isActive(item.href) : false}
-                    tooltip={item.title}
+                    disabled={!item.href}
+                    aria-disabled={!item.href || undefined}
+                    tooltip={
+                      item.href ? item.title : `${item.title} — em breve`
+                    }
+                    className={
+                      item.href
+                        ? undefined
+                        : "cursor-default opacity-45 hover:bg-transparent hover:text-sidebar-foreground"
+                    }
                   >
                     <item.icon />
                     <span>{item.title}</span>
+                    {item.href ? null : (
+                      <span className="ml-auto rounded-full border border-sidebar-border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                        Em breve
+                      </span>
+                    )}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
