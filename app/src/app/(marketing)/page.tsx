@@ -3,21 +3,24 @@ import {
   ArrowRight,
   BookOpen,
   Bot,
+  BrainCircuit,
   CalendarDays,
   ChartNoAxesCombined,
   ChevronRight,
   CircleCheck,
+  ClipboardCheck,
+  Compass,
   FileCheck2,
   FileSearch,
   GraduationCap,
   Layers3,
   LibraryBig,
   Lightbulb,
-  PenLine,
   ShieldCheck,
   Sparkles,
   Target,
   UsersRound,
+  Zap,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -25,54 +28,69 @@ import Link from "next/link";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteNav } from "@/components/marketing/site-nav";
 
-const differentiators = [
+const platformEssentials = [
   {
     icon: Layers3,
-    title: "Plataforma própria",
+    title: "Metodologia pronta",
     description:
-      "Sua escola oferece a disciplina de IA sem depender de curso genérico nem desenvolver nada internamente.",
+      "Estrutura pedagógica testada, sem depender de material improvisado ou de curso genérico traduzido.",
   },
   {
     icon: BookOpen,
-    title: "Material didático autoral",
+    title: "Material autoral",
     description:
-      "Currículo pronto e testado em sala, para o professor conduzir com segurança desde a primeira aula.",
+      "Currículo próprio, redigido para a sala de aula real — o professor conduz com segurança desde a primeira aula.",
   },
   {
     icon: FileSearch,
     title: "Missões investigativas",
     description:
-      "Aulas estruturadas como investigação real — o formato que sustenta pensamento crítico, não decoreba.",
+      "Cada aula é uma investigação guiada, com pergunta, evidência e produção — não uma lista de exercícios sobre IA.",
   },
   {
     icon: Bot,
-    title: "Uso ético e crítico da IA",
+    title: "IA integrada",
     description:
-      "O aluno aprende a questionar a IA, não a depender dela — a competência que as famílias já cobram.",
+      "A Inteligência Artificial entra como objeto de estudo e apoio crítico — nunca como resposta pronta para o aluno copiar.",
   },
   {
-    icon: PenLine,
-    title: "Diário do Auditor",
+    icon: BrainCircuit,
+    title: "Formação do pensamento crítico",
     description:
-      "Evidência contínua da evolução de cada estudante, pronta para apresentar a pais e mantenedores.",
+      "O aluno aprende a questionar, verificar e argumentar — a competência que sustenta todas as outras.",
   },
   {
+    icon: Zap,
+    title: "Implantação rápida",
+    description:
+      "Sua escola começa a usar em dias, não em meses de configuração, treinamento longo ou desenvolvimento interno.",
+  },
+];
+
+const implementationSteps = [
+  {
+    number: "01",
+    icon: Compass,
+    title: "Conhecer",
+    description: "Demonstração da plataforma com a equipe pedagógica e a mantenedoria.",
+  },
+  {
+    number: "02",
     icon: GraduationCap,
-    title: "Painel do Professor",
-    description:
-      "Visão em tempo real do progresso da turma — nada de descobrir o problema só na entrega final.",
+    title: "Capacitar professores",
+    description: "Onboarding direto na metodologia — sem curso longo, sem burocracia.",
   },
   {
-    icon: UsersRound,
-    title: "Metodologia validada em sala",
-    description:
-      "Nascida com quem já leciona a disciplina — não é teoria de consultoria, é prática testada.",
+    number: "03",
+    icon: FileSearch,
+    title: "Aplicar Missões",
+    description: "As primeiras aulas já rodam com conteúdo pronto, guiadas pelo professor.",
   },
   {
-    icon: ShieldCheck,
-    title: "Acessibilidade desde a base",
-    description:
-      "Leitura, foco e navegação pensados para incluir todos os estudantes, não como reforma posterior.",
+    number: "04",
+    icon: ClipboardCheck,
+    title: "Acompanhar resultados",
+    description: "Progresso da turma visível para professor e coordenação, aula a aula.",
   },
 ];
 
@@ -193,6 +211,17 @@ export default function Home() {
               com segurança — enquanto os alunos aprendem a pensar
               criticamente num mundo transformado pela IA.
             </p>
+            <ul className="hero-clarify" aria-label="O que o IAH não é, e o que é">
+              <li className="hero-clarify-no">
+                <span aria-hidden="true">×</span> Não é um AVA
+              </li>
+              <li className="hero-clarify-no">
+                <span aria-hidden="true">×</span> Não é um chatbot
+              </li>
+              <li className="hero-clarify-yes">
+                <CircleCheck aria-hidden="true" /> É um sistema completo de ensino
+              </li>
+            </ul>
             <div className="hero-actions">
               <a className="button button-primary" href="#plataforma">
                 Conheça a Plataforma
@@ -234,6 +263,16 @@ export default function Home() {
           </div>
         </section>
 
+        <section className="hero-cta-strip" aria-label="Solicitar demonstração">
+          <div className="container hero-cta-strip-inner">
+            <p>Já deu para entender? Fale com a gente antes de continuar lendo.</p>
+            <Link className="button button-primary" href="/contato">
+              Solicitar demonstração
+              <ArrowRight aria-hidden="true" />
+            </Link>
+          </div>
+        </section>
+
         <section className="trust-bar" aria-label="Princípios da IAH Educacional">
           <div className="container trust-items">
             <span>TECNOLOGIA COM PROPÓSITO</span>
@@ -249,12 +288,12 @@ export default function Home() {
         <section className="section section-light" id="plataforma">
           <div className="container">
             <SectionHeading
-              eyebrow="POR QUE O IAH"
-              title="O método encontra a infraestrutura."
-              description="Uma plataforma criada para tornar a educação em Inteligência Artificial uma experiência estruturada, viva e relevante."
+              eyebrow="A PLATAFORMA"
+              title="Tudo o que a escola precisa para ensinar IA."
+              description="Metodologia, conteúdo e acompanhamento em um só lugar — sua equipe não monta isso do zero."
             />
             <div className="differentiator-grid">
-              {differentiators.map(({ icon: Icon, title, description }) => (
+              {platformEssentials.map(({ icon: Icon, title, description }) => (
                 <article className="differentiator-card" key={title}>
                   <span className="card-icon"><Icon aria-hidden="true" /></span>
                   <h3>{title}</h3>
@@ -270,8 +309,8 @@ export default function Home() {
           <div className="container">
             <SectionHeading
               eyebrow="COMO FUNCIONA"
-              title="Uma aula que se transforma em investigação."
-              description="O IAH organiza a experiência, mas é o encontro entre professor e estudante que a torna significativa."
+              title="Como o IAH funciona na prática."
+              description="Professor planeja, aluno investiga, IA auxilia, aluno produz, professor acompanha — em cada aula, nesta ordem."
             />
             <div className="flow-list" aria-label="Fluxo de aprendizagem IAH">
               {flow.map((step, index) => (
@@ -281,6 +320,31 @@ export default function Home() {
                   <h3>{step.action}</h3>
                   {index < flow.length - 1 ? (
                     <ArrowDown className="flow-arrow" aria-hidden="true" />
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="section section-light" id="implantacao">
+          <div className="container">
+            <SectionHeading
+              eyebrow="IMPLANTAÇÃO"
+              title="Implantação em 4 passos."
+              description="Do primeiro contato à primeira turma usando o IAH em sala, sem projeto longo de implantação."
+            />
+            <div className="flow-list flow-list-4" aria-label="Passos de implantação do IAH">
+              {implementationSteps.map((step, index) => (
+                <div className="flow-item flow-item-light" key={step.number}>
+                  <div className="flow-number">{step.number}</div>
+                  <p>
+                    <step.icon aria-hidden="true" className="flow-item-icon" />
+                  </p>
+                  <h3>{step.title}</h3>
+                  <span className="flow-item-description">{step.description}</span>
+                  {index < implementationSteps.length - 1 ? (
+                    <ArrowDown className="flow-arrow flow-arrow-light" aria-hidden="true" />
                   ) : null}
                 </div>
               ))}
@@ -315,6 +379,19 @@ export default function Home() {
                 </ul>
               </article>
             </div>
+          </div>
+        </section>
+
+        <section className="section founder-section">
+          <div className="container">
+            <blockquote className="founder-quote">
+              <span className="founder-quote-mark" aria-hidden="true">&ldquo;</span>
+              <p>
+                O fundador do IAH já ministra a disciplina de Inteligência
+                Artificial em uma escola. Toda a metodologia apresentada nesta
+                plataforma já nasceu da prática em sala de aula.
+              </p>
+            </blockquote>
           </div>
         </section>
 

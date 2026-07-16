@@ -4,11 +4,11 @@ Fotografia do estado atual do projeto. **Este é o primeiro documento a consulta
 
 ## Estado atual
 
-Projeto em **fase de preparação do piloto comercial de agosto/2026**, agora com a experiência de ponta a ponta revisada para demonstração comercial (continuidade de fluxo, estados de carregamento, copy da Landing focada em gestores). A Plataforma executa uma jornada completa de aula (aluno) e um painel de acompanhamento (professor) para a Missão 01, com o Dossiê de Auditoria completo. Nenhuma autenticação real, nenhum banco de dados — persistência do aluno em localStorage; turma do professor é simulada (autorizada, rotulada como "Turma de demonstração").
+Projeto em **fase de preparação do piloto comercial de agosto/2026**, com a experiência de ponta a ponta revisada para demonstração comercial e a Landing agora estruturada como pitch completo para o mantenedor (o quê é, como funciona, como se implanta, prova de confiança). A Plataforma executa uma jornada completa de aula (aluno) e um painel de acompanhamento (professor) para a Missão 01, com o Dossiê de Auditoria completo. Nenhuma autenticação real, nenhum banco de dados — persistência do aluno em localStorage; turma do professor é simulada (autorizada, rotulada como "Turma de demonstração").
 
 ## Último commit
 
-`40f8284` — *feat(missao-01): Dossiê de Auditoria completo* (16/07/2026), branch `main`. As mudanças de experiência de demonstração comercial (Landing, continuidade de fluxo, skeletons) descritas abaixo estão implementadas neste momento, aguardando o commit desta tarefa. Ver `CHANGELOG.md` para o histórico completo.
+`baea706` — *feat(demo): experiência de demonstração comercial — continuidade e polimento* (16/07/2026), branch `main`. A Sprint "Experiência do Mantenedor" (novas seções da Landing) descrita abaixo está implementada neste momento, aguardando o commit desta tarefa. Ver `CHANGELOG.md` para o histórico completo.
 
 ## Último deploy
 
@@ -18,7 +18,7 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 
 ## Funcionalidades prontas
 
-- Landing institucional completa (`/`), com `/contato` (formulário + e-mails institucionais).
+- Landing institucional completa (`/`), estruturada como pitch comercial: Hero com desambiguação imediata ("não é AVA, não é chatbot, é sistema completo"), CTA logo após a Hero, seção "Tudo o que a escola precisa para ensinar IA" (6 pilares), "Como o IAH funciona na prática" (fluxo de 5 etapas), "Implantação em 4 passos", bloco de confiança (metodologia nascida em sala real) e CTA final — com `/contato` (formulário + e-mails institucionais).
 - Abertura da Plataforma (`/entrar`, sem autenticação real).
 - Dashboard (`/dashboard`) com Missão ativa real e progresso do dispositivo.
 - Lista e detalhe de Missão (`/missoes`, `/missoes/[id]`) — Missão 01 "A Fábrica de Notícias" com os 11 blocos e o **Dossiê de Auditoria completo**: 4 manchetes reais de investigação (2 autênticas, 2 fabricadas — chave de correção só no código-fonte, nunca exibida ao aluno), Guia de Investigação (5 critérios: fonte, data/escopo, evidência, linguagem, coerência interna) e Critérios de Auditoria explícitos.
@@ -38,7 +38,7 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 
 ## Próxima tarefa
 
-Ensaiar a demonstração de agosto ponta a ponta com o Dossiê real e a experiência revisada (Landing → Entrar → Dashboard → Missão → hipótese/veredito nos 4 itens → manchete gerada → Reflexão → Painel do Professor), cronometrando o tempo real de execução do Desafio — ver `ROADMAP.md`, "Sprint seguinte".
+Ensaiar a demonstração de agosto ponta a ponta com a Landing e o Dossiê completos (Landing → Entrar → Dashboard → Missão → hipótese/veredito nos 4 itens → manchete gerada → Reflexão → Painel do Professor), cronometrando o tempo real — a Landing cresceu com as novas seções e a meta de 15 minutos precisa ser reconfirmada — ver `ROADMAP.md`, "Sprint seguinte".
 
 ## Riscos conhecidos
 

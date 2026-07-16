@@ -317,6 +317,68 @@ a {
   font-size: 12px;
 }
 
+/* Linha de clareza — desfaz confusão com AVA/chatbot nos primeiros segundos */
+.hero-clarify {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hero-clarify li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.hero-clarify-no {
+  border: 1px solid rgba(212, 230, 245, 0.16);
+  color: #8c9baa;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.hero-clarify-no span { font-size: 13px; line-height: 0.8; color: #6b7c8d; }
+
+.hero-clarify-yes {
+  border: 1px solid rgba(66, 232, 241, 0.35);
+  color: var(--cyan);
+  background: rgba(66, 232, 241, 0.08);
+}
+
+.hero-clarify-yes svg { width: 13px; height: 13px; }
+
+/* Faixa de CTA logo após a Hero */
+.hero-cta-strip {
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid var(--iah-line-dark);
+  border-bottom: 1px solid var(--iah-line-dark);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.hero-cta-strip-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 0;
+}
+
+.hero-cta-strip-inner p {
+  margin: 0;
+  color: #cdd8e5;
+  font-size: 14px;
+}
+
+.hero-cta-strip .button { flex: none; }
+
 .method-visual {
   position: relative;
   min-width: 0;
@@ -493,6 +555,20 @@ a {
 .flow-item h3 { margin: 0; color: #effbff; font-family: var(--iah-font-sans); font-size: 21px; font-weight: 520; letter-spacing: -0.045em; }
 .flow-arrow { position: absolute; z-index: 2; top: 50%; right: -9px; width: 17px; height: 17px; padding: 3px; border: 1px solid #6ac2cb; border-radius: 50%; background: #0a1728; color: var(--cyan); transform: translateY(-50%) rotate(-90deg); }
 
+/* Variante clara do flow-list — seção "Implantação em 4 passos" */
+.flow-list-4 { grid-template-columns: repeat(4, 1fr); }
+.flow-item-light {
+  border-top-color: var(--iah-line);
+  border-bottom-color: var(--iah-line);
+  border-left-color: var(--iah-line);
+}
+.flow-item-light:last-child { border-right-color: var(--iah-line); }
+.flow-item-light .flow-number { color: var(--iah-teal-600); }
+.flow-item-icon { width: 20px; height: 20px; margin-top: 6px; color: var(--iah-teal-600); }
+.flow-item-light h3 { margin: 10px 0 6px; color: var(--iah-ink-soft); font-family: var(--iah-font-sans); font-size: 17px; font-weight: 620; letter-spacing: -0.03em; }
+.flow-item-description { display: block; color: var(--iah-slate-500); font-size: 13px; line-height: 1.5; }
+.flow-arrow-light { border-color: #9de7ec; background: var(--iah-paper); color: var(--iah-teal-600); }
+
 .section-contrast { background: var(--iah-mist); color: var(--ink); }
 .contrast-layout { display: grid; grid-template-columns: 0.87fr 1.13fr; gap: 90px; align-items: center; }
 .contrast-cards { display: grid; gap: 13px; }
@@ -506,6 +582,28 @@ a {
 .contrast-card li > span { display: inline-block; color: #8c9baa; font-size: 17px; line-height: 0.8; }
 .contrast-card-highlight li { color: #f0fbfd; }
 .contrast-card-highlight li svg { width: 16px; height: 16px; flex: none; color: var(--cyan); }
+
+/* Bloco de confiança — credibilidade do fundador */
+.founder-section { padding: 76px 0; background: var(--iah-navy-800); }
+.founder-quote { max-width: 780px; margin: 0 auto; text-align: center; }
+.founder-quote-mark {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--cyan);
+  font-family: var(--iah-font-sans);
+  font-size: 52px;
+  line-height: 1;
+  opacity: 0.5;
+}
+.founder-quote p {
+  margin: 0;
+  color: #eef6fb;
+  font-family: var(--iah-font-sans);
+  font-size: clamp(19px, 2.2vw, 26px);
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: -0.015em;
+}
 
 .section-resources { background: var(--iah-paper); color: var(--ink); }
 .resource-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-top: 59px; overflow: hidden; border: 1px solid #dce5ed; border-radius: 11px; background: #dce5ed; }
@@ -662,6 +760,11 @@ a {
   .flow-item h3 { grid-column: 2; grid-row: 2; }
   .flow-number { grid-column: 1; grid-row: 1 / span 2; }
   .flow-arrow { top: auto; right: auto; bottom: -9px; left: 49px; transform: translateX(-50%); }
+  .flow-list-4 { grid-template-columns: 1fr; }
+  .flow-item-light { min-height: auto; padding-bottom: 22px; }
+  .flow-item-description { grid-column: 2; grid-row: 3; margin-top: 2px; }
+  .hero-clarify { gap: 8px; }
+  .hero-cta-strip-inner { justify-content: center; text-align: center; }
 }
 
 @media (max-width: 650px) {
@@ -702,6 +805,7 @@ a {
   .hero h1 { margin-top: 22px; font-size: clamp(37px, 11vw, 49px); }
   .hero-description { font-size: 15px; }
   .hero-actions { margin-top: 30px; }
+  .hero-cta-strip-inner { flex-direction: column; align-items: stretch; }
   .button { width: 100%; }
   .method-visual { min-height: 355px; border-radius: 13px; }
   .method-core { width: 126px; height: 126px; }

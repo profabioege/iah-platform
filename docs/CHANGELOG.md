@@ -2,6 +2,18 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 16/07/2026 — M01: Experiência do Mantenedor (Landing como pitch comercial)
+
+Sprint de copy/UX na Landing, sem funcionalidades técnicas novas, para que a página sozinha já conte a história do produto a um gestor escolar.
+
+- **Hero desambiguada**: linha de clareza logo abaixo da descrição — "Não é um AVA" / "Não é um chatbot" / "É um sistema completo de ensino" — visível nos primeiros segundos, sem esperar a seção de contraste mais abaixo na página.
+- **CTA logo após a Hero**: faixa "Solicitar demonstração" antes da trust-bar, para quem já decidiu não precisar rolar a página inteira.
+- **Nova seção "Tudo o que a escola precisa para ensinar IA"**: substitui a antiga grade "Por que o IAH" por 6 pilares (Metodologia pronta, Material autoral, Missões investigativas, IA integrada, Formação do pensamento crítico, Implantação rápida) — descartados os dois cartões que prometiam integrações inexistentes (Google Classroom, Canva/Agenda).
+- **Seção "Como o IAH funciona na prática"**: retitulação da seção de fluxo existente (Professor planeja → Aluno investiga → IA auxilia → Aluno produz → Professor acompanha), agora nomeada explicitamente como pedido.
+- **Nova seção "Implantação em 4 passos"**: Conhecer → Capacitar professores → Aplicar Missões → Acompanhar resultados — nova variante clara do componente de fluxo (`.flow-list-4`), sem duplicar CSS.
+- **Novo bloco de confiança**: citação sobre o fundador já lecionar a disciplina em sala real, antes da seção de recursos.
+- Validado em desktop (1920px), notebook (1366px), tablet (820px) e mobile (375px) — sem overflow horizontal, sem sobreposição na Hero, grade de implantação em 4 colunas no desktop e empilhada no mobile, console limpo.
+
 ## 16/07/2026 — Experiência de demonstração comercial
 
 Sprint focada em continuidade e polimento visual, sem funcionalidades novas — preparação para a demonstração ao mantenedor.
