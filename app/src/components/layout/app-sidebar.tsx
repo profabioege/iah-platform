@@ -7,6 +7,7 @@ import {
   CircleUser,
   FlaskConical,
   FolderKanban,
+  GraduationCap,
   LayoutDashboard,
   Library,
   NotebookPen,
@@ -38,6 +39,7 @@ const menuItems: { title: string; icon: typeof LayoutDashboard; href?: string }[
   [
     { title: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
     { title: "Missões", icon: Rocket, href: "/missoes" },
+    { title: "Professor", icon: GraduationCap, href: "/professor" },
     { title: "Laboratório", icon: FlaskConical },
     { title: "Biblioteca", icon: Library },
     { title: "Diário do Auditor", icon: NotebookPen, href: "/diario" },

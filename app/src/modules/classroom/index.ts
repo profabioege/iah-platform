@@ -16,3 +16,12 @@ export {
   loadStudentWork,
   saveStudentWork,
 } from "./infrastructure/local-student-work-store";
+
+export {
+  STUDENT_MISSION_STATUSES,
+  type ClassMonitorReader,
+  type StudentMissionSnapshot,
+  type StudentMissionStatus,
+} from "./domain/class-monitor";
+
+export { simulatedClassMonitor } from "./infrastructure/simulated-class-monitor";
