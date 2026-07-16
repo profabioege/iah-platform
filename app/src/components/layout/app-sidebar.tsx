@@ -1,3 +1,7 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   CalendarDays,
   CircleUser,
@@ -25,22 +29,31 @@ import {
 } from "@/components/ui/sidebar";
 
 /**
- * Menus estáticos do Sprint 1 — sem navegação real.
- * "Dashboard" é marcado como ativo apenas para visualização do estado.
+ * Menus da Plataforma. Os itens com `href` navegam de verdade; os demais
+ * permanecem visíveis (visão do produto) mas inativos até serem construídos
+ * nas próximas Sprints. O estado ativo é derivado da URL atual.
  */
-const menuItems = [
-  { title: "Dashboard", icon: LayoutDashboard, active: true },
-  { title: "Missões", icon: Rocket, active: false },
-  { title: "Laboratório", icon: FlaskConical, active: false },
-  { title: "Biblioteca", icon: Library, active: false },
-  { title: "Diário do Auditor", icon: NotebookPen, active: false },
-  { title: "Projetos", icon: FolderKanban, active: false },
-  { title: "Mentor IA", icon: Sparkles, active: false },
-  { title: "Agenda", icon: CalendarDays, active: false },
-  { title: "Perfil", icon: CircleUser, active: false },
-];
+const menuItems: { title: string; icon: typeof LayoutDashboard; href?: string }[] =
+  [
+    { title: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+    { title: "Missões", icon: Rocket, href: "/missoes" },
+    { title: "Laboratório", icon: FlaskConical },
+    { title: "Biblioteca", icon: Library },
+    { title: "Diário do Auditor", icon: NotebookPen },
+    { title: "Projetos", icon: FolderKanban },
+    { title: "Mentor IA", icon: Sparkles },
+    { title: "Agenda", icon: CalendarDays },
+    { title: "Perfil", icon: CircleUser },
+  ];
 
 export function AppSidebar() {
+  const pathname = usePathname();
+
+  function isActive(href: string) {
+    if (href === "/dashboard") return pathname === href;
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
+
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border">
@@ -66,7 +79,13 @@ export function AppSidebar() {
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton isActive={item.active} tooltip={item.title}>
+                  <SidebarMenuButton
+                    render={
+                      item.href ? <Link href={item.href} /> : undefined
+                    }
+                    isActive={item.href ? isActive(item.href) : false}
+                    tooltip={item.title}
+                  >
                     <item.icon />
                     <span>{item.title}</span>
                   </SidebarMenuButton>

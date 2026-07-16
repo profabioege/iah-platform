@@ -1,14 +1,27 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+
 import { AccessibilityMenu } from "@/components/layout/accessibility-menu";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
+/** Título da seção atual, derivado da URL. */
+function sectionTitle(pathname: string): string {
+  if (pathname.startsWith("/missoes")) return "Missões";
+  if (pathname.startsWith("/diario")) return "Diário do Auditor";
+  return "Dashboard";
+}
+
 export function AppHeader() {
+  const pathname = usePathname();
+
   return (
     <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur-md">
       <SidebarTrigger className="-ml-1" />
       <Separator orientation="vertical" className="!h-5" />
-      <span className="text-sm font-medium">Dashboard</span>
+      <span className="text-sm font-medium">{sectionTitle(pathname)}</span>
       <div className="ml-auto flex items-center gap-3">
         <Badge
           variant="outline"
