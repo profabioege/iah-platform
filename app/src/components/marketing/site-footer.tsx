@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { Logo } from "@/components/brand/logo";
+
 /**
  * Rodapé institucional do site. Usado pela Landing e pela página de contato.
  * E-mails oficiais: contato@ (geral) e comercial@ (demonstrações/vendas).
@@ -9,14 +11,8 @@ export function SiteFooter() {
     <footer className="site-footer">
       <div className="container footer-grid">
         <div>
-          <Link className="brand" href="/#inicio">
-            <span className="brand-mark" aria-hidden="true">
-              <span />
-              <span />
-              <span />
-            </span>
-            <span>IAH</span>
-            <small>Educacional</small>
+          <Link href="/#inicio" aria-label="IAH Educacional, início">
+            <Logo variant="dark" wordmark className="h-14 w-auto" />
           </Link>
           <p className="footer-tagline">
             Inteligência Artificial &amp; Humanidades. Um sistema de ensino

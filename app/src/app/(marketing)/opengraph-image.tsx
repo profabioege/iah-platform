@@ -25,25 +25,26 @@ export default function OpengraphImage() {
           fontFamily: "sans-serif",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-end",
-              gap: 5,
-              padding: 12,
-              border: "2px solid rgba(105,240,247,0.6)",
-              borderRadius: 12,
-            }}
-          >
-            <div style={{ width: 6, height: 16, background: "#42e8f1", borderRadius: 9, opacity: 0.65 }} />
-            <div style={{ width: 6, height: 28, background: "#42e8f1", borderRadius: 9 }} />
-            <div style={{ width: 6, height: 40, background: "#42e8f1", borderRadius: 9 }} />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ fontSize: 30, fontWeight: 700, letterSpacing: -1 }}>IAH</span>
-            <span style={{ fontSize: 18, color: "#95a3b7" }}>Educacional</span>
-          </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+          {/* Marca IAH — mesmo desenho do componente Logo */}
+          <svg width="150" height="53" viewBox="0 0 340 120">
+            <rect x="8" y="8" width="34" height="104" rx="9" fill="#f4f8fc" />
+            <path
+              d="M70 112 L120 14 L170 112"
+              fill="none"
+              stroke="#f4f8fc"
+              strokeWidth="34"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path d="M120 66 L142 108 L98 108 Z" fill="#42e8f1" />
+            <rect x="206" y="8" width="34" height="104" rx="9" fill="#f4f8fc" />
+            <rect x="298" y="8" width="34" height="104" rx="9" fill="#f4f8fc" />
+            <rect x="206" y="45" width="126" height="30" rx="9" fill="#f4f8fc" />
+          </svg>
+          <span style={{ fontSize: 22, letterSpacing: 6, color: "#42e8f1" }}>
+            EDUCACIONAL
+          </span>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>

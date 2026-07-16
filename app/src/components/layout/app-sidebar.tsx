@@ -14,6 +14,7 @@ import {
   Sparkles,
 } from "lucide-react";
 
+import { Logo } from "@/components/brand/logo";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Sidebar,
@@ -57,19 +58,21 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border">
-        <div className="flex items-center gap-3 px-2 py-2.5">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-chart-2 text-primary-foreground shadow-lg shadow-primary/30">
-            <FlaskConical className="size-5" />
-          </div>
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-3 px-2 py-2.5"
+          aria-label="IAH Educacional — ir para o Dashboard"
+        >
+          <Logo variant="dark" className="h-8 w-auto shrink-0" />
           <div className="flex flex-col leading-tight">
             <span className="text-sm font-semibold tracking-tight">
-              IA &amp; Humanidades
+              Educacional
             </span>
             <span className="text-xs text-muted-foreground">
               Laboratório do Auditor
             </span>
           </div>
-        </div>
+        </Link>
       </SidebarHeader>
 
       <SidebarContent>

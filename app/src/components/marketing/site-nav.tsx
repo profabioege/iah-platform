@@ -4,6 +4,8 @@ import * as React from "react";
 import Link from "next/link";
 import { ArrowRight, Menu, X } from "lucide-react";
 
+import { Logo } from "@/components/brand/logo";
+
 const LINKS = [
   { href: "/#plataforma", label: "Plataforma" },
   { href: "/#metodo", label: "Metodologia" },
@@ -21,12 +23,7 @@ export function SiteNav() {
     <header className="site-header">
       <nav className="container nav" aria-label="Navegação principal">
         <Link className="brand" href="/#inicio" aria-label="IAH Educacional, início">
-          <span className="brand-mark" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-          </span>
-          <span>IAH</span>
+          <Logo variant="dark" className="h-6 w-auto" title="IAH" />
           <small>Educacional</small>
         </Link>
 
