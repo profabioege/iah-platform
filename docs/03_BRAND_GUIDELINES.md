@@ -59,7 +59,7 @@ O Design System (tokens, componentes shadcn/ui, convenções de consumo) é úni
 
 - **Código:** identificadores em inglês (`Mission`, `guidingQuestion`), com comentários em português mapeando aos conceitos de produto quando não óbvios (convenção estabelecida em [07_DECISIONS.md](07_DECISIONS.md)).
 - **Produto/UI:** todo texto voltado ao usuário é em português, usando exatamente os termos do glossário acima.
-- **Arquivos e rotas:** `kebab-case` para arquivos, `(grupo)` para route groups do Next.js, nomes de módulo alinhados aos contextos do domínio (ver [06_DOMAIN_MODEL.md](06_DOMAIN_MODEL.md)).
+- **Arquivos e rotas:** `kebab-case` para arquivos, `(grupo)` para route groups do Next.js, nomes de módulo alinhados aos contextos do domínio (ver [DOMAIN_MODEL.md](DOMAIN_MODEL.md)).
 
 ## Conceitos proibidos
 

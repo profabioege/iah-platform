@@ -2,6 +2,17 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 16/07/2026 — Modelo Institucional (Domain Model consolidado)
+
+Sprint só de documentação — nenhum código, componente React, página ou rota alterado; nenhum banco de dados implementado.
+
+- **`docs/DOMAIN_MODEL.md` consolidado** como modelo conceitual institucional único, incorporando o que vivia em `06_DOMAIN_MODEL.md` (agora redirecionamento) — contextos Identidade & Acesso, Instituição, Currículo & Autoria, Aprendizagem & Entrega, Integrações Externas, Colaboração, Acervo, Operação & Transversais.
+- **Nova entidade `Ano Letivo`** (antes só um atributo solto de `Turma`) — necessária para suportar múltiplos períodos letivos sem confundir dados.
+- **Novas seções**: "Fluxo completo: Instituição → Professor → Turma → Aluno → Missão" (com mapeamento do que já existe em código vs. o que falta) e "Origens de dados futuras" (cadastro manual, CSV, Google Classroom, Microsoft Teams — todas convergindo para o mesmo modelo interno via `ClassroomProvider`, conectando com o módulo `integrations` da Sprint anterior).
+- **Tabela de equivalência** entre os nomes de entidade em português (convenção do domínio de produto) e os identificadores em inglês que o código usará quando implementado (`Institution`, `AcademicYear`, `Teacher`, `Classroom`, `Student`, `Mission`, `MissionProgress`, `Reflection`, `Production`).
+- Links corrigidos em `03_BRAND_GUIDELINES.md` e `MISSION_TEMPLATE.md`, que ainda apontavam para `06_DOMAIN_MODEL.md`.
+- Ver `DECISIONS.md` D-020 para o porquê da consolidação em vez de um documento novo do zero.
+
 ## 16/07/2026 — M03: Infraestrutura Google Workspace (sem dependência externa)
 
 Sprint de arquitetura pura — nenhuma credencial, pacote ou chamada externa. Objetivo original (login Google real + Classroom real) foi reduzido após análise de risco (ver `DECISIONS.md`, D-019).

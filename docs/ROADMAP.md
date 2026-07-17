@@ -27,10 +27,11 @@ Este norte **substitui** o sequenciamento original de Sprints temáticas (Missõ
 | Dossiê de Auditoria da Missão 01 | 4 manchetes reais de investigação (2 autênticas, 2 fabricadas — chave só no código-fonte), Guia de Investigação (5 critérios) e Critérios de Auditoria explícitos, com hipótese inicial + veredito final incorporados ao Desafio e à Produção |
 | Ensaio da demonstração de agosto | Fluxo completo validado tecnicamente na Vercel (sem erro, sem quebra visual em 5 larguras); `ROTEIRO-DEMONSTRACAO.md` com roteiro de apresentação por etapa. Achado: divergência de meta de tempo (Landing promete 20 min, meta interna é 15 min) — não decidido ainda |
 | M03 — Infraestrutura Google Workspace | `modules/integrations` (contratos `AuthProvider`/`ClassroomProvider`, mock em uso, stub Google sem chamada de rede), card "Integrações" no Painel do Professor, `GOOGLE_WORKSPACE.md`. Escopo original (OAuth/Classroom reais) reduzido após análise de risco — ver `DECISIONS.md` D-019 |
+| Modelo Institucional (Domain Model) | `DOMAIN_MODEL.md` consolidado como modelo conceitual único (Identidade, Instituição, Currículo, Aprendizagem, Integrações, Colaboração, Acervo, Operação), nova entidade `Ano Letivo`, fluxo Instituição→Professor→Turma→Aluno→Missão, origens de dados futuras (manual/CSV/Google/Microsoft). Só documentação — ver `DECISIONS.md` D-020 |
 
 ## Sprint atual
 
-**Nenhuma em execução.** Última tarefa concluída: M03 — Infraestrutura Google Workspace. Próxima Sprint planejada abaixo, aguardando aprovação para implementar.
+**Nenhuma em execução.** Última tarefa concluída: Modelo Institucional (`DOMAIN_MODEL.md` consolidado, ver `DECISIONS.md` D-020) — só documentação, nenhum código/UI alterado. Próxima Sprint planejada abaixo (Painel do Gestor), aguardando aprovação para implementar.
 
 ## Sprint seguinte (recomendada) — Painel do Gestor (MVP Comercial)
 
@@ -78,8 +79,8 @@ Deliberadamente **fora** do escopo do Gestor: granularidade por aluno, filtros p
 Prioridade **decrescente** — cada item exige plano de implementação explícito antes de virar código, e reavaliação contra os critérios de `VISION.md` (o piloto pode reordenar tudo abaixo):
 
 1. **Biblioteca** — acervo de Material Didático navegável, ligado às Missões.
-2. **Autenticação real** — Supabase; login por papel (aluno/professor/gestor); acesso dos Painéis restrito à turma/escola real.
-3. **Persistência em banco** — substituir `local-student-work-store` e `simulated-class-monitor` por implementações reais dos mesmos contratos (`StudentWork`, `ClassMonitorReader`), sem mudar UI.
+2. **Autenticação real** — Supabase; login por papel (aluno/professor/gestor), seguindo os contextos Identidade & Acesso definidos em `DOMAIN_MODEL.md` (Usuário + Perfil, não herança rígida); acesso dos Painéis restrito à turma/escola real.
+3. **Persistência em banco** — substituir `local-student-work-store` e `simulated-class-monitor` por implementações reais dos mesmos contratos (`StudentWork`, `ClassMonitorReader`), sem mudar UI; modelar `Instituição`/`Ano Letivo`/`Turma`/`Matrícula` conforme `DOMAIN_MODEL.md`.
 4. **Segunda Missão** — validar que "cadastrar arquivo de conteúdo" realmente escala sem tocar em interface.
 5. **Diário do Auditor — privacidade** — controle explícito de compartilhamento professor/gestor↔aluno (hoje toda reflexão salva é visível a ambos os painéis simulados).
 6. **Projetos** — produção autoral maior, individual ou em grupo.

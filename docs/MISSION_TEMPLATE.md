@@ -114,7 +114,7 @@ Cada bloco abaixo traz: **objetivo · finalidade pedagógica · como redigir · 
 ### 8. Produção do Aluno
 
 - **Objetivo:** descrever o artefato que o aluno cria.
-- **Finalidade pedagógica:** é a evidência concreta do pensamento — a peça do portfólio (ver [06_DOMAIN_MODEL.md](06_DOMAIN_MODEL.md)).
+- **Finalidade pedagógica:** é a evidência concreta do pensamento — a peça do portfólio (ver [DOMAIN_MODEL.md](DOMAIN_MODEL.md)).
 - **Como redigir:** nomeie o artefato e liste o que ele deve conter; defina formato e tom.
 - **Boas práticas:** dar um nome de identidade ("Relatório de Auditoria"); pedir estrutura (itens a), b), c)); pedir voz autoral.
 - **Erros a evitar:** produção sem forma definida; confundir produção (o artefato) com entrega (o ato de entregar, bloco 10).
