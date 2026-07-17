@@ -8,7 +8,11 @@ Projeto em **fase de preparação do piloto comercial de agosto/2026**, com um f
 
 ## Último commit
 
-`75b6a78` (anterior a esta tarefa) — *feat(integrations): M03 — Infraestrutura Google Workspace (sem dependência externa)* (16/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com o Modelo Institucional (`DOMAIN_MODEL.md` consolidado) — ver "Ciclo 2 — Modelo Institucional" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+`cb768d9` (anterior a esta tarefa) — *docs: Modelo Institucional — DOMAIN_MODEL.md consolidado, entidade Ano Letivo* (16/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com a Fundação da Plataforma (`ClassroomIntegration`/`IntegrationProvider`/`Indicadores` + `IMPORT_ARCHITECTURE.md`) — ver "Ciclo 2 — Fundação da Plataforma" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+
+## Ciclo 2 — Fundação da Plataforma (16/07/2026)
+
+Sprint só de documentação — nenhum código, UI, página, rota ou banco de dados alterado. `DOMAIN_MODEL.md` ganhou três entidades: `ClassroomIntegration` (especialização de Integração), `IntegrationProvider` (contrato-guarda-chuva de `AuthProvider`/`ClassroomProvider`/`ImportProvider`) e `Indicadores` (projeção agregada, base do futuro Painel do Gestor). Novo `docs/IMPORT_ARCHITECTURE.md`: contrato `ImportProvider`, as 5 implementações futuras previstas (Manual, CSV, Google Classroom, Microsoft Teams, Moodle), fluxo de revisão humana obrigatória antes de qualquer gravação, reconciliação de identidade por e-mail. Pedido de um `MASTER.md` foi resolvido apontando para `HANDOFF.md` (já cumpre esse papel desde D-018) em vez de criar um documento paralelo — ver `DECISIONS.md` D-021.
 
 ## Ciclo 2 — Modelo Institucional (16/07/2026)
 
@@ -56,7 +60,7 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 
 ## Próxima tarefa
 
-Painel do Gestor (MVP Comercial) segue como próxima Sprint planejada (`ROADMAP.md`), aguardando aprovação para implementar — agora com o modelo institucional (`DOMAIN_MODEL.md`) como referência de quais entidades/contratos reaproveitar. Em paralelo, seguem pendentes: decidir a meta real da demonstração (15 ou 20 minutos) e rodar o ensaio humano cronometrado (`ROTEIRO-DEMONSTRACAO.md`) que nenhuma Sprint técnica substitui.
+Painel do Gestor (MVP Comercial) segue como próxima Sprint planejada (`ROADMAP.md`), aguardando aprovação para implementar — agora com `DOMAIN_MODEL.md` (entidade `Indicadores` já modelada) como referência direta. Em paralelo, seguem pendentes: decidir a meta real da demonstração (15 ou 20 minutos) e rodar o ensaio humano cronometrado (`ROTEIRO-DEMONSTRACAO.md`) que nenhuma Sprint técnica substitui.
 
 ## Riscos conhecidos
 

@@ -2,6 +2,14 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 16/07/2026 — Fundação da Plataforma (multiescola): novas entidades + arquitetura de importação
+
+Sprint só de documentação — nenhum código, componente React, página, rota ou banco de dados alterado.
+
+- **`DOMAIN_MODEL.md`**: novas entidades `ClassroomIntegration` (especialização de Integração — registro de uma sincronização de turma configurada), `IntegrationProvider` (contrato-guarda-chuva de `AuthProvider`/`ClassroomProvider`/`ImportProvider`) e `Indicadores` (projeção agregada, derivada de Progresso/Produção/Reflexão — base do futuro Painel do Gestor). Nova seção 0 reforçando "Instituição é a raiz", com a leitura linear Instituição→Ano Letivo→Professor→Turma→Aluno→Missão→Produção→Reflexão→Indicadores (com ressalva explícita de que é simplificação didática, não a topologia real). Nova lista de "Relacionamentos-chave" e nova seção "Pontos de extensão".
+- **Novo `docs/IMPORT_ARCHITECTURE.md`**: contrato conceitual `ImportProvider` (`listClassrooms`/`listStudents`/`importClassroom`), as 5 implementações futuras previstas (`ManualImportProvider`, `CSVImportProvider`, `GoogleClassroomProvider`, `MicrosoftTeamsProvider`, `MoodleProvider`), fluxo de revisão humana obrigatória antes de qualquer gravação, e reconciliação de identidade por e-mail entre origens.
+- **`MASTER.md` não foi criado** — não existe no projeto; `HANDOFF.md` já cumpre esse papel desde D-018. Ver `DECISIONS.md` D-021.
+
 ## 16/07/2026 — Modelo Institucional (Domain Model consolidado)
 
 Sprint só de documentação — nenhum código, componente React, página ou rota alterado; nenhum banco de dados implementado.

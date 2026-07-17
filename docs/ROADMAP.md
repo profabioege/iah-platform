@@ -28,10 +28,11 @@ Este norte **substitui** o sequenciamento original de Sprints temáticas (Missõ
 | Ensaio da demonstração de agosto | Fluxo completo validado tecnicamente na Vercel (sem erro, sem quebra visual em 5 larguras); `ROTEIRO-DEMONSTRACAO.md` com roteiro de apresentação por etapa. Achado: divergência de meta de tempo (Landing promete 20 min, meta interna é 15 min) — não decidido ainda |
 | M03 — Infraestrutura Google Workspace | `modules/integrations` (contratos `AuthProvider`/`ClassroomProvider`, mock em uso, stub Google sem chamada de rede), card "Integrações" no Painel do Professor, `GOOGLE_WORKSPACE.md`. Escopo original (OAuth/Classroom reais) reduzido após análise de risco — ver `DECISIONS.md` D-019 |
 | Modelo Institucional (Domain Model) | `DOMAIN_MODEL.md` consolidado como modelo conceitual único (Identidade, Instituição, Currículo, Aprendizagem, Integrações, Colaboração, Acervo, Operação), nova entidade `Ano Letivo`, fluxo Instituição→Professor→Turma→Aluno→Missão, origens de dados futuras (manual/CSV/Google/Microsoft). Só documentação — ver `DECISIONS.md` D-020 |
+| Fundação da Plataforma (multiescola) | `DOMAIN_MODEL.md` ganha `ClassroomIntegration`/`IntegrationProvider`/`Indicadores`; novo `IMPORT_ARCHITECTURE.md` (contrato `ImportProvider`, 5 provedores futuros: Manual/CSV/Google/Microsoft/Moodle, fluxo de revisão humana, reconciliação por e-mail). Só documentação — ver `DECISIONS.md` D-021 |
 
 ## Sprint atual
 
-**Nenhuma em execução.** Última tarefa concluída: Modelo Institucional (`DOMAIN_MODEL.md` consolidado, ver `DECISIONS.md` D-020) — só documentação, nenhum código/UI alterado. Próxima Sprint planejada abaixo (Painel do Gestor), aguardando aprovação para implementar.
+**Nenhuma em execução.** Última tarefa concluída: Fundação da Plataforma — `ClassroomIntegration`/`IntegrationProvider`/`Indicadores` no modelo institucional + `IMPORT_ARCHITECTURE.md` (ver `DECISIONS.md` D-021) — só documentação, nenhum código/UI alterado. Próxima Sprint planejada abaixo (Painel do Gestor), aguardando aprovação para implementar.
 
 ## Sprint seguinte (recomendada) — Painel do Gestor (MVP Comercial)
 
@@ -84,7 +85,7 @@ Prioridade **decrescente** — cada item exige plano de implementação explíci
 4. **Segunda Missão** — validar que "cadastrar arquivo de conteúdo" realmente escala sem tocar em interface.
 5. **Diário do Auditor — privacidade** — controle explícito de compartilhamento professor/gestor↔aluno (hoje toda reflexão salva é visível a ambos os painéis simulados).
 6. **Projetos** — produção autoral maior, individual ou em grupo.
-7. **Google Workspace real** — trocar os stubs de `modules/integrations` por implementações reais (OAuth + Classroom API), quando o projeto Google Cloud existir (ver `GOOGLE_WORKSPACE.md`).
+7. **Google Workspace real** — trocar os stubs de `modules/integrations` por implementações reais (OAuth + Classroom API), quando o projeto Google Cloud existir (ver `GOOGLE_WORKSPACE.md`); demais provedores de importação (`CSVImportProvider`, `ManualImportProvider`, `MicrosoftTeamsProvider`, `MoodleProvider`) seguem o mesmo contrato `ImportProvider` (ver `IMPORT_ARCHITECTURE.md`), sem ordem de prioridade definida ainda entre eles.
 8. **Mentor IA** — assistente de IA com registro de proveniência por uso.
 9. **Modo Claro funcional** — hoje só os tokens existem; falta a alternância na interface (o menu de Acessibilidade já expõe a opção sem efeito).
 10. **Virada de domínio** — `iaheducacional.com.br` migrar do WordPress temporário para a aplicação Next.js (checklist em `DEPLOY.md`).
