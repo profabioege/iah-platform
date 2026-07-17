@@ -2,7 +2,7 @@
 
 Modelo institucional completo do sistema de ensino IAH (disciplina **Inteligência Artificial & Humanidades**, Ensino Médio). Documento de referência técnica oficial, complementar aos 5 documentos vivos (`VISION.md`, `PRODUCT.md`, `ROADMAP.md`, `STATUS.md`, `DECISIONS.md` — ver D-018). **É conceitual**: não define banco, SQL, Prisma nem tipos de código — apenas entidades, atributos, relacionamentos, responsabilidades e regras de negócio. Nenhum banco de dados, UI, página, rota ou componente React foi alterado para produzir este documento.
 
-Ver também [MISSION.md](MISSION.md) (estrutura padrão de Missão), [VISION.md](VISION.md) e [PRODUCT.md](PRODUCT.md).
+Ver também [MISSION.md](MISSION.md) (estrutura padrão de Missão), [VISION.md](VISION.md) e [PRODUCT.md](PRODUCT.md). Deep-dives técnicos por contexto: [AUTHORING_MODEL.md](AUTHORING_MODEL.md) (motor de autoria de Missões) e [IMPORT_ARCHITECTURE.md](IMPORT_ARCHITECTURE.md) (importação de Turma/Aluno de origens externas).
 
 > **Nota de consolidação:** este arquivo substitui `06_DOMAIN_MODEL.md`, que mantinha o modelo mais completo mas com nome fora do padrão dos 5 documentos oficiais (D-018 já esperava que `DOMAIN_MODEL.md` fosse o nome canônico — `PRODUCT.md` já apontava para cá). `06_DOMAIN_MODEL.md` passa a ser apenas um redirecionamento. Nenhum conteúdo foi perdido: a base deste documento é o modelo já existente, com a entidade `Ano Letivo` e as seções 4 e 5 abaixo adicionadas nesta Sprint.
 
@@ -181,11 +181,11 @@ Para cada entidade: **finalidade · principais atributos · relacionamentos · r
 - **Relacionamentos:** pertence a `Curso`; contém `Missão`s.
 - **Regras:** ordenado dentro do curso; pertence a exatamente um curso (numa dada versão).
 
-#### Missão (`Mission`)
-- **Finalidade:** unidade central de aprendizagem investigativa (estrutura padrão em [MISSION.md](MISSION.md)). Já modelada em `modules/library/domain/mission.ts`.
+#### Missão (`Mission` / `MissionTemplate`)
+- **Finalidade:** unidade central de aprendizagem investigativa (estrutura padrão em [MISSION.md](MISSION.md)). Já modelada em `modules/library/domain/mission.ts`. Decomposição completa do motor de autoria (`MissionSection`, `Evidence`, `Challenge`, `EvaluationCriteria`, `ReflectionGuide`, `TeacherGuide`, `LearningObjective`) e estratégia de versionamento: ver **[AUTHORING_MODEL.md](AUTHORING_MODEL.md)**, deep-dive deste contexto.
 - **Atributos:** id, número, título, objetivo, pergunta norteadora, contexto, ordem, status editorial, competências desenvolvidas; agrega `Etapa`s, `Material Didático` e `Ferramenta de IA` sugeridas.
 - **Relacionamentos:** pertence a `Módulo`; composta por `Etapa da Missão`; referencia `Material Didático`, `Ferramenta de IA`, `Competência`; instanciada como `Atividade` para turmas; motiva registros no `Diário do Auditor`.
-- **Regras:** é template — nunca guarda dados de aluno; versionável; a "Reflexão no Diário" e a "Produção do Aluno" previstas na estrutura são *slots* preenchidos na instância, não na missão.
+- **Regras:** é template — nunca guarda dados de aluno; versionável (versionamento detalhado em `AUTHORING_MODEL.md`); a "Reflexão no Diário" e a "Produção do Aluno" previstas na estrutura são *slots* preenchidos na instância, não na missão.
 
 #### Etapa da Missão
 - **Finalidade:** decompõe a Missão em passos sequenciais (investigar → produzir → refletir → entregar).

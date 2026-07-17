@@ -8,7 +8,11 @@ Projeto em **fase de preparação do piloto comercial de agosto/2026**, com um f
 
 ## Último commit
 
-`cb768d9` (anterior a esta tarefa) — *docs: Modelo Institucional — DOMAIN_MODEL.md consolidado, entidade Ano Letivo* (16/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com a Fundação da Plataforma (`ClassroomIntegration`/`IntegrationProvider`/`Indicadores` + `IMPORT_ARCHITECTURE.md`) — ver "Ciclo 2 — Fundação da Plataforma" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+`8dfe815` (anterior a esta tarefa) — *docs: Fundação da Plataforma — ClassroomIntegration/IntegrationProvider/Indicadores + arquitetura de importação* (16/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com o Sistema de Autoria (`AUTHORING_MODEL.md`) — ver "Ciclo 2 — Sistema de Autoria" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+
+## Ciclo 2 — Sistema de Autoria (16/07/2026)
+
+Sprint só de documentação — nenhum código, UI, página, rota ou banco de dados alterado. Novo `docs/AUTHORING_MODEL.md`: decompõe o `Mission` plano de hoje em 10 entidades (`MissionTemplate`, `MissionSection`, `Evidence`, `Challenge`, `EvaluationCriteria`, `ReflectionGuide`, `TeacherGuide`, `Competency`, `LearningObjective`, `DidacticMaterial`), com fluxo de criação (nasce → evolui → publica) e estratégia de versionamento (unidade de versão = `MissionTemplate` inteiro). Achado concreto ao inspecionar o conteúdo real da Missão 01: os itens do Dossiê de Auditoria e o Guia de Investigação hoje são strings soltas em `didacticMaterials`, e a chave de correção existe só como comentário de código, nunca como dado — exatamente a lacuna que a decomposição resolve. Ver `DECISIONS.md` D-022.
 
 ## Ciclo 2 — Fundação da Plataforma (16/07/2026)
 
@@ -60,7 +64,7 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 
 ## Próxima tarefa
 
-Painel do Gestor (MVP Comercial) segue como próxima Sprint planejada (`ROADMAP.md`), aguardando aprovação para implementar — agora com `DOMAIN_MODEL.md` (entidade `Indicadores` já modelada) como referência direta. Em paralelo, seguem pendentes: decidir a meta real da demonstração (15 ou 20 minutos) e rodar o ensaio humano cronometrado (`ROTEIRO-DEMONSTRACAO.md`) que nenhuma Sprint técnica substitui.
+Painel do Gestor (MVP Comercial) segue como próxima Sprint planejada (`ROADMAP.md`), aguardando aprovação para implementar — agora com `DOMAIN_MODEL.md` (entidade `Indicadores` já modelada) como referência direta. Em paralelo, seguem pendentes: decidir a meta real da demonstração (15 ou 20 minutos), rodar o ensaio humano cronometrado (`ROTEIRO-DEMONSTRACAO.md`), e decidir se/quando a Segunda Missão usa o `Mission` plano de hoje ou já nasce no formato decomposto de `AUTHORING_MODEL.md`.
 
 ## Riscos conhecidos
 

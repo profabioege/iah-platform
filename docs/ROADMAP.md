@@ -29,10 +29,11 @@ Este norte **substitui** o sequenciamento original de Sprints temáticas (Missõ
 | M03 — Infraestrutura Google Workspace | `modules/integrations` (contratos `AuthProvider`/`ClassroomProvider`, mock em uso, stub Google sem chamada de rede), card "Integrações" no Painel do Professor, `GOOGLE_WORKSPACE.md`. Escopo original (OAuth/Classroom reais) reduzido após análise de risco — ver `DECISIONS.md` D-019 |
 | Modelo Institucional (Domain Model) | `DOMAIN_MODEL.md` consolidado como modelo conceitual único (Identidade, Instituição, Currículo, Aprendizagem, Integrações, Colaboração, Acervo, Operação), nova entidade `Ano Letivo`, fluxo Instituição→Professor→Turma→Aluno→Missão, origens de dados futuras (manual/CSV/Google/Microsoft). Só documentação — ver `DECISIONS.md` D-020 |
 | Fundação da Plataforma (multiescola) | `DOMAIN_MODEL.md` ganha `ClassroomIntegration`/`IntegrationProvider`/`Indicadores`; novo `IMPORT_ARCHITECTURE.md` (contrato `ImportProvider`, 5 provedores futuros: Manual/CSV/Google/Microsoft/Moodle, fluxo de revisão humana, reconciliação por e-mail). Só documentação — ver `DECISIONS.md` D-021 |
+| Sistema de Autoria | Novo `AUTHORING_MODEL.md`: decompõe `Mission` em 10 entidades (`MissionTemplate`, `MissionSection`, `Evidence`, `Challenge`, `EvaluationCriteria`, `ReflectionGuide`, `TeacherGuide`, `Competency`, `LearningObjective`, `DidacticMaterial`) com versionamento; identificou que Evidence/EvaluationCriteria hoje são strings soltas em `didacticMaterials` e a chave de correção só existe em comentário de código. Só documentação — ver `DECISIONS.md` D-022 |
 
 ## Sprint atual
 
-**Nenhuma em execução.** Última tarefa concluída: Fundação da Plataforma — `ClassroomIntegration`/`IntegrationProvider`/`Indicadores` no modelo institucional + `IMPORT_ARCHITECTURE.md` (ver `DECISIONS.md` D-021) — só documentação, nenhum código/UI alterado. Próxima Sprint planejada abaixo (Painel do Gestor), aguardando aprovação para implementar.
+**Nenhuma em execução.** Última tarefa concluída: Sistema de Autoria — `AUTHORING_MODEL.md`, motor de autoria de Missões decomposto em 10 entidades versionáveis (ver `DECISIONS.md` D-022) — só documentação, nenhum código/UI alterado. Próxima Sprint planejada abaixo (Painel do Gestor), aguardando aprovação para implementar.
 
 ## Sprint seguinte (recomendada) — Painel do Gestor (MVP Comercial)
 
@@ -82,7 +83,7 @@ Prioridade **decrescente** — cada item exige plano de implementação explíci
 1. **Biblioteca** — acervo de Material Didático navegável, ligado às Missões.
 2. **Autenticação real** — Supabase; login por papel (aluno/professor/gestor), seguindo os contextos Identidade & Acesso definidos em `DOMAIN_MODEL.md` (Usuário + Perfil, não herança rígida); acesso dos Painéis restrito à turma/escola real.
 3. **Persistência em banco** — substituir `local-student-work-store` e `simulated-class-monitor` por implementações reais dos mesmos contratos (`StudentWork`, `ClassMonitorReader`), sem mudar UI; modelar `Instituição`/`Ano Letivo`/`Turma`/`Matrícula` conforme `DOMAIN_MODEL.md`.
-4. **Segunda Missão** — validar que "cadastrar arquivo de conteúdo" realmente escala sem tocar em interface.
+4. **Segunda Missão** — validar que "cadastrar arquivo de conteúdo" realmente escala sem tocar em interface; pode nascer no formato `Mission` plano de hoje, sem esperar pelo motor de autoria decomposto (`AUTHORING_MODEL.md`) — a decomposição é aditiva, não bloqueante.
 5. **Diário do Auditor — privacidade** — controle explícito de compartilhamento professor/gestor↔aluno (hoje toda reflexão salva é visível a ambos os painéis simulados).
 6. **Projetos** — produção autoral maior, individual ou em grupo.
 7. **Google Workspace real** — trocar os stubs de `modules/integrations` por implementações reais (OAuth + Classroom API), quando o projeto Google Cloud existir (ver `GOOGLE_WORKSPACE.md`); demais provedores de importação (`CSVImportProvider`, `ManualImportProvider`, `MicrosoftTeamsProvider`, `MoodleProvider`) seguem o mesmo contrato `ImportProvider` (ver `IMPORT_ARCHITECTURE.md`), sem ordem de prioridade definida ainda entre eles.

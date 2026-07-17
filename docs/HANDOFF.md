@@ -2,7 +2,7 @@
 
 Documento único de transição de contexto. Escrito para que uma nova conversa (ou uma nova pessoa) retome o projeto sem precisar reconstruir nada do histórico. Se este documento divergir do código, o código manda — mas a divergência deve ser corrigida aqui.
 
-Para o dia a dia, os documentos vivos continuam sendo `VISION.md`, `PRODUCT.md`, `ROADMAP.md`, `STATUS.md` e `DECISIONS.md` (`CHANGELOG.md` para o histórico entrega-a-entrega). Este HANDOFF é o resumo de entrada única; aqueles são a fonte de verdade contínua. `DOMAIN_MODEL.md` é a referência técnica complementar para o modelo institucional completo (entidades, relacionamentos, fluxo); `IMPORT_ARCHITECTURE.md` complementa com o contrato de importação de Turma/Aluno de qualquer origem externa — consultar ambos antes de qualquer Sprint que envolva Instituição/Turma/Aluno/Professor/integração além do que já existe hoje.
+Para o dia a dia, os documentos vivos continuam sendo `VISION.md`, `PRODUCT.md`, `ROADMAP.md`, `STATUS.md` e `DECISIONS.md` (`CHANGELOG.md` para o histórico entrega-a-entrega). Este HANDOFF é o resumo de entrada única; aqueles são a fonte de verdade contínua. `DOMAIN_MODEL.md` é a referência técnica complementar para o modelo institucional completo (entidades, relacionamentos, fluxo); `IMPORT_ARCHITECTURE.md` complementa com o contrato de importação de Turma/Aluno de qualquer origem externa; `AUTHORING_MODEL.md` complementa com o motor de autoria de Missões (versionamento, decomposição do `Mission` de hoje) — consultar os três antes de qualquer Sprint que envolva Instituição/Turma/Aluno/Professor/integração/autoria de conteúdo além do que já existe hoje.
 
 > **Nota:** este projeto não tem (nem deve ter) um `MASTER.md`. Se uma Sprint pedir para atualizá-lo, o documento equivalente é este `HANDOFF.md` — "documento único de transição de contexto" já é a definição de um master doc (ver `DECISIONS.md` D-018, D-021).
 
@@ -124,6 +124,7 @@ Resumo das mais importantes (histórico completo com motivo/alternativas/impacto
 - **Módulo `integrations` com abstração de provedor, sem dependência externa** (D-019): contratos `AuthProvider`/`ClassroomProvider`, implementação simulada em uso, stub do Google sem chamada de rede — escopo reduzido deliberadamente após análise de risco (verificação de escopos restritos do Google, tela de "app não verificado") antes da demonstração de agosto.
 - **Modelo institucional consolidado em `DOMAIN_MODEL.md`, com `Ano Letivo` como entidade** (D-020): um modelo mais completo já existia fragmentado (`06_DOMAIN_MODEL.md`); consolidado em vez de duplicado, para não repetir o problema que D-018 corrigiu. Nomes de entidade em português (convenção do domínio de produto), com tabela de equivalência para os identificadores em inglês que o código usará.
 - **`ClassroomIntegration`/`IntegrationProvider`/`Indicadores` + `IMPORT_ARCHITECTURE.md`** (D-021): camada de importação formal (contrato `ImportProvider`, 5 provedores futuros previstos), documento dedicado por volume próprio de conteúdo. `MASTER.md` não foi criado — não existe no projeto e `HANDOFF.md` já cumpre esse papel.
+- **Motor de autoria: `Mission` decomposto em 10 entidades versionáveis** (D-022, `AUTHORING_MODEL.md`): achado concreto ao inspecionar a Missão 01 — Evidence/EvaluationCriteria hoje são strings soltas em `didacticMaterials`, chave de correção só em comentário de código. Decomposição é aditiva — a Missão 02 não precisa esperar por ela.
 - **Base UI (não Radix)** por baixo do shadcn/ui: `render` no lugar de `asChild`; `DropdownMenuLabel` exige estar dentro de `Group`/`RadioGroup`.
 
 ## 9. Convenções adotadas
@@ -187,7 +188,7 @@ Antes de implementar qualquer coisa numa nova sessão:
 - [ ] Ler este `HANDOFF.md` inteiro.
 - [ ] Consultar `VISION.md` antes de aceitar/rejeitar qualquer nova funcionalidade proposta.
 - [ ] Consultar `PRODUCT.md` para arquitetura, Design System e convenções antes de tocar em código.
-- [ ] Consultar `DOMAIN_MODEL.md` antes de modelar qualquer entidade institucional nova (Instituição, Turma, Aluno, Professor, Ano Letivo etc.) — evita reinventar um modelo que já existe conceitualmente. Para integrações/importação de dados externos, consultar também `IMPORT_ARCHITECTURE.md`.
+- [ ] Consultar `DOMAIN_MODEL.md` antes de modelar qualquer entidade institucional nova (Instituição, Turma, Aluno, Professor, Ano Letivo etc.) — evita reinventar um modelo que já existe conceitualmente. Para integrações/importação de dados externos, consultar também `IMPORT_ARCHITECTURE.md`; para autoria/estrutura de Missões, consultar `AUTHORING_MODEL.md`.
 - [ ] Consultar `ROADMAP.md` para a próxima prioridade real (não reinventar sequenciamento).
 - [ ] Verificar `DECISIONS.md` antes de propor algo que pareça "óbvio" — pode já ter sido tentado e descartado (ex.: `output: export`, tema violeta).
 - [ ] Depois de qualquer entrega: rodar `npx tsc --noEmit`, `npm run lint`, `npm run build` (com o dev server **parado**).

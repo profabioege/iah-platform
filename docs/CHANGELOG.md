@@ -2,6 +2,15 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 16/07/2026 — Sistema de Autoria: motor de autoria de Missões decomposto
+
+Sprint só de documentação — nenhum código, componente React, página, rota ou banco de dados alterado.
+
+- **Novo `docs/AUTHORING_MODEL.md`**: decompõe o `Mission` plano de hoje em 10 entidades — `MissionTemplate`, `MissionSection`, `Evidence`, `Challenge`, `EvaluationCriteria`, `ReflectionGuide`, `TeacherGuide`, `Competency`, `LearningObjective`, `DidacticMaterial` — com responsabilidades, relacionamentos, fluxo de criação (nasce → evolui → é publicada) e estratégia de versionamento (unidade de versão = `MissionTemplate` inteiro; `EvaluationCriteria`/`Competency`/`DidacticMaterial` reutilizáveis, com ciclo de vida próprio).
+- **Achado concreto**: ao inspecionar `01-a-fabrica-de-noticias.ts`, os 4 itens do Dossiê de Auditoria e o Guia de Investigação/Critérios de Auditoria hoje são strings soltas dentro de `didacticMaterials`, e a chave de correção (`groundTruth`) existe só como comentário de código, nunca visível ao Professor na Plataforma — exatamente a lacuna que a decomposição em `Evidence`/`EvaluationCriteria`/`TeacherGuide` resolve.
+- **`DOMAIN_MODEL.md`** ganhou referência cruzada para `AUTHORING_MODEL.md` como deep-dive do contexto Currículo & Autoria, sem duplicar conteúdo.
+- Ver `DECISIONS.md` D-022.
+
 ## 16/07/2026 — Fundação da Plataforma (multiescola): novas entidades + arquitetura de importação
 
 Sprint só de documentação — nenhum código, componente React, página, rota ou banco de dados alterado.
