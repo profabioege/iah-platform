@@ -1,6 +1,6 @@
 # Status — IAH Educacional
 
-Fotografia do estado atual do projeto. **Este é o primeiro documento a consultar antes de qualquer nova implementação.** Atualizado ao final de cada tarefa — se este arquivo diverge do código, o código manda, mas a divergência deve ser corrigida aqui imediatamente. Histórico entrega-a-entrega em `CHANGELOG.md`.
+Fotografia do estado atual do projeto. **Este é o primeiro documento a consultar antes de qualquer nova implementação.** Atualizado ao final de cada tarefa — se este arquivo diverge do código, o código manda, mas a divergência deve ser corrigida aqui imediatamente. Histórico entrega-a-entrega em `CHANGELOG.md`. **Retomando o projeto numa nova conversa (janela de contexto reiniciada): leia `HANDOFF.md` primeiro** — é o resumo único de todo o histórico, escrito para esse exato momento.
 
 ## Estado atual
 
@@ -8,7 +8,7 @@ Projeto em **fase de preparação do piloto comercial de agosto/2026**, com um f
 
 ## Último commit
 
-`b40c8bc` — *feat(landing): M01 — Landing como pitch comercial completo* (16/07/2026), branch `main`. A Sprint M02 (página `/demonstracao`) descrita abaixo está implementada neste momento, aguardando o commit desta tarefa. Ver `CHANGELOG.md` para o histórico completo.
+`c0681aa` — *feat(landing): M02 — Comercialização: página /demonstracao (funil de conversão)* (16/07/2026), branch `main`. Este ciclo foi encerrado por proximidade do limite de contexto; `HANDOFF.md` criado como resumo de continuidade, aguardando o commit desta tarefa. Ver `CHANGELOG.md` para o histórico completo.
 
 ## Último deploy
 

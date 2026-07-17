@@ -135,3 +135,4 @@ Landing (`/`) → "Entrar" (demonstração da Plataforma) ou "Solicitar Demonstr
 - `03_BRAND_GUIDELINES.md` — glossário de marca, tom de voz, conceitos proibidos.
 - `DEPLOY.md` — processo de versionamento e publicação (Git → GitHub → Vercel).
 - `CHANGELOG.md` — histórico de entregas, entrega a entrega.
+- `HANDOFF.md` — resumo único de transição de contexto; ler primeiro ao retomar o projeto numa conversa nova.
