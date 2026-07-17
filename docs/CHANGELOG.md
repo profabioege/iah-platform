@@ -2,6 +2,19 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 16/07/2026 — M07: Primeiro Usuário Real — autenticação definitiva (Auth.js + Google)
+
+Infraestrutura completa de login implementada; ativação depende só dos passos de console do fundador (Google Cloud + Supabase), roteirizados em `AUTHENTICATION.md` e `SUPABASE.md`. Única dependência nova: `next-auth@5 (beta)`, pedida na Sprint.
+
+- **Auth.js v5, Google exclusivo**: config dividida (`auth.config.ts` edge-safe para o middleware; `auth.ts` completa com provisionamento), endpoints em `/api/auth/[...nextauth]`, sessão JWT persistente (sem tabela de sessões — decisão documentada), logout no header (`SessionControls`, só aparece com sessão ativa).
+- **Middleware de rotas privadas** (`src/middleware.ts`): `/dashboard`, `/missoes`, `/diario`, `/professor` exigem sessão quando a autenticação está configurada; sem credenciais, tudo passa — modo demonstração intacto.
+- **Provisionamento automático do primeiro login** (`modules/identity` + migration `0003_identity.sql`): criar Usuário → criar Professor (ligado ao usuário) → criar Perfil professor → associar à Instituição → Dashboard. Idempotente; queries Supabase reais (admin client com service role, só servidor). Allowlist fechada por padrão (`AUTH_ALLOWED_EMAILS`); Instituição nunca criada automaticamente — a linha do Colégio Beryon é inserida pelo próprio responsável (`SUPABASE.md`).
+- **Contrato `AuthProvider` (D-019) ganhou a implementação real** (`authJsAuthProvider`) e o seletor `getAuthProvider()`; nenhum componente importa `next-auth` diretamente.
+- **`/entrar`**: botão "Entrar com Google" quando configurado (sessão existente vai direto ao Dashboard); sem credenciais, o acesso direto de sempre.
+- **`.env.example` reorganizado** por seções (Auth, Supabase, Resend, Site, futuras) — nenhuma credencial hardcoded.
+- **Item "remover simulados" da Sprint**: nada removido de propósito — todos os mocks seguem sustentando o modo demonstração; aposentadoria amarrada ao checklist de `PERSISTENCE.md` (D-025).
+- Validado: typecheck/lint/build limpos (middleware 87.3 kB edge; bundles de página inalterados), modo demonstração idêntico no navegador (/entrar, /dashboard, /professor), console limpo. O fluxo autenticado ponta a ponta será validado no primeiro login real do fundador. Ver `DECISIONS.md` D-025.
+
 ## 16/07/2026 — M06: Google Classroom + Import Wizard (sem OAuth, sem banco)
 
 Camada de integração com o Google Classroom, plugável. Sem autenticação OAuth e sem persistência ainda — dados simulados e rotulados. Nenhuma dependência nova instalada.

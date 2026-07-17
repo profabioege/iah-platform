@@ -8,7 +8,11 @@ Projeto em **fase de preparação do piloto comercial de agosto/2026**, com um f
 
 ## Último commit
 
-`aa11440` (anterior a esta tarefa) — *feat(platform): M04 — Núcleo da Plataforma: persistência multi-tenant preparada, UI intocada* (16/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com M06 — Google Classroom + Import Wizard — ver "Ciclo 2 — Google Classroom" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+`66d0d7a` (anterior a esta tarefa) — *feat(integrations): M06 — Google Classroom plugável + Import Wizard* (16/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com M07 — Primeiro Usuário Real (autenticação) — ver "Ciclo 2 — Primeiro Usuário Real" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+
+## Ciclo 2 — Primeiro Usuário Real / Autenticação (16/07/2026)
+
+Infraestrutura definitiva de login implementada — **aguardando apenas os passos de console do fundador** (criar projeto Google Cloud + projeto Supabase e definir as variáveis; roteiros prontos em `AUTHENTICATION.md` e `SUPABASE.md`). Auth.js v5 com Google exclusivo (única dependência nova); sessão JWT persistente; middleware protegendo `/dashboard`, `/missoes`, `/diario`, `/professor` quando configurado; logout no header. Primeiro login provisiona automaticamente Usuário → Professor → Perfil → Instituição (migration `0003_identity.sql`; queries Supabase reais em `modules/identity`). Allowlist fechada por padrão (`AUTH_ALLOWED_EMAILS`); a Instituição é inserida pelo responsável real, nunca criada automaticamente. Sem credenciais, o modo demonstração segue **idêntico** (validado: /entrar, /dashboard e /professor inalterados, console limpo, bundles de página iguais). O fluxo autenticado real será validado no primeiro login do fundador. Ver `DECISIONS.md` D-025.
 
 ## Ciclo 2 — Google Classroom + Import Wizard (16/07/2026)
 
@@ -64,6 +68,7 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 - Infraestrutura de integração Google Workspace (`modules/integrations`): contratos `AuthProvider`/`ClassroomProvider` com implementação simulada; card "Integrações" no Painel do Professor. Nenhuma credencial real, nenhuma chamada externa — ver `GOOGLE_WORKSPACE.md`.
 - Núcleo de persistência multi-tenant (`modules/platform`): entidades, contratos, seeds de demonstração, stub de banco e factory — pronto para a troca futura sem alterar UI; schema SQL versionado em `app/db/migrations/`. Ver `PERSISTENCE.md`.
 - Integração Google Classroom (`modules/integrations/google-classroom`): módulo plugável (real + mock), `ClassroomSyncService`, Import Wizard (`/professor/importar`) e seção Turmas no Painel do Professor — tudo sobre dados simulados rotulados, sem OAuth/banco. Ver `GOOGLE_CLASSROOM_INTEGRATION.md`.
+- Autenticação (Auth.js v5 + Google): login/logout, sessão JWT, middleware de rotas privadas, provisionamento automático do professor no primeiro login (`modules/identity`, migration `0003`) — ativa ao definir as credenciais; sem elas, modo demonstração intacto. Ver `AUTHENTICATION.md`/`SUPABASE.md`.
 
 ## Funcionalidades em andamento / lacunas conhecidas
 
@@ -74,7 +79,7 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 
 ## Próxima tarefa
 
-Para o piloto Beryon sair do simulado para o real, o caminho crítico é o "Expansão futura" de `GOOGLE_CLASSROOM_INTEGRATION.md`: criar o projeto Google Cloud + OAuth (`GOOGLE_WORKSPACE.md`), implementar o `google-classroom-repository` (hoje stub) e conectar o banco (checklist de `PERSISTENCE.md`). Em paralelo seguem pendentes, sem dependência de infraestrutura: Painel do Gestor (planejado no `ROADMAP.md`, com `computeClassIndicators` pronto), decidir a meta da demonstração (15 ou 20 min) e rodar o ensaio humano cronometrado (`ROTEIRO-DEMONSTRACAO.md`).
+**Do fundador (fora do código, ~15 min):** executar os passos de console de `AUTHENTICATION.md`/`SUPABASE.md` — criar projeto Google Cloud (OAuth) e projeto Supabase (migrations 0001–0003 + linha da Instituição), definir as variáveis na Vercel e fazer o primeiro login real. **Da próxima Sprint (código):** com o login validado, implementar o `google-classroom-repository` (hoje stub) para sincronizar as turmas reais — o restante do caminho já está pronto (`GOOGLE_CLASSROOM_INTEGRATION.md`). Em paralelo seguem pendentes: Painel do Gestor (planejado no `ROADMAP.md`), meta da demonstração (15 ou 20 min) e ensaio humano cronometrado (`ROTEIRO-DEMONSTRACAO.md`).
 
 ## Riscos conhecidos
 

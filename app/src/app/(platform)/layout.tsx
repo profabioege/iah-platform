@@ -1,5 +1,6 @@
 import { AppHeader } from "@/components/layout/app-header";
 import { AppSidebar } from "@/components/layout/app-sidebar";
+import { SessionControls } from "@/components/layout/session-controls";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 /**
@@ -7,7 +8,9 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
  *
  * Monta o App Shell (sidebar + header) e ativa o tema Premium Dark via
  * wrapper `.dark`, isolando o visual da plataforma do CSS da Landing.
- * A futura barreira de autenticação entra aqui. Ver ADR-004.
+ * A barreira de autenticação vive no middleware (src/middleware.ts);
+ * aqui entram só os controles de sessão do header (logout), que não
+ * renderizam nada no modo demonstração. Ver docs/AUTHENTICATION.md.
  */
 export default function PlatformLayout({
   children,
@@ -19,7 +22,7 @@ export default function PlatformLayout({
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
-          <AppHeader />
+          <AppHeader actions={<SessionControls />} />
           <main className="flex-1 p-4 md:p-6">{children}</main>
         </SidebarInset>
       </SidebarProvider>

@@ -96,13 +96,14 @@ IAH - Educacional/
 - **Infraestrutura Google Workspace** (`modules/integrations`): contratos `AuthProvider`/`ClassroomProvider`, implementação simulada em uso, stub do provedor Google (sem chamada de rede). Ver `GOOGLE_WORKSPACE.md`.
 - **Núcleo de persistência multi-tenant** (`modules/platform`, M04): 12 entidades com `institutionId`, contratos de repositório, seeds de demonstração em memória, stub de banco (Supabase/PostgreSQL), factory de troca, `ImportProvider` com 6 provedores; schema SQL em `app/db/migrations/`. Consumido pela seção Turmas do Painel do Professor (via seeds); demais telas seguem em localStorage/turma simulada. Ver `PERSISTENCE.md`.
 - **Integração Google Classroom** (`modules/integrations/google-classroom`, M06): módulo plugável (real + mock), `ClassroomSyncService`/`ClassroomSyncState`, Import Wizard em `/professor/importar` (6 passos), seção Turmas no Painel do Professor, contratos de entrega de Missão. Sem OAuth/banco — dados simulados rotulados. Ver `GOOGLE_CLASSROOM_INTEGRATION.md`.
+- **Autenticação definitiva** (M07): Auth.js v5 + Google, sessão JWT, middleware de rotas privadas, provisionamento automático do professor no primeiro login (`modules/identity`, migration `0003`), logout no header. **Ativa só quando o fundador executar os passos de console** (`AUTHENTICATION.md`/`SUPABASE.md`); sem credenciais, modo demonstração intacto.
 - **CI/CD completo**: push na `main` → deploy automático na Vercel.
 
 Lista viva e mais detalhada: `STATUS.md` → "Funcionalidades prontas". Histórico entrega-a-entrega: `CHANGELOG.md`.
 
 ## 7. Funcionalidades pendentes
 
-- **Autenticação real** (Supabase) e conexão do banco — o núcleo de persistência existe (`modules/platform`), mas não há projeto Supabase/credenciais; a troca segue o checklist de `PERSISTENCE.md`. Hoje a UI roda em `localStorage`/simulado.
+- **Ativação da autenticação e do banco** — o código está completo (M07); faltam os passos de console do fundador: projeto Google Cloud (OAuth), projeto Supabase (migrations 0001–0003 + linha da Instituição) e variáveis na Vercel — roteiros em `AUTHENTICATION.md`/`SUPABASE.md`. Até lá, a UI roda em `localStorage`/simulado.
 - **Google Workspace real** (OAuth + Classroom API) — arquitetura pronta em `modules/integrations`, falta o projeto no Google Cloud Console (credenciais, verificação de escopos restritos); passo a passo em `GOOGLE_WORKSPACE.md`.
 - **Biblioteca**, **Projetos**, **Mentor IA**, **Agenda**, **Perfil**, **Laboratório** — itens da sidebar marcados "Em breve" e desabilitados (honestos, não clicáveis à toa).
 - **Modo Claro funcional** — tokens existem, sem alternância na interface.
@@ -132,6 +133,7 @@ Resumo das mais importantes (histórico completo com motivo/alternativas/impacto
 - **Motor de autoria: `Mission` decomposto em 10 entidades versionáveis** (D-022, `AUTHORING_MODEL.md`): achado concreto ao inspecionar a Missão 01 — Evidence/EvaluationCriteria hoje são strings soltas em `didacticMaterials`, chave de correção só em comentário de código. Decomposição é aditiva — a Missão 02 não precisa esperar por ela.
 - **Núcleo de persistência: Supabase/PostgreSQL sem Prisma, banco como stub até haver credenciais** (D-023, `PERSISTENCE.md`): multi-tenant por `institution_id` (contrato + query + futura RLS, nunca bancos separados); seeds de demonstração jamais persistidos (banco real nasce vazio); troca seed→banco acontece só na `repository-factory`.
 - **Google Classroom plugável, Import Wizard sem OAuth/banco** (D-024, `GOOGLE_CLASSROOM_INTEGRATION.md`): mappers isolam os tipos Google do resto; `ClassroomSyncService` compõe o `ImportService` (não duplica) e é genérico; Wizard e Turmas sobre dados simulados rotulados; entrega de Missão é só contrato. Não se fabricou seed com o nome do Colégio Beryon (instituição real) — a prontidão real depende de OAuth+banco.
+- **Autenticação: Auth.js v5 + Google, sessão JWT, allowlist fechada por padrão** (D-025, `AUTHENTICATION.md`): sem `AUTH_ALLOWED_EMAILS` ninguém entra; Instituição nunca criada automaticamente (inserida pelo responsável — `SUPABASE.md`); sem tabela de sessões (JWT); toda autenticação passa pelo contrato `AuthProvider` via `getAuthProvider()`.
 - **Base UI (não Radix)** por baixo do shadcn/ui: `render` no lugar de `asChild`; `DropdownMenuLabel` exige estar dentro de `Group`/`RadioGroup`.
 
 ## 9. Convenções adotadas
@@ -167,7 +169,7 @@ Nenhuma é obrigatória para o site subir — cada ausência apenas desliga a fu
 | `CONTACT_TO_EMAIL` / `CONTACT_FROM_EMAIL` | Destino/remetente via Resend | usa `contato@iaheducacional.com.br` / remetente de teste |
 | `NEXT_PUBLIC_WHATSAPP_NUMBER` | Botão de WhatsApp (componente pronto, não usado no fluxo atual) | botão não aparece |
 
-Reservadas para o futuro, ainda não usadas: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `OPENAI_API_KEY`, `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`/`GOOGLE_REDIRECT_URI` (detalhes em `GOOGLE_WORKSPACE.md`), credenciais de Canva.
+Já usadas pela autenticação/persistência quando definidas (M07 — ver `AUTHENTICATION.md`/`SUPABASE.md` e `app/.env.example`): `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_SECRET`, `AUTH_ALLOWED_EMAILS`, `AUTH_DEFAULT_INSTITUTION_SLUG`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`. Reservadas para o futuro, ainda não usadas: `OPENAI_API_KEY`, credenciais de Canva.
 
 Segredos existem **só** em `app/.env.local` (gitignored) e no painel da Vercel — nunca em código ou commit.
 

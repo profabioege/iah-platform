@@ -15,7 +15,7 @@ function sectionTitle(pathname: string): string {
   return "Dashboard";
 }
 
-export function AppHeader() {
+export function AppHeader({ actions }: { actions?: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
@@ -30,6 +30,7 @@ export function AppHeader() {
         >
           Ensino Médio &middot; 2026
         </Badge>
+        {actions}
         <AccessibilityMenu />
       </div>
     </header>

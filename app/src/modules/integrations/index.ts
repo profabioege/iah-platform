@@ -12,6 +12,19 @@ export type {
 } from "./auth/domain/auth-provider";
 export { mockAuthProvider } from "./auth/infrastructure/mock-auth-provider";
 export { googleAuthProvider } from "./auth/infrastructure/google-auth-provider";
+export { authJsAuthProvider } from "./auth/infrastructure/authjs-auth-provider";
+
+/**
+ * AuthProvider em uso: o real (Auth.js + Google) quando as credenciais
+ * existem, o simulado caso contrário. Toda autenticação passa por aqui.
+ */
+import { authJsAuthProvider } from "./auth/infrastructure/authjs-auth-provider";
+import { mockAuthProvider } from "./auth/infrastructure/mock-auth-provider";
+import type { AuthProvider } from "./auth/domain/auth-provider";
+
+export function getAuthProvider(): AuthProvider {
+  return authJsAuthProvider.isConfigured ? authJsAuthProvider : mockAuthProvider;
+}
 
 export type {
   ClassroomProvider,

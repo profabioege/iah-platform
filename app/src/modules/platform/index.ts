@@ -69,3 +69,7 @@ export {
   type RepositorySource,
 } from "./infrastructure/repository-factory";
 export { isDatabaseConfigured } from "./infrastructure/database/supabase-client";
+export {
+  getSupabaseAdminClient,
+  isAdminDatabaseConfigured,
+} from "./infrastructure/database/admin-client";

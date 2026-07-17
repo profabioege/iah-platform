@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 
+import { auth, signIn } from "@/auth";
+import { isAuthConfigured } from "@/lib/auth-flags";
 import { Logo } from "@/components/brand/logo";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -12,12 +15,19 @@ export const metadata: Metadata = {
 };
 
 /**
- * Entrada da Plataforma — abertura da experiência, com a marca IAH.
+ * Entrada da Plataforma.
  *
- * Fase 1 do MVP: sem autenticação (o acesso é direto). Quando a autenticação
- * entrar, o formulário nasce aqui, preservando esta identidade visual.
+ * Com autenticação configurada (docs/AUTHENTICATION.md): login com
+ * Google, sessão existente redireciona direto ao Dashboard. Sem
+ * configuração: acesso direto, como no modo demonstração de sempre.
  */
-export default function EntrarPage() {
+export default async function EntrarPage() {
+  const authEnabled = isAuthConfigured();
+  if (authEnabled) {
+    const session = await auth();
+    if (session?.user) redirect("/dashboard");
+  }
+
   return (
     <div className="dark relative flex min-h-svh flex-col items-center justify-center overflow-hidden bg-background px-6 text-foreground">
       {/* brilhos decorativos da marca */}
@@ -43,13 +53,31 @@ export default function EntrarPage() {
           </p>
         </div>
 
-        <Link
-          href="/dashboard"
-          className={cn(buttonVariants({ size: "lg" }), "w-full")}
-        >
-          Entrar na plataforma
-          <ArrowRight className="size-4" />
-        </Link>
+        {authEnabled ? (
+          <form
+            className="w-full"
+            action={async () => {
+              "use server";
+              await signIn("google", { redirectTo: "/dashboard" });
+            }}
+          >
+            <Button type="submit" size="lg" className="w-full">
+              Entrar com Google
+              <ArrowRight className="size-4" />
+            </Button>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Use sua conta Google institucional autorizada.
+            </p>
+          </form>
+        ) : (
+          <Link
+            href="/dashboard"
+            className={cn(buttonVariants({ size: "lg" }), "w-full")}
+          >
+            Entrar na plataforma
+            <ArrowRight className="size-4" />
+          </Link>
+        )}
       </main>
     </div>
   );
