@@ -2,6 +2,18 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 16/07/2026 — M06: Google Classroom + Import Wizard (sem OAuth, sem banco)
+
+Camada de integração com o Google Classroom, plugável. Sem autenticação OAuth e sem persistência ainda — dados simulados e rotulados. Nenhuma dependência nova instalada.
+
+- **Novo módulo `modules/integrations/google-classroom`** (subpastas types/dto/contracts/mappers/repositories/services/mock): entidades `GoogleClassroom`/`GoogleCourse`/`GoogleStudent`/`GoogleTeacher`/`GoogleAssignment`; `ClassroomService` (listar turmas/alunos/professores/atividades + fotografia completa); DTOs crus da Classroom API separados das entidades por mappers; `repositories/` como stub até haver OAuth; `mockClassroomService` com dados fictícios rotulados. Nada fora do módulo conhece tipos Google — a fronteira é o adapter para o contrato genérico `ImportProvider`.
+- **`ClassroomSyncService`** (em `modules/platform`, genérico — não conhece Google): compõe o `ImportService` (não duplica) e registra `ClassroomSyncState` — nova entidade (data da última sincronização, nº de alunos, nº de atividades, status) + migration `app/db/migrations/0002_classroom_sync_state.sql`.
+- **Import Wizard** (`/professor/importar`, 6 passos: Instituição → Conectar Google → Turmas → Alunos → Confirmação → Resumo) sobre dados simulados, com aviso explícito no topo e Resumo declarando que nada foi gravado (D-015). Fluxo percorrido ponta a ponta na validação.
+- **Painel do Professor — seção Turmas**: nome, ano letivo, nº de alunos, status de sincronização, última atualização e botão Visualizar (destino real). Lê do módulo `platform`; turmas sem sincronização aparecem como "Cadastro manual". Corrigida a concordância "1 atividade"/"1 aluno".
+- **Estrutura preparada, não implementada** (`modules/platform/domain/mission-delivery.ts`): contratos `MissionAssignment`/`MissionPublishingService`/`AssistedEvaluationService` para o fluxo Missão → turma → publicar → entregas → avaliação assistida (a IA sempre exige revisão do professor).
+- **Novo `docs/GOOGLE_CLASSROOM_INTEGRATION.md`**: arquitetura, fluxo, sincronização, importação, expansão futura. Sobre o Beryon: entregue a infraestrutura, sem fabricar seeds com o nome da escola real.
+- Validado: typecheck/lint/build limpos (17 rotas), wizard nos 6 passos, sem overflow mobile, console limpo. Ver `DECISIONS.md` D-024.
+
 ## 16/07/2026 — M04: Núcleo da Plataforma (persistência multi-tenant, sem tocar na UI)
 
 Sprint de arquitetura: código novo, zero mudança visual — nenhuma página, rota ou componente alterado; bundles idênticos aos do build anterior. Nenhuma dependência nova instalada.

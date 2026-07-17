@@ -103,5 +103,16 @@ export function createDatabaseRepositories(): PlatformRepositories {
         notConfigured("classroomIntegrations.listByInstitution");
       },
     },
+    classroomSyncStates: {
+      async listByInstitution() {
+        notConfigured("classroomSyncStates.listByInstitution");
+      },
+      async getByClassroom() {
+        notConfigured("classroomSyncStates.getByClassroom");
+      },
+      async save() {
+        notConfigured("classroomSyncStates.save");
+      },
+    },
   };
 }

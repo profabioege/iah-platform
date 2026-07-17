@@ -135,6 +135,34 @@ export interface ClassroomIntegration {
   lastSyncAt: string | null;
 }
 
+/** Situação da última sincronização de uma Turma com uma origem externa. */
+export type ClassroomSyncStatus =
+  | "never_synced"
+  | "synced"
+  | "out_of_date"
+  | "failed";
+
+/**
+ * Estado de sincronização de uma Turma com um provedor externo
+ * (docs/GOOGLE_CLASSROOM_INTEGRATION.md). Vive ao lado da Turma, não
+ * dentro dela: uma Turma criada manualmente simplesmente não tem este
+ * registro.
+ */
+export interface ClassroomSyncState {
+  id: string;
+  institutionId: string;
+  classroomId: string;
+  provider: IntegrationProviderId;
+  /** Id da turma na origem (ex.: courseId do Google Classroom). */
+  externalCourseId: string;
+  status: ClassroomSyncStatus;
+  lastSyncAt: string | null;
+  studentCount: number;
+  assignmentCount: number;
+  /** Mensagem do erro quando status === "failed". */
+  lastError: string | null;
+}
+
 /**
  * Indicadores — projeção agregada de uma Turma numa Missão.
  * NUNCA persistido (DOMAIN_MODEL.md): é sempre recalculado a partir

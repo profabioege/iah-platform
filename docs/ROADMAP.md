@@ -31,10 +31,11 @@ Este norte **substitui** o sequenciamento original de Sprints temáticas (Missõ
 | Fundação da Plataforma (multiescola) | `DOMAIN_MODEL.md` ganha `ClassroomIntegration`/`IntegrationProvider`/`Indicadores`; novo `IMPORT_ARCHITECTURE.md` (contrato `ImportProvider`, 5 provedores futuros: Manual/CSV/Google/Microsoft/Moodle, fluxo de revisão humana, reconciliação por e-mail). Só documentação — ver `DECISIONS.md` D-021 |
 | Sistema de Autoria | Novo `AUTHORING_MODEL.md`: decompõe `Mission` em 10 entidades (`MissionTemplate`, `MissionSection`, `Evidence`, `Challenge`, `EvaluationCriteria`, `ReflectionGuide`, `TeacherGuide`, `Competency`, `LearningObjective`, `DidacticMaterial`) com versionamento; identificou que Evidence/EvaluationCriteria hoje são strings soltas em `didacticMaterials` e a chave de correção só existe em comentário de código. Só documentação — ver `DECISIONS.md` D-022 |
 | M04 — Núcleo da Plataforma | Módulo `modules/platform` (12 entidades multi-tenant, contratos com `institutionId` obrigatório, seeds de demonstração em memória, stub de banco, factory), schema SQL versionado (`app/db/migrations/`), `ImportProvider` com 6 provedores (manual funcional + 5 stubs), `PERSISTENCE.md` (stack: Supabase/PostgreSQL sem Prisma). Zero mudança visual — ver `DECISIONS.md` D-023 |
+| M06 — Google Classroom + Import Wizard | Módulo `modules/integrations/google-classroom` plugável (real + mock, mappers isolando os tipos Google), `ClassroomSyncService` + `ClassroomSyncState` (migration `0002`), Import Wizard de 6 passos em `/professor/importar`, seção Turmas no Painel do Professor, contratos de entrega de Missão. Tudo sobre dados simulados rotulados, sem OAuth/banco — ver `DECISIONS.md` D-024 e `GOOGLE_CLASSROOM_INTEGRATION.md` |
 
 ## Sprint atual
 
-**Nenhuma em execução.** Última tarefa concluída: M04 — Núcleo da Plataforma (persistência multi-tenant preparada, UI intocada; ver `DECISIONS.md` D-023). Próxima Sprint planejada abaixo (Painel do Gestor), aguardando aprovação para implementar.
+**Nenhuma em execução.** Última tarefa concluída: M06 — Google Classroom + Import Wizard (infraestrutura de importação plugável, dados simulados; ver `DECISIONS.md` D-024). Próxima Sprint planejada abaixo (Painel do Gestor), aguardando aprovação para implementar.
 
 ## Sprint seguinte (recomendada) — Painel do Gestor (MVP Comercial)
 

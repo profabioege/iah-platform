@@ -16,6 +16,8 @@ export type {
   ClassIndicators,
   Classroom,
   ClassroomIntegration,
+  ClassroomSyncState,
+  ClassroomSyncStatus,
   Enrollment,
   Institution,
   IntegrationProviderId,
@@ -28,9 +30,17 @@ export type {
 } from "./domain/entities";
 
 export type {
+  AssistedEvaluationService,
+  AssistedEvaluationSuggestion,
+  MissionAssignment,
+  MissionPublishingService,
+} from "./domain/mission-delivery";
+
+export type {
   AcademicYearRepository,
   ClassroomIntegrationRepository,
   ClassroomRepository,
+  ClassroomSyncStateRepository,
   EnrollmentRepository,
   InstitutionRepository,
   MissionProgressRepository,
@@ -48,6 +58,10 @@ export {
   type ImportPreview,
   type ImportResult,
 } from "./services/import-service";
+export {
+  createClassroomSyncService,
+  type SyncResult,
+} from "./services/classroom-sync-service";
 
 export {
   createRepositories,

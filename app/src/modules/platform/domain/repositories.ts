@@ -15,6 +15,7 @@ import type {
   AcademicYear,
   Classroom,
   ClassroomIntegration,
+  ClassroomSyncState,
   Enrollment,
   Institution,
   MissionProgress,
@@ -98,6 +99,15 @@ export interface ClassroomIntegrationRepository {
   listByInstitution(institutionId: string): Promise<ClassroomIntegration[]>;
 }
 
+export interface ClassroomSyncStateRepository {
+  listByInstitution(institutionId: string): Promise<ClassroomSyncState[]>;
+  getByClassroom(
+    institutionId: string,
+    classroomId: string,
+  ): Promise<ClassroomSyncState | null>;
+  save(institutionId: string, state: ClassroomSyncState): Promise<void>;
+}
+
 /** Conjunto completo de repositórios — o que a factory entrega. */
 export interface PlatformRepositories {
   institutions: InstitutionRepository;
@@ -111,4 +121,5 @@ export interface PlatformRepositories {
   productions: ProductionRepository;
   reflections: ReflectionRepository;
   classroomIntegrations: ClassroomIntegrationRepository;
+  classroomSyncStates: ClassroomSyncStateRepository;
 }

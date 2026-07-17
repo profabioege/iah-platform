@@ -8,7 +8,11 @@ Projeto em **fase de preparação do piloto comercial de agosto/2026**, com um f
 
 ## Último commit
 
-`bd6b354` (anterior a esta tarefa) — *docs: Sistema de Autoria — motor de autoria de Missões decomposto em 10 entidades* (16/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com M04 — Núcleo da Plataforma (persistência multi-tenant) — ver "Ciclo 2 — Núcleo da Plataforma" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+`aa11440` (anterior a esta tarefa) — *feat(platform): M04 — Núcleo da Plataforma: persistência multi-tenant preparada, UI intocada* (16/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com M06 — Google Classroom + Import Wizard — ver "Ciclo 2 — Google Classroom" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+
+## Ciclo 2 — Google Classroom + Import Wizard (16/07/2026)
+
+Camada de integração com o Google Classroom, plugável, **sem OAuth e sem banco** ainda. Novo módulo `modules/integrations/google-classroom` (types/dto/contracts/mappers/repositories/services/mock) que adapta o Google ao contrato genérico `ImportProvider` — nada fora dele conhece tipos Google. `ClassroomService` real pronto (camada de dados `repositories/` é stub até haver credenciais); `mockClassroomService` fornece dados simulados rotulados. `ClassroomSyncService` (genérico, em `modules/platform`) compõe o `ImportService` e registra `ClassroomSyncState` (nova entidade + migration `0002`). **Import Wizard** em `/professor/importar` (6 passos: Instituição → Conectar Google → Turmas → Alunos → Confirmação → Resumo) sobre dados simulados, com aviso explícito e Resumo declarando que nada foi gravado. Painel do Professor ganhou seção **Turmas** (nome, ano, nº de alunos, status de sincronização, última atualização, botão Visualizar), lendo do módulo `platform`. Contratos de entrega de Missão (`mission-delivery.ts`) criados como arquitetura, sem implementação. Sobre o piloto Beryon: entregue a infraestrutura, não seeds com o nome da escola real (ver `GOOGLE_CLASSROOM_INTEGRATION.md`, D-024). Validado: typecheck/lint/build limpos, wizard percorrido nos 6 passos, sem overflow mobile, console limpo.
 
 ## Ciclo 2 — Núcleo da Plataforma (16/07/2026)
 
@@ -59,6 +63,7 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 - Fluxo de demonstração revisado ponta a ponta: continuidade Landing → Entrar → Dashboard → Missão → Produção → Reflexão → Diário → Painel do Professor sem telas brancas (skeletons em `MissionWorkspace` e `DiarioList`), header com título de seção consistente em todas as rotas, e Landing com copy comercial focada em benefício para gestores.
 - Infraestrutura de integração Google Workspace (`modules/integrations`): contratos `AuthProvider`/`ClassroomProvider` com implementação simulada; card "Integrações" no Painel do Professor. Nenhuma credencial real, nenhuma chamada externa — ver `GOOGLE_WORKSPACE.md`.
 - Núcleo de persistência multi-tenant (`modules/platform`): entidades, contratos, seeds de demonstração, stub de banco e factory — pronto para a troca futura sem alterar UI; schema SQL versionado em `app/db/migrations/`. Ver `PERSISTENCE.md`.
+- Integração Google Classroom (`modules/integrations/google-classroom`): módulo plugável (real + mock), `ClassroomSyncService`, Import Wizard (`/professor/importar`) e seção Turmas no Painel do Professor — tudo sobre dados simulados rotulados, sem OAuth/banco. Ver `GOOGLE_CLASSROOM_INTEGRATION.md`.
 
 ## Funcionalidades em andamento / lacunas conhecidas
 
@@ -69,7 +74,7 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 
 ## Próxima tarefa
 
-Painel do Gestor (MVP Comercial) segue como próxima Sprint planejada (`ROADMAP.md`), aguardando aprovação para implementar — agora com base concreta: `computeClassIndicators` (módulo `platform`) já calcula adesão/progresso agregado sobre os seeds. Em paralelo, seguem pendentes: decidir a meta real da demonstração (15 ou 20 minutos), rodar o ensaio humano cronometrado (`ROTEIRO-DEMONSTRACAO.md`), e — quando o piloto exigir dados reais — executar o checklist Mock → Banco Real de `PERSISTENCE.md` (começa por criar o projeto Supabase).
+Para o piloto Beryon sair do simulado para o real, o caminho crítico é o "Expansão futura" de `GOOGLE_CLASSROOM_INTEGRATION.md`: criar o projeto Google Cloud + OAuth (`GOOGLE_WORKSPACE.md`), implementar o `google-classroom-repository` (hoje stub) e conectar o banco (checklist de `PERSISTENCE.md`). Em paralelo seguem pendentes, sem dependência de infraestrutura: Painel do Gestor (planejado no `ROADMAP.md`, com `computeClassIndicators` pronto), decidir a meta da demonstração (15 ou 20 min) e rodar o ensaio humano cronometrado (`ROTEIRO-DEMONSTRACAO.md`).
 
 ## Riscos conhecidos
 

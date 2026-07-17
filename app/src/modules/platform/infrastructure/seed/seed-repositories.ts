@@ -9,6 +9,7 @@
 
 import type {
   ClassroomIntegration,
+  ClassroomSyncState,
   Enrollment,
   MissionProgress,
   Production,
@@ -37,6 +38,7 @@ export function createSeedRepositories(): PlatformRepositories {
   const productions: Production[] = [];
   const reflections: Reflection[] = [];
   const integrations: ClassroomIntegration[] = [];
+  const syncStates: ClassroomSyncState[] = [];
 
   return {
     institutions: {
@@ -172,6 +174,26 @@ export function createSeedRepositories(): PlatformRepositories {
     classroomIntegrations: {
       async listByInstitution(institutionId) {
         return integrations.filter((i) => i.institutionId === institutionId);
+      },
+    },
+    classroomSyncStates: {
+      async listByInstitution(institutionId) {
+        return syncStates.filter((s) => s.institutionId === institutionId);
+      },
+      async getByClassroom(institutionId, classroomId) {
+        return (
+          syncStates.find(
+            (s) =>
+              s.institutionId === institutionId && s.classroomId === classroomId,
+          ) ?? null
+        );
+      },
+      async save(institutionId, state) {
+        const index = syncStates.findIndex(
+          (s) => s.institutionId === institutionId && s.id === state.id,
+        );
+        if (index >= 0) syncStates[index] = { ...state, institutionId };
+        else syncStates.push({ ...state, institutionId });
       },
     },
   };

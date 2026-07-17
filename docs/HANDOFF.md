@@ -32,7 +32,7 @@ Estado minuto-a-minuto (último commit, último deploy, lacunas, riscos, próxim
 Aplicação **Next.js 15 (App Router)** com servidor (Node/Vercel), route groups separando os dois blocos sem afetar a URL:
 
 - `(marketing)` — bloco público. `/` (Landing), `/demonstracao` (funil de conversão principal), `/contato` (formulário legado, sem links apontando para ele), `/api/contato` (Route Handler de envio de e-mail).
-- `(platform)` — sistema de ensino. `/entrar` (abertura, fica fora dos dois grupos), `/dashboard`, `/missoes`, `/missoes/[id]`, `/diario`, `/professor`. É aqui que a futura autenticação entra, no layout do grupo.
+- `(platform)` — sistema de ensino. `/entrar` (abertura, fica fora dos dois grupos), `/dashboard`, `/missoes`, `/missoes/[id]`, `/diario`, `/professor`, `/professor/importar` (Import Wizard). É aqui que a futura autenticação entra, no layout do grupo.
 - Raiz compartilhada (`src/app/layout.tsx`) — só `<html>`, fontes, metadata base.
 
 Domínio da aplicação vive em `src/modules/*`, um diretório por contexto, cada um com `domain/` (entidades + contratos, sem UI/banco) separado de `infrastructure/` (implementação atual — hoje local/simulada). Trocar a fonte de dados por um banco é trocar a injeção, nunca a UI.
@@ -94,7 +94,8 @@ IAH - Educacional/
 - **Reflexão + Diário do Auditor** (`/diario`): liberada após a entrega da produção; unificada num único registro (`MissionWorkspace`) para não sobrescrever produção/reflexão.
 - **Painel do Professor** (`/professor`): 8 estados, contadores-filtro, último acesso, abertura de produção/reflexão por aluno (turma simulada); card "Integrações" (Google Workspace — não configurado).
 - **Infraestrutura Google Workspace** (`modules/integrations`): contratos `AuthProvider`/`ClassroomProvider`, implementação simulada em uso, stub do provedor Google (sem chamada de rede). Ver `GOOGLE_WORKSPACE.md`.
-- **Núcleo de persistência multi-tenant** (`modules/platform`, M04): 12 entidades com `institutionId`, contratos de repositório, seeds de demonstração em memória, stub de banco (Supabase/PostgreSQL), factory de troca, `ImportProvider` com 6 provedores; schema SQL em `app/db/migrations/`. **Nenhuma página consome ainda** — UI segue em localStorage/turma simulada. Ver `PERSISTENCE.md`.
+- **Núcleo de persistência multi-tenant** (`modules/platform`, M04): 12 entidades com `institutionId`, contratos de repositório, seeds de demonstração em memória, stub de banco (Supabase/PostgreSQL), factory de troca, `ImportProvider` com 6 provedores; schema SQL em `app/db/migrations/`. Consumido pela seção Turmas do Painel do Professor (via seeds); demais telas seguem em localStorage/turma simulada. Ver `PERSISTENCE.md`.
+- **Integração Google Classroom** (`modules/integrations/google-classroom`, M06): módulo plugável (real + mock), `ClassroomSyncService`/`ClassroomSyncState`, Import Wizard em `/professor/importar` (6 passos), seção Turmas no Painel do Professor, contratos de entrega de Missão. Sem OAuth/banco — dados simulados rotulados. Ver `GOOGLE_CLASSROOM_INTEGRATION.md`.
 - **CI/CD completo**: push na `main` → deploy automático na Vercel.
 
 Lista viva e mais detalhada: `STATUS.md` → "Funcionalidades prontas". Histórico entrega-a-entrega: `CHANGELOG.md`.
@@ -130,6 +131,7 @@ Resumo das mais importantes (histórico completo com motivo/alternativas/impacto
 - **`ClassroomIntegration`/`IntegrationProvider`/`Indicadores` + `IMPORT_ARCHITECTURE.md`** (D-021): camada de importação formal (contrato `ImportProvider`, 5 provedores futuros previstos), documento dedicado por volume próprio de conteúdo. `MASTER.md` não foi criado — não existe no projeto e `HANDOFF.md` já cumpre esse papel.
 - **Motor de autoria: `Mission` decomposto em 10 entidades versionáveis** (D-022, `AUTHORING_MODEL.md`): achado concreto ao inspecionar a Missão 01 — Evidence/EvaluationCriteria hoje são strings soltas em `didacticMaterials`, chave de correção só em comentário de código. Decomposição é aditiva — a Missão 02 não precisa esperar por ela.
 - **Núcleo de persistência: Supabase/PostgreSQL sem Prisma, banco como stub até haver credenciais** (D-023, `PERSISTENCE.md`): multi-tenant por `institution_id` (contrato + query + futura RLS, nunca bancos separados); seeds de demonstração jamais persistidos (banco real nasce vazio); troca seed→banco acontece só na `repository-factory`.
+- **Google Classroom plugável, Import Wizard sem OAuth/banco** (D-024, `GOOGLE_CLASSROOM_INTEGRATION.md`): mappers isolam os tipos Google do resto; `ClassroomSyncService` compõe o `ImportService` (não duplica) e é genérico; Wizard e Turmas sobre dados simulados rotulados; entrega de Missão é só contrato. Não se fabricou seed com o nome do Colégio Beryon (instituição real) — a prontidão real depende de OAuth+banco.
 - **Base UI (não Radix)** por baixo do shadcn/ui: `render` no lugar de `asChild`; `DropdownMenuLabel` exige estar dentro de `Group`/`RadioGroup`.
 
 ## 9. Convenções adotadas

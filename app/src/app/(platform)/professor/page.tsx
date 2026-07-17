@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { simulatedClassMonitor } from "@/modules/classroom";
 import { localMissionRepository } from "@/modules/library";
 import { isGoogleWorkspaceConfigured } from "@/modules/integrations";
+import { getDefaultRepositories } from "@/modules/platform";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,8 +14,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 import { ClassPanel } from "./class-panel";
+import { ClassroomsSection, type ClassroomRow } from "./classrooms-section";
+
+/** Instituição do contexto — fixa até existir autenticação real. */
+const INSTITUTION_ID = "inst-demo";
 
 export const metadata: Metadata = {
   title: "Painel do Professor",
@@ -34,6 +42,7 @@ export default async function ProfessorPage() {
     ? await simulatedClassMonitor.listByMission(mission.id)
     : [];
   const googleConfigured = isGoogleWorkspaceConfigured();
+  const classrooms = await listClassroomRows();
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
@@ -56,7 +65,11 @@ export default async function ProfessorPage() {
         ) : null}
       </header>
 
-      <ClassPanel students={students} />
+      <ClassroomsSection classrooms={classrooms} />
+
+      <section id="acompanhamento" className="scroll-mt-20">
+        <ClassPanel students={students} />
+      </section>
 
       <Card>
         <CardHeader>
@@ -65,7 +78,7 @@ export default async function ProfessorPage() {
             Provedores externos conectados a este Painel.
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col gap-2">
+        <CardContent className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <span className="text-base" aria-hidden="true">
@@ -81,8 +94,47 @@ export default async function ProfessorPage() {
             Infraestrutura preparada. Configure OAuth quando o projeto Google
             Cloud estiver disponível.
           </p>
+          <Link
+            href="/professor/importar"
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "w-fit")}
+          >
+            Importar turmas do Google Classroom
+          </Link>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+/**
+ * Turmas da instituição + estado de sincronização, lidas do módulo
+ * platform (hoje servido pelos seeds de demonstração; a troca para banco
+ * é uma mudança de factory — ver docs/PERSISTENCE.md).
+ */
+async function listClassroomRows(): Promise<ClassroomRow[]> {
+  const repositories = getDefaultRepositories();
+  const [classrooms, academicYears, syncStates] = await Promise.all([
+    repositories.classrooms.listByInstitution(INSTITUTION_ID),
+    repositories.academicYears.listByInstitution(INSTITUTION_ID),
+    repositories.classroomSyncStates.listByInstitution(INSTITUTION_ID),
+  ]);
+
+  return Promise.all(
+    classrooms.map(async (classroom) => {
+      const enrollments = await repositories.enrollments.listByClassroom(
+        INSTITUTION_ID,
+        classroom.id,
+      );
+      return {
+        id: classroom.id,
+        name: classroom.name,
+        academicYear:
+          academicYears.find((year) => year.id === classroom.academicYearId)
+            ?.label ?? "—",
+        studentCount: enrollments.length,
+        sync:
+          syncStates.find((state) => state.classroomId === classroom.id) ?? null,
+      };
+    }),
   );
 }
