@@ -30,10 +30,11 @@ Este norte **substitui** o sequenciamento original de Sprints temáticas (Missõ
 | Modelo Institucional (Domain Model) | `DOMAIN_MODEL.md` consolidado como modelo conceitual único (Identidade, Instituição, Currículo, Aprendizagem, Integrações, Colaboração, Acervo, Operação), nova entidade `Ano Letivo`, fluxo Instituição→Professor→Turma→Aluno→Missão, origens de dados futuras (manual/CSV/Google/Microsoft). Só documentação — ver `DECISIONS.md` D-020 |
 | Fundação da Plataforma (multiescola) | `DOMAIN_MODEL.md` ganha `ClassroomIntegration`/`IntegrationProvider`/`Indicadores`; novo `IMPORT_ARCHITECTURE.md` (contrato `ImportProvider`, 5 provedores futuros: Manual/CSV/Google/Microsoft/Moodle, fluxo de revisão humana, reconciliação por e-mail). Só documentação — ver `DECISIONS.md` D-021 |
 | Sistema de Autoria | Novo `AUTHORING_MODEL.md`: decompõe `Mission` em 10 entidades (`MissionTemplate`, `MissionSection`, `Evidence`, `Challenge`, `EvaluationCriteria`, `ReflectionGuide`, `TeacherGuide`, `Competency`, `LearningObjective`, `DidacticMaterial`) com versionamento; identificou que Evidence/EvaluationCriteria hoje são strings soltas em `didacticMaterials` e a chave de correção só existe em comentário de código. Só documentação — ver `DECISIONS.md` D-022 |
+| M04 — Núcleo da Plataforma | Módulo `modules/platform` (12 entidades multi-tenant, contratos com `institutionId` obrigatório, seeds de demonstração em memória, stub de banco, factory), schema SQL versionado (`app/db/migrations/`), `ImportProvider` com 6 provedores (manual funcional + 5 stubs), `PERSISTENCE.md` (stack: Supabase/PostgreSQL sem Prisma). Zero mudança visual — ver `DECISIONS.md` D-023 |
 
 ## Sprint atual
 
-**Nenhuma em execução.** Última tarefa concluída: Sistema de Autoria — `AUTHORING_MODEL.md`, motor de autoria de Missões decomposto em 10 entidades versionáveis (ver `DECISIONS.md` D-022) — só documentação, nenhum código/UI alterado. Próxima Sprint planejada abaixo (Painel do Gestor), aguardando aprovação para implementar.
+**Nenhuma em execução.** Última tarefa concluída: M04 — Núcleo da Plataforma (persistência multi-tenant preparada, UI intocada; ver `DECISIONS.md` D-023). Próxima Sprint planejada abaixo (Painel do Gestor), aguardando aprovação para implementar.
 
 ## Sprint seguinte (recomendada) — Painel do Gestor (MVP Comercial)
 
@@ -82,7 +83,7 @@ Prioridade **decrescente** — cada item exige plano de implementação explíci
 
 1. **Biblioteca** — acervo de Material Didático navegável, ligado às Missões.
 2. **Autenticação real** — Supabase; login por papel (aluno/professor/gestor), seguindo os contextos Identidade & Acesso definidos em `DOMAIN_MODEL.md` (Usuário + Perfil, não herança rígida); acesso dos Painéis restrito à turma/escola real.
-3. **Persistência em banco** — substituir `local-student-work-store` e `simulated-class-monitor` por implementações reais dos mesmos contratos (`StudentWork`, `ClassMonitorReader`), sem mudar UI; modelar `Instituição`/`Ano Letivo`/`Turma`/`Matrícula` conforme `DOMAIN_MODEL.md`.
+3. **Persistência em banco** — o núcleo já existe (`modules/platform`, M04): executar o checklist Mock → Banco Real de `PERSISTENCE.md` (projeto Supabase → migrations → implementar os stubs de `database-repositories.ts` → RLS → migrar páginas → aposentar `local-student-work-store`/`simulated-class-monitor`), sem mudar UI.
 4. **Segunda Missão** — validar que "cadastrar arquivo de conteúdo" realmente escala sem tocar em interface; pode nascer no formato `Mission` plano de hoje, sem esperar pelo motor de autoria decomposto (`AUTHORING_MODEL.md`) — a decomposição é aditiva, não bloqueante.
 5. **Diário do Auditor — privacidade** — controle explícito de compartilhamento professor/gestor↔aluno (hoje toda reflexão salva é visível a ambos os painéis simulados).
 6. **Projetos** — produção autoral maior, individual ou em grupo.

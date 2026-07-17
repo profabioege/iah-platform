@@ -8,7 +8,11 @@ Projeto em **fase de preparação do piloto comercial de agosto/2026**, com um f
 
 ## Último commit
 
-`8dfe815` (anterior a esta tarefa) — *docs: Fundação da Plataforma — ClassroomIntegration/IntegrationProvider/Indicadores + arquitetura de importação* (16/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com o Sistema de Autoria (`AUTHORING_MODEL.md`) — ver "Ciclo 2 — Sistema de Autoria" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+`bd6b354` (anterior a esta tarefa) — *docs: Sistema de Autoria — motor de autoria de Missões decomposto em 10 entidades* (16/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com M04 — Núcleo da Plataforma (persistência multi-tenant) — ver "Ciclo 2 — Núcleo da Plataforma" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+
+## Ciclo 2 — Núcleo da Plataforma (16/07/2026)
+
+Sprint de arquitetura, zero mudança visual (bundles idênticos — nenhuma página importa o módulo novo). Novo módulo `modules/platform`: 12 entidades multi-tenant (toda operacional com `institutionId`), contratos de repositório que exigem `institutionId` em todo método, `SeedRepositories` funcionais em memória, `DatabaseRepositories` como stub (padrão D-019 — sem credenciais, sem query especulativa), factory como único ponto de troca. Stack decidida: **Supabase/PostgreSQL, sem Prisma** (`PERSISTENCE.md`). Schema versionado em `app/db/migrations/0001_initial_schema.sql` (11 tabelas, sem nenhum INSERT — banco real nasce vazio). Seeds de demonstração desacoplados em `modules/platform/seeds/` (nunca persistidos). `ImportProvider` implementado em `modules/integrations/import` (manual funcional + 5 stubs), com `ImportService` responsável pela gravação após revisão humana. A UI continua 100% nos stores atuais (localStorage + turma simulada) — a troca futura segue o checklist de 7 passos em `PERSISTENCE.md`. Ver `DECISIONS.md` D-023.
 
 ## Ciclo 2 — Sistema de Autoria (16/07/2026)
 
@@ -54,6 +58,7 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 - CI/CD completo (Git → GitHub → Vercel).
 - Fluxo de demonstração revisado ponta a ponta: continuidade Landing → Entrar → Dashboard → Missão → Produção → Reflexão → Diário → Painel do Professor sem telas brancas (skeletons em `MissionWorkspace` e `DiarioList`), header com título de seção consistente em todas as rotas, e Landing com copy comercial focada em benefício para gestores.
 - Infraestrutura de integração Google Workspace (`modules/integrations`): contratos `AuthProvider`/`ClassroomProvider` com implementação simulada; card "Integrações" no Painel do Professor. Nenhuma credencial real, nenhuma chamada externa — ver `GOOGLE_WORKSPACE.md`.
+- Núcleo de persistência multi-tenant (`modules/platform`): entidades, contratos, seeds de demonstração, stub de banco e factory — pronto para a troca futura sem alterar UI; schema SQL versionado em `app/db/migrations/`. Ver `PERSISTENCE.md`.
 
 ## Funcionalidades em andamento / lacunas conhecidas
 
@@ -64,7 +69,7 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 
 ## Próxima tarefa
 
-Painel do Gestor (MVP Comercial) segue como próxima Sprint planejada (`ROADMAP.md`), aguardando aprovação para implementar — agora com `DOMAIN_MODEL.md` (entidade `Indicadores` já modelada) como referência direta. Em paralelo, seguem pendentes: decidir a meta real da demonstração (15 ou 20 minutos), rodar o ensaio humano cronometrado (`ROTEIRO-DEMONSTRACAO.md`), e decidir se/quando a Segunda Missão usa o `Mission` plano de hoje ou já nasce no formato decomposto de `AUTHORING_MODEL.md`.
+Painel do Gestor (MVP Comercial) segue como próxima Sprint planejada (`ROADMAP.md`), aguardando aprovação para implementar — agora com base concreta: `computeClassIndicators` (módulo `platform`) já calcula adesão/progresso agregado sobre os seeds. Em paralelo, seguem pendentes: decidir a meta real da demonstração (15 ou 20 minutos), rodar o ensaio humano cronometrado (`ROTEIRO-DEMONSTRACAO.md`), e — quando o piloto exigir dados reais — executar o checklist Mock → Banco Real de `PERSISTENCE.md` (começa por criar o projeto Supabase).
 
 ## Riscos conhecidos
 

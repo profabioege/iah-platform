@@ -1,6 +1,8 @@
 # Arquitetura de Importação — IAH Educacional
 
-Como cada origem de dados de Turma/Aluno (cadastro manual, CSV, Google Classroom, Microsoft Teams, Moodle) alimenta **exatamente o mesmo modelo interno** descrito em [DOMAIN_MODEL.md](DOMAIN_MODEL.md). Documento conceitual — não define banco, SQL nem tipos de código; é o contrato que qualquer implementação futura deve cumprir. Nenhum código, UI, página ou rota foi alterado para produzir este documento.
+Como cada origem de dados de Turma/Aluno (cadastro manual, CSV, Google Classroom, Microsoft Teams, Moodle, API genérica) alimenta **exatamente o mesmo modelo interno** descrito em [DOMAIN_MODEL.md](DOMAIN_MODEL.md).
+
+> **Atualização (Sprint Núcleo da Plataforma, D-023):** o contrato descrito aqui foi implementado em código — `app/src/modules/integrations/import/` (contrato + 6 provedores: manual funcional, 5 stubs) e `app/src/modules/platform/services/import-service.ts` (quem grava). Com uma melhoria sobre a versão original deste documento: **o provider é estritamente só-leitura** (`listClassrooms`/`listStudents`); a gravação (`importClassroom`) saiu do provider e virou responsabilidade do `ImportService` — um provedor de origem externa não deve ter poder de escrita no modelo interno. As seções abaixo refletem o contrato vigente.
 
 ## Visão geral
 
@@ -8,48 +10,53 @@ O IAH será usado por escolas que já têm seus alunos e turmas cadastrados em o
 
 Isso já é a mesma filosofia aplicada em D-019 (`modules/integrations`, `ClassroomProvider`) — este documento generaliza esse contrato para origens que não são uma API OAuth (CSV, cadastro manual), e nomeia formalmente a família completa de provedores previstos.
 
-## O contrato `ImportProvider`
+## O contrato `ImportProvider` (implementado em `modules/integrations/import`)
 
 ```
-ImportProvider
-├─ id: "manual" | "csv" | "google" | "microsoft" | "moodle"
+ImportProvider (só-leitura)
+├─ id: "manual" | "csv" | "google" | "microsoft" | "moodle" | "api"
 ├─ isConfigured: boolean
 ├─ listClassrooms(): Promise<ImportedClassroom[]>
-├─ listStudents(classroomId): Promise<ImportedStudent[]>
-└─ importClassroom(classroomId): Promise<ImportResult>
+└─ listStudents(externalClassroomId): Promise<ImportedStudent[]>
+
+ImportService (modules/platform — quem grava)
+├─ previewClassroom(provider, institutionId, externalClassroomId)
+│    → candidatos + reconciliação por e-mail já indicada
+└─ importClassroom(provider, institutionId, academicYearId, externalClassroomId)
+     → grava Turma/Aluno/Matrícula via contratos de repositório
+       (chamado SÓ depois da revisão humana)
 ```
 
 - `listClassrooms()` — devolve as turmas candidatas encontradas na origem (ex.: cursos do Google Classroom, abas de uma planilha, turmas de um Moodle).
-- `listStudents(classroomId)` — devolve os alunos candidatos de uma turma específica.
-- `importClassroom(classroomId)` — converte os candidatos em `Turma`/`Aluno`/`Matrícula` internos, **depois de revisão humana** (ver "Fluxo de importação" abaixo) — nunca grava silenciosamente.
+- `listStudents(externalClassroomId)` — devolve os alunos candidatos de uma turma específica.
+- **O provider nunca grava.** Converter candidatos em `Turma`/`Aluno`/`Matrícula` internos é papel do `ImportService`, **depois de revisão humana** (ver "Fluxo de importação" abaixo) — nunca silenciosamente.
 - `ImportedClassroom`/`ImportedStudent` são tipos de fronteira (dados crus da origem, ainda não confirmados) — não são `Turma`/`Aluno` internos; só viram isso depois do passo de revisão.
 
 ### Relação com `ClassroomProvider` (já existe em código)
 
 `modules/integrations/classroom/domain/classroom-provider.ts` (D-019) já define `listCourses()`/`listStudents()`/`publishMission()`, hoje usado só para o caso Google (mock + stub). `ImportProvider` é a generalização desse mesmo formato para incluir origens que não têm API (CSV, manual) e adiciona o passo explícito de confirmação (`importClassroom`) que `ClassroomProvider` ainda não tem, porque hoje ele não persiste nada. Quando a persistência existir (`ROADMAP.md`, item 3), o caminho natural é: `ClassroomProvider` passa a ser a especialização de `ImportProvider` usada pelos provedores com API (Google, Microsoft), enquanto `ManualImportProvider`/`CSVImportProvider` implementam `ImportProvider` diretamente, sem API. Nenhuma mudança é necessária no que já existe — é extensão, não substituição.
 
-## As 5 implementações futuras
+## As 6 implementações (`modules/integrations/import/infrastructure/import-providers.ts`)
 
 | Implementação | Como preenche o modelo interno | Situação hoje |
 |---|---|---|
-| **`ManualImportProvider`** | `listClassrooms()`/`listStudents()` não fazem sentido (não há "origem" a listar) — a Escola/Professor preenche um formulário na Plataforma que chama `importClassroom` diretamente com os dados digitados. | Não implementado (depende de banco) |
-| **`CSVImportProvider`** | Lê um arquivo CSV enviado (colunas: nome da turma, nome do aluno, e-mail); `listClassrooms()` agrupa linhas por turma; `listStudents()` lista as linhas de uma turma; `importClassroom()` grava após revisão. | Não implementado |
-| **`GoogleClassroomProvider`** | Usa a Google Classroom API (`classroom.courses.readonly`, `classroom.rosters.readonly`) — ver `GOOGLE_WORKSPACE.md`. `listClassrooms()` → `courses.list`; `listStudents()` → `courses.students.list`. | Contrato equivalente já existe como `ClassroomProvider` (mock funcional, stub Google sem chamada de rede) |
-| **`MicrosoftTeamsProvider`** | Usa a Microsoft Graph API (Education/Teams for Education) para listar turmas (`classes`) e membros. Mesmo formato de saída (`ImportedClassroom`/`ImportedStudent`). | Não implementado — nenhuma credencial, nenhum SDK instalado |
-| **`MoodleProvider`** | Usa a Moodle Web Services API (função `core_enrol_get_users_courses` + `core_enrol_get_enrolled_users`, tipicamente) para listar cursos/turmas e alunos matriculados. | Não implementado — nenhuma credencial, nenhum SDK instalado |
-
-Nenhuma dessas 5 implementações foi criada nesta Sprint — só o contrato (`ImportProvider`) e este documento. Cada uma, quando implementada, é um novo arquivo em `infrastructure/`, seguindo o mesmo padrão de `mock-classroom-provider.ts`/`google-classroom-provider.ts` já existentes.
+| **`ManualImportProvider`** | A "origem" são os dados digitados no ato: o provedor é criado já com as turmas/alunos do formulário (`createManualImportProvider`) e apenas os devolve — o `ImportService` grava, como para qualquer origem. | **Funcional** (não precisa de credencial; a UI de cadastro que o alimenta depende de banco) |
+| **`CSVImportProvider`** | Lê um arquivo CSV enviado (colunas: nome da turma, nome do aluno, e-mail); `listClassrooms()` agrupa linhas por turma; `listStudents()` lista as linhas de uma turma. | Stub (parser real pendente) |
+| **`GoogleClassroomProvider`** | Usa a Google Classroom API (`classroom.courses.readonly`, `classroom.rosters.readonly`) — ver `GOOGLE_WORKSPACE.md`. `listClassrooms()` → `courses.list`; `listStudents()` → `courses.students.list`. | Stub (credenciais pendentes; convive com o `ClassroomProvider` de D-019) |
+| **`MicrosoftTeamsProvider`** | Usa a Microsoft Graph API (Education/Teams for Education) para listar turmas (`classes`) e membros. | Stub — nenhuma credencial, nenhum SDK instalado |
+| **`MoodleProvider`** | Usa a Moodle Web Services API (`core_enrol_get_users_courses` + `core_enrol_get_enrolled_users`, tipicamente) para listar cursos/turmas e alunos matriculados. | Stub — nenhuma credencial, nenhum SDK instalado |
+| **`APIProvider`** | Origem genérica via API REST configurável (para sistemas escolares próprios que exponham turmas/alunos em JSON). | Stub — formato do endpoint a definir quando houver um caso real |
 
 ## Fluxo de importação (qualquer origem)
 
 ```
-Origem externa                ImportProvider                 Plataforma (revisão humana)         Modelo interno
-───────────────               ──────────────                 ─────────────────────────────       ──────────────
+Origem externa                ImportProvider (só-leitura)    Plataforma (revisão humana)         ImportService → Modelo interno
+───────────────               ───────────────────────────    ─────────────────────────────       ──────────────────────────────
 Planilha / API / formulário → listClassrooms()             → tela: "Turmas encontradas: 3"
                              → listStudents(classroomId)    → tela: "12 alunos — confirmar?"
                                                                (Professor/Admin revisa, corrige,
                                                                 resolve conflitos de nome/e-mail)
-                             → importClassroom(classroomId) → grava, só após confirmação        → Turma, Aluno, Matrícula
+                                                            → confirmação → importClassroom()   → Turma, Aluno, Matrícula
 ```
 
 **Regra central: nenhuma importação é automática e silenciosa.** Toda origem passa por uma tela de revisão antes de gravar — mesmo o Google Classroom, mesmo com OAuth já configurado. Isso é coerente com D-015 (dados simulados sempre identificados, nunca silenciosos) e evita que um CSV malformado ou uma sincronização do Classroom crie 40 alunos fantasmas sem ninguém perceber.

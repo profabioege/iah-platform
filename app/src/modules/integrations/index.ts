@@ -21,4 +21,19 @@ export type {
 export { mockClassroomProvider } from "./classroom/infrastructure/mock-classroom-provider";
 export { googleClassroomProvider } from "./classroom/infrastructure/google-classroom-provider";
 
+export type {
+  ImportProvider,
+  ImportProviderId,
+  ImportedClassroom,
+  ImportedStudent,
+} from "./import/domain/import-provider";
+export {
+  apiImportProvider,
+  createManualImportProvider,
+  csvImportProvider,
+  googleClassroomImportProvider,
+  microsoftTeamsImportProvider,
+  moodleImportProvider,
+} from "./import/infrastructure/import-providers";
+
 export { isGoogleWorkspaceConfigured } from "./config";

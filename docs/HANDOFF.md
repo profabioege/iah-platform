@@ -2,7 +2,7 @@
 
 Documento único de transição de contexto. Escrito para que uma nova conversa (ou uma nova pessoa) retome o projeto sem precisar reconstruir nada do histórico. Se este documento divergir do código, o código manda — mas a divergência deve ser corrigida aqui.
 
-Para o dia a dia, os documentos vivos continuam sendo `VISION.md`, `PRODUCT.md`, `ROADMAP.md`, `STATUS.md` e `DECISIONS.md` (`CHANGELOG.md` para o histórico entrega-a-entrega). Este HANDOFF é o resumo de entrada única; aqueles são a fonte de verdade contínua. `DOMAIN_MODEL.md` é a referência técnica complementar para o modelo institucional completo (entidades, relacionamentos, fluxo); `IMPORT_ARCHITECTURE.md` complementa com o contrato de importação de Turma/Aluno de qualquer origem externa; `AUTHORING_MODEL.md` complementa com o motor de autoria de Missões (versionamento, decomposição do `Mission` de hoje) — consultar os três antes de qualquer Sprint que envolva Instituição/Turma/Aluno/Professor/integração/autoria de conteúdo além do que já existe hoje.
+Para o dia a dia, os documentos vivos continuam sendo `VISION.md`, `PRODUCT.md`, `ROADMAP.md`, `STATUS.md` e `DECISIONS.md` (`CHANGELOG.md` para o histórico entrega-a-entrega). Este HANDOFF é o resumo de entrada única; aqueles são a fonte de verdade contínua. Referências técnicas complementares: `DOMAIN_MODEL.md` (modelo institucional completo), `IMPORT_ARCHITECTURE.md` (importação de Turma/Aluno de origens externas), `AUTHORING_MODEL.md` (motor de autoria de Missões) e `PERSISTENCE.md` (arquitetura de persistência multi-tenant, seeds, checklist Mock → Banco Real) — consultar antes de qualquer Sprint que envolva Instituição/Turma/Aluno/Professor/integração/autoria/banco além do que já existe hoje.
 
 > **Nota:** este projeto não tem (nem deve ter) um `MASTER.md`. Se uma Sprint pedir para atualizá-lo, o documento equivalente é este `HANDOFF.md` — "documento único de transição de contexto" já é a definição de um master doc (ver `DECISIONS.md` D-018, D-021).
 
@@ -61,9 +61,12 @@ IAH - Educacional/
 │       ├── content/missions/     ← conteúdo pedagógico versionado em arquivo
 │       ├── modules/
 │       │   ├── library/          ← Mission (entidade + repositório local)
-│       │   └── classroom/        ← StudentWork + ClassMonitor (aluno/professor)
+│       │   ├── classroom/        ← StudentWork + ClassMonitor (aluno/professor)
+│       │   ├── integrations/     ← AuthProvider/ClassroomProvider/ImportProvider (mock + stubs)
+│       │   └── platform/         ← núcleo multi-tenant (entidades, contratos, seeds, factory)
 │       ├── lib/                  ← site.ts (config/SEO), utils.ts
 │       └── hooks/
+│   └── db/migrations/            ← schema SQL versionado (sem INSERTs; ver PERSISTENCE.md)
 ├── docs/                         ← toda a documentação (este arquivo incluso)
 ├── assets/                       ← recursos de marca/mídia (reservado)
 ├── wordpress-theme/              ← tema WordPress temporário (domínio antigo)
@@ -76,7 +79,7 @@ IAH - Educacional/
 - **Tailwind CSS v4** + **shadcn/ui** (sobre **Base UI**, não Radix — atenção às peculiaridades de API, ex.: `render` em vez de `asChild`)
 - **lucide-react** (ícones)
 - **Resend** (SDK instalado, rota pronta, envio real ainda dormente)
-- **@supabase/supabase-js** e **@supabase/ssr** (instalados, **não configurados/usados ainda**)
+- **@supabase/supabase-js** e **@supabase/ssr** (instalados; a arquitetura de persistência já os elege como stack — ver `PERSISTENCE.md` — mas **não há projeto Supabase/credenciais**; o client é criado só por `modules/platform/infrastructure/database/supabase-client.ts` e lança erro sem configuração)
 - Hospedagem: **Vercel**; versionamento: **Git/GitHub**
 
 ## 6. Funcionalidades implementadas
@@ -91,13 +94,14 @@ IAH - Educacional/
 - **Reflexão + Diário do Auditor** (`/diario`): liberada após a entrega da produção; unificada num único registro (`MissionWorkspace`) para não sobrescrever produção/reflexão.
 - **Painel do Professor** (`/professor`): 8 estados, contadores-filtro, último acesso, abertura de produção/reflexão por aluno (turma simulada); card "Integrações" (Google Workspace — não configurado).
 - **Infraestrutura Google Workspace** (`modules/integrations`): contratos `AuthProvider`/`ClassroomProvider`, implementação simulada em uso, stub do provedor Google (sem chamada de rede). Ver `GOOGLE_WORKSPACE.md`.
+- **Núcleo de persistência multi-tenant** (`modules/platform`, M04): 12 entidades com `institutionId`, contratos de repositório, seeds de demonstração em memória, stub de banco (Supabase/PostgreSQL), factory de troca, `ImportProvider` com 6 provedores; schema SQL em `app/db/migrations/`. **Nenhuma página consome ainda** — UI segue em localStorage/turma simulada. Ver `PERSISTENCE.md`.
 - **CI/CD completo**: push na `main` → deploy automático na Vercel.
 
 Lista viva e mais detalhada: `STATUS.md` → "Funcionalidades prontas". Histórico entrega-a-entrega: `CHANGELOG.md`.
 
 ## 7. Funcionalidades pendentes
 
-- **Autenticação real** (Supabase) e persistência em banco — hoje tudo é `localStorage`/simulado.
+- **Autenticação real** (Supabase) e conexão do banco — o núcleo de persistência existe (`modules/platform`), mas não há projeto Supabase/credenciais; a troca segue o checklist de `PERSISTENCE.md`. Hoje a UI roda em `localStorage`/simulado.
 - **Google Workspace real** (OAuth + Classroom API) — arquitetura pronta em `modules/integrations`, falta o projeto no Google Cloud Console (credenciais, verificação de escopos restritos); passo a passo em `GOOGLE_WORKSPACE.md`.
 - **Biblioteca**, **Projetos**, **Mentor IA**, **Agenda**, **Perfil**, **Laboratório** — itens da sidebar marcados "Em breve" e desabilitados (honestos, não clicáveis à toa).
 - **Modo Claro funcional** — tokens existem, sem alternância na interface.
@@ -125,6 +129,7 @@ Resumo das mais importantes (histórico completo com motivo/alternativas/impacto
 - **Modelo institucional consolidado em `DOMAIN_MODEL.md`, com `Ano Letivo` como entidade** (D-020): um modelo mais completo já existia fragmentado (`06_DOMAIN_MODEL.md`); consolidado em vez de duplicado, para não repetir o problema que D-018 corrigiu. Nomes de entidade em português (convenção do domínio de produto), com tabela de equivalência para os identificadores em inglês que o código usará.
 - **`ClassroomIntegration`/`IntegrationProvider`/`Indicadores` + `IMPORT_ARCHITECTURE.md`** (D-021): camada de importação formal (contrato `ImportProvider`, 5 provedores futuros previstos), documento dedicado por volume próprio de conteúdo. `MASTER.md` não foi criado — não existe no projeto e `HANDOFF.md` já cumpre esse papel.
 - **Motor de autoria: `Mission` decomposto em 10 entidades versionáveis** (D-022, `AUTHORING_MODEL.md`): achado concreto ao inspecionar a Missão 01 — Evidence/EvaluationCriteria hoje são strings soltas em `didacticMaterials`, chave de correção só em comentário de código. Decomposição é aditiva — a Missão 02 não precisa esperar por ela.
+- **Núcleo de persistência: Supabase/PostgreSQL sem Prisma, banco como stub até haver credenciais** (D-023, `PERSISTENCE.md`): multi-tenant por `institution_id` (contrato + query + futura RLS, nunca bancos separados); seeds de demonstração jamais persistidos (banco real nasce vazio); troca seed→banco acontece só na `repository-factory`.
 - **Base UI (não Radix)** por baixo do shadcn/ui: `render` no lugar de `asChild`; `DropdownMenuLabel` exige estar dentro de `Group`/`RadioGroup`.
 
 ## 9. Convenções adotadas

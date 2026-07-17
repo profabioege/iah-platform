@@ -2,6 +2,18 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 16/07/2026 — M04: Núcleo da Plataforma (persistência multi-tenant, sem tocar na UI)
+
+Sprint de arquitetura: código novo, zero mudança visual — nenhuma página, rota ou componente alterado; bundles idênticos aos do build anterior. Nenhuma dependência nova instalada.
+
+- **Novo módulo `modules/platform`** — núcleo institucional multi-tenant: `domain/entities.ts` (12 entidades, todas as operacionais com `institutionId`), `domain/repositories.ts` (contratos que exigem `institutionId` como primeiro parâmetro de todo método — isolamento de tenant imposto no contrato), `services/` (`computeClassIndicators`, projeção pura nunca persistida; `ImportService` com preview separado da gravação), `infrastructure/` (`SeedRepositories` em memória funcionais; `DatabaseRepositories` como stub padrão D-019 até haver credenciais; `repository-factory` como único ponto de troca seed↔banco).
+- **Stack decidida: Supabase (PostgreSQL), sem Prisma** — justificativa em `docs/PERSISTENCE.md` (dependência já instalada, alinhada ao plano de auth do ROADMAP; Prisma adiável sem retrabalho graças aos contratos).
+- **Schema inicial versionado** em `app/db/migrations/0001_initial_schema.sql`: 11 tabelas (institutions, academic_years, teachers, classrooms, classroom_teachers, students, enrollments, missions, mission_progress, productions, reflections, classroom_integrations), índices por `institution_id`, sem nenhum `INSERT`. `Indicator` não tem tabela (projeção calculada); `IntegrationProvider` não tem tabela (é contrato); `missions` é registro de metadados — conteúdo segue em arquivo.
+- **Seeds desacoplados**: `modules/platform/seeds/demo-seed.ts` — escola/ano letivo/professor/turma/11 alunos de demonstração, rotulados, carregados só em memória pelas `SeedRepositories`; nunca entram em migration nem no banco real (que nasce vazio).
+- **`ImportProvider` implementado** (`modules/integrations/import`): contrato só-leitura + 6 provedores — `createManualImportProvider` funcional, CSV/Google/Microsoft/Moodle/API como stubs. `IMPORT_ARCHITECTURE.md` atualizado: a gravação saiu do provider e virou responsabilidade do `ImportService` (melhoria sobre o contrato original).
+- **Novo `docs/PERSISTENCE.md`**: camadas, fluxo, estratégia multi-tenant (contrato + query + futura RLS), estratégia de seeds e o checklist de 7 passos para a troca Mock → Banco Real.
+- Validado: typecheck, lint e build limpos; fluxo na Vercel revalidado em desktop/tablet/mobile com console limpo. Ver `DECISIONS.md` D-023.
+
 ## 16/07/2026 — Sistema de Autoria: motor de autoria de Missões decomposto
 
 Sprint só de documentação — nenhum código, componente React, página, rota ou banco de dados alterado.
