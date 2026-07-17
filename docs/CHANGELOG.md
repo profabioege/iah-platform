@@ -2,6 +2,16 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 16/07/2026 — M03: Infraestrutura Google Workspace (sem dependência externa)
+
+Sprint de arquitetura pura — nenhuma credencial, pacote ou chamada externa. Objetivo original (login Google real + Classroom real) foi reduzido após análise de risco (ver `DECISIONS.md`, D-019).
+
+- **Novo módulo `modules/integrations`**: contratos `AuthProvider` (`signIn`/`signOut`/`getSession`) e `ClassroomProvider` (`listCourses`/`listStudents`/`publishMission`), cada um com implementação simulada (`mockAuthProvider`, `mockClassroomProvider`, usadas hoje) e stub do provedor real (`googleAuthProvider`, `googleClassroomProvider` — lançam erro se chamados, nenhuma chamada de rede existe). `isGoogleWorkspaceConfigured()` é o único ponto que decide se há credencial real (hoje sempre falso).
+- **Painel do Professor**: novo card "Integrações" mostrando "○ Google Workspace — Não configurado" e a mensagem "Infraestrutura preparada. Configure OAuth quando o projeto Google Cloud estiver disponível."
+- **Novo `docs/GOOGLE_WORKSPACE.md`**: credenciais necessárias, APIs e escopos previstos (Classroom API), passos futuros no Google Cloud Console (projeto, tela de consentimento, test users, verificação de escopos restritos) e como ativar quando as credenciais existirem.
+- Nenhuma dependência nova instalada (nem SDK do Google, nem NextAuth/Auth.js). `/entrar` e o fluxo de demonstração de agosto permanecem exatamente como estavam.
+- Validado em desktop (1280px), tablet (768px) e mobile (375px) — sem overflow horizontal, console limpo.
+
 ## 16/07/2026 — Ensaio cronometrado da demonstração de agosto
 
 Sprint de validação, sem funcionalidades novas — nenhuma alteração de código foi necessária.

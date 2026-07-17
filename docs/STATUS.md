@@ -8,7 +8,11 @@ Projeto em **fase de preparação do piloto comercial de agosto/2026**, com um f
 
 ## Último commit
 
-`c0681aa` (anterior a esta tarefa) — *feat(landing): M02 — Comercialização: página /demonstracao (funil de conversão)* (16/07/2026), branch `main`. Este ciclo (Ciclo 2) começou com o Ensaio cronometrado da demonstração de agosto — ver "Ciclo 2 — Ensaio da demonstração" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+`fcb9219` (anterior a esta tarefa) — *docs: Ciclo 2 — Ensaio da demonstração de agosto (validação técnica + roteiro)* (16/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com M03 — Infraestrutura Google Workspace (arquitetura preparada, sem dependência externa) — ver "Ciclo 2 — Infraestrutura Google Workspace" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+
+## Ciclo 2 — Infraestrutura Google Workspace (16/07/2026)
+
+Sprint M03: escopo original (login Google real + Google Classroom real) foi reduzido, após análise de risco, para arquitetura pura — nenhuma credencial, pacote ou chamada externa (ver `DECISIONS.md`, D-019). Entregue: novo módulo `modules/integrations` com contratos `AuthProvider` e `ClassroomProvider`, cada um com implementação simulada (usada hoje) e stub do provedor Google (lança erro se chamado, nenhuma chamada de rede existe); card "Integrações" no Painel do Professor (`○ Google Workspace — Não configurado`); `docs/GOOGLE_WORKSPACE.md` com credenciais, APIs/escopos e passos futuros no Google Cloud Console. `/entrar` e o fluxo de demonstração de agosto não foram tocados. Validado em desktop/tablet/mobile, sem overflow, console limpo.
 
 ## Ciclo 2 — Ensaio da demonstração (16/07/2026)
 
@@ -37,6 +41,7 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 - Identidade visual oficial (logo, favicon, Open Graph) aplicada em toda a superfície.
 - CI/CD completo (Git → GitHub → Vercel).
 - Fluxo de demonstração revisado ponta a ponta: continuidade Landing → Entrar → Dashboard → Missão → Produção → Reflexão → Diário → Painel do Professor sem telas brancas (skeletons em `MissionWorkspace` e `DiarioList`), header com título de seção consistente em todas as rotas, e Landing com copy comercial focada em benefício para gestores.
+- Infraestrutura de integração Google Workspace (`modules/integrations`): contratos `AuthProvider`/`ClassroomProvider` com implementação simulada; card "Integrações" no Painel do Professor. Nenhuma credencial real, nenhuma chamada externa — ver `GOOGLE_WORKSPACE.md`.
 
 ## Funcionalidades em andamento / lacunas conhecidas
 
@@ -47,14 +52,15 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 
 ## Próxima tarefa
 
-Decidir a meta real da demonstração (15 ou 20 minutos — achado desta Sprint) e, com isso resolvido, rodar o ensaio humano cronometrado (roteiro de `ROTEIRO-DEMONSTRACAO.md` lido em voz alta) que a validação técnica desta Sprint não substitui. Ver `ROADMAP.md`, "Sprint seguinte", para o próximo item de backlog depois disso.
+Planejamento técnico e funcional do Painel do Gestor (MVP Comercial) está registrado nesta Sprint — implementação ainda não iniciada, aguardando aprovação. Em paralelo, seguem pendentes: decidir a meta real da demonstração (15 ou 20 minutos) e rodar o ensaio humano cronometrado (`ROTEIRO-DEMONSTRACAO.md`) que nenhuma Sprint técnica substitui.
 
 ## Riscos conhecidos
 
-- **Meta de tempo da demonstração ainda não validada por um ensaio humano:** a validação técnica desta Sprint confirmou que o fluxo funciona sem erro e sem quebra visual em 5 larguras, mas não mede tempo de fala humana — a meta de 15 (ou 20?) minutos segue não confirmada na prática.
+- **Meta de tempo da demonstração ainda não validada por um ensaio humano:** a validação técnica confirmou que o fluxo funciona sem erro e sem quebra visual em 5 larguras, mas não mede tempo de fala humana — a meta de 15 (ou 20?) minutos segue não confirmada na prática.
 - **Dados do aluno vivem só no dispositivo** (localStorage): trocar de navegador/computador perde o progresso. Aceitável para demonstração pontual; inviável para uso continuado em turma real sem banco.
 - **Painel do Professor usa turma fictícia**: qualquer demonstração precisa deixar claro que os alunos ali são simulados, não a turma real do professor.
 - **Sem autenticação:** qualquer pessoa com a URL acessa `/professor` e `/dashboard` — aceitável para demonstração controlada, não para uso público.
+- **Google Workspace segue sem credenciais reais:** a arquitetura está pronta (`modules/integrations`), mas login e Classroom reais dependem de um projeto no Google Cloud Console que ainda não existe — ver `GOOGLE_WORKSPACE.md`.
 
 ## Pendências
 
@@ -62,4 +68,5 @@ Decidir a meta real da demonstração (15 ou 20 minutos — achado desta Sprint)
 - Definir `RESEND_API_KEY` (e domínio verificado no Resend) para os formulários de demonstração/contato saírem do modo `mailto:`.
 - Acesso ao DNS de `iaheducacional.com.br` para a futura virada do domínio (ver `DEPLOY.md`).
 - Proteção da branch `main` no GitHub (exigir Pull Request) — recomendado, não implementado.
+- Criar projeto no Google Cloud Console (credenciais OAuth) quando o piloto institucional exigir login/Classroom reais — passo a passo em `GOOGLE_WORKSPACE.md`.
 - **Observação de SEO (não corrigida, fora de escopo desta Sprint):** páginas do bloco `(marketing)` além da home (`/demonstracao`, `/contato`) renderizam `<title>` sem o sufixo "| IAH Educacional", porque o layout do bloco define `title: { absolute: ... }` sem `template`, quebrando a herança do template do layout raiz. Padrão pré-existente (já valia para `/contato` antes desta Sprint), não introduzido agora — mas vale corrigir numa futura passada de SEO.

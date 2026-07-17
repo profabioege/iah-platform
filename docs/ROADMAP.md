@@ -25,31 +25,65 @@ Este norte **substitui** o sequenciamento original de Sprints temáticas (Missõ
 | Auditoria de demonstração (3 ajustes) | Link "Entrar" na Landing; sidebar honesta ("Em breve" nos itens não construídos); Dashboard sem flash em branco (skeleton) |
 | Consolidação de contexto | Estes 5 documentos (`VISION`, `PRODUCT`, `ROADMAP`, `STATUS`, `DECISIONS`) como memória oficial única do projeto |
 | Dossiê de Auditoria da Missão 01 | 4 manchetes reais de investigação (2 autênticas, 2 fabricadas — chave só no código-fonte), Guia de Investigação (5 critérios) e Critérios de Auditoria explícitos, com hipótese inicial + veredito final incorporados ao Desafio e à Produção |
+| Ensaio da demonstração de agosto | Fluxo completo validado tecnicamente na Vercel (sem erro, sem quebra visual em 5 larguras); `ROTEIRO-DEMONSTRACAO.md` com roteiro de apresentação por etapa. Achado: divergência de meta de tempo (Landing promete 20 min, meta interna é 15 min) — não decidido ainda |
+| M03 — Infraestrutura Google Workspace | `modules/integrations` (contratos `AuthProvider`/`ClassroomProvider`, mock em uso, stub Google sem chamada de rede), card "Integrações" no Painel do Professor, `GOOGLE_WORKSPACE.md`. Escopo original (OAuth/Classroom reais) reduzido após análise de risco — ver `DECISIONS.md` D-019 |
 
 ## Sprint atual
 
-**Nenhuma em execução.** Última tarefa concluída: Dossiê de Auditoria da Missão 01. Ver `STATUS.md` para a próxima tarefa recomendada.
+**Nenhuma em execução.** Última tarefa concluída: M03 — Infraestrutura Google Workspace. Próxima Sprint planejada abaixo, aguardando aprovação para implementar.
 
-## Sprint seguinte (recomendada)
+## Sprint seguinte (recomendada) — Painel do Gestor (MVP Comercial)
 
-**Ensaio cronometrado da demonstração de agosto** — percorrer o fluxo completo (Landing → Entrar → Dashboard → Missão → os 4 itens do Dossiê com hipótese/veredito → manchete gerada → Reflexão → Painel do Professor) como o mantenedor verá, medindo o tempo real de execução do Desafio agora que o conteúdo está rico — a meta de 15 minutos precisa ser reconfirmada com o Dossiê completo.
+**Planejamento técnico e funcional** (não implementado ainda — ver instrução explícita de "apenas planejar").
 
-**Critérios de aceite:**
-- [ ] Tempo total do ensaio registrado e comparado à meta de 15 minutos.
-- [ ] Nenhuma quebra visual em notebook (1366×768) e projetor (1024×768) com o conteúdo mais longo da Missão.
-- [ ] Roteiro de apresentação (o que o professor fala em cada etapa) redigido a partir do ensaio.
+### Por que este é o próximo passo
+
+O formulário de `/demonstracao` já identifica o público-alvo por cargo (Diretor(a), Coordenador(a) pedagógico(a), Mantenedor(a), Professor(a)) — mas hoje a única visão pós-login é o Painel do Professor, operacional e granular (8 estados por aluno). Um Diretor/Mantenedor avaliando a plataforma não quer esse nível de detalhe; quer evidência rápida de adoção e de valor pedagógico. Isso serve diretamente o Norte do produto ("isso melhora a demonstração/uso real em agosto?").
+
+### Indicadores que interessam a um Gestor (não a um Professor)
+
+1. **Adesão da turma** — % de alunos que já iniciaram a Missão (visualizou ou além) vs. nunca acessou. Uma métrica, não 8 estados.
+2. **Progresso agregado** — % da turma que concluiu a Missão (produção + reflexão), como stat único, não lista aluno a aluno.
+3. **Evidência pedagógica (prova social)** — 1–2 trechos de reflexão em destaque, curados, mostrando a profundidade do pensamento crítico produzido — não a lista completa de produções (isso é papel do Painel do Professor).
+4. **Competências desenvolvidas** — a lista já existente na Missão (`mission.competencies`: pensamento crítico, formulação de hipóteses, verificação de fontes, uso ético de IA, argumentação, letramento midiático) — contextualiza o que está sendo formado, sem repetir dado operacional.
+
+Deliberadamente **fora** do escopo do Gestor: granularidade por aluno, filtros por status, abertura de produção individual — isso permanece exclusivo do Painel do Professor, para manter os dois papéis com propósitos distintos.
+
+### Menor solução compatível com a arquitetura atual
+
+- **Nenhum módulo novo.** Reaproveita `ClassMonitorReader`/`simulatedClassMonitor` (já usado por `/professor`) e `MissionReader`/`localMissionRepository` (já usado em toda a Plataforma).
+- **Uma função pura de agregação** em `modules/classroom` (ex.: `summarizeClassProgress(students): ClassProgressSummary`), calculando adesão/progresso a partir dos mesmos `StudentMissionSnapshot[]` que o Painel do Professor já lê — sem duplicar fonte de dados.
+- **Nova rota `/gestor`** em `(platform)`, seguindo exatamente o padrão de `professor/page.tsx` (server component, mesma injeção de dados, mesmo Design System — `Card`/`Badge`).
+- **Item de navegação na sidebar**, do mesmo jeito que `/professor` hoje — sem "Em breve", porque será construído de fato.
+
+### Riscos a decidir antes de implementar
+
+- **Sem autenticação/papel** (mesmo risco já documentado para `/professor` e `/dashboard`): qualquer pessoa com a URL acessa `/gestor` — aceitável para demonstração controlada, não para uso público.
+- **Privacidade do Diário** (backlog #5, ainda não resolvida): mostrar trechos de reflexão ao "Gestor" amplia a mesma exposição já sinalizada para o Professor — hoje é dado fictício autorizado, mas o desenho não deve pressupor que isso continua aceitável quando a turma for real.
+
+**Critérios de aceite (quando aprovado para implementar):**
+- [ ] `/gestor` mostra adesão, progresso agregado, 1–2 destaques de reflexão e competências desenvolvidas — sem lista aluno a aluno.
+- [ ] Nenhum módulo novo; reaproveita os contratos `ClassMonitorReader`/`MissionReader` existentes.
+- [ ] Validado em desktop/tablet/mobile, sem overflow, console limpo.
+- [ ] Rotulado como "Turma de demonstração", mesmo padrão do Painel do Professor (D-015).
+
+## Também pendente (não esquecido, fora desta Sprint)
+
+- **Ensaio humano cronometrado da demonstração** — a validação técnica já feita não substitui um ensaio real com o roteiro lido em voz alta (ver `STATUS.md`).
+- **Decidir a meta de tempo real** (15 ou 20 minutos — divergência entre Landing e `ROADMAP.md`/`STATUS.md`).
+- **Google Workspace real** — criar projeto no Google Cloud Console quando o piloto exigir login/Classroom reais (ver `GOOGLE_WORKSPACE.md`).
 
 ## Backlog (pós-piloto de agosto, sem data)
 
 Prioridade **decrescente** — cada item exige plano de implementação explícito antes de virar código, e reavaliação contra os critérios de `VISION.md` (o piloto pode reordenar tudo abaixo):
 
 1. **Biblioteca** — acervo de Material Didático navegável, ligado às Missões.
-2. **Autenticação real** — Supabase; login por papel (aluno/professor); acesso do Painel do Professor restrito à turma real.
+2. **Autenticação real** — Supabase; login por papel (aluno/professor/gestor); acesso dos Painéis restrito à turma/escola real.
 3. **Persistência em banco** — substituir `local-student-work-store` e `simulated-class-monitor` por implementações reais dos mesmos contratos (`StudentWork`, `ClassMonitorReader`), sem mudar UI.
 4. **Segunda Missão** — validar que "cadastrar arquivo de conteúdo" realmente escala sem tocar em interface.
-5. **Diário do Auditor — privacidade** — controle explícito de compartilhamento professor↔aluno (hoje toda reflexão salva é visível ao "professor" simulado).
+5. **Diário do Auditor — privacidade** — controle explícito de compartilhamento professor/gestor↔aluno (hoje toda reflexão salva é visível a ambos os painéis simulados).
 6. **Projetos** — produção autoral maior, individual ou em grupo.
-7. **Integrações** — Google Classroom, Google Agenda, Canva.
+7. **Google Workspace real** — trocar os stubs de `modules/integrations` por implementações reais (OAuth + Classroom API), quando o projeto Google Cloud existir (ver `GOOGLE_WORKSPACE.md`).
 8. **Mentor IA** — assistente de IA com registro de proveniência por uso.
 9. **Modo Claro funcional** — hoje só os tokens existem; falta a alternância na interface (o menu de Acessibilidade já expõe a opção sem efeito).
 10. **Virada de domínio** — `iaheducacional.com.br` migrar do WordPress temporário para a aplicação Next.js (checklist em `DEPLOY.md`).

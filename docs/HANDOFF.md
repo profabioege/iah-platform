@@ -87,7 +87,8 @@ IAH - Educacional/
 - **Missões** (`/missoes`, `/missoes/[id]`): Missão 01 completa com os 11 blocos + Dossiê de Auditoria (4 itens de investigação — 2 autênticos, 2 fabricados; chave de correção só em comentário de código, nunca exposta ao aluno), Guia de Investigação, Critérios de Auditoria.
 - **Produção do Aluno**: autosave, entrega datada, reabertura.
 - **Reflexão + Diário do Auditor** (`/diario`): liberada após a entrega da produção; unificada num único registro (`MissionWorkspace`) para não sobrescrever produção/reflexão.
-- **Painel do Professor** (`/professor`): 8 estados, contadores-filtro, último acesso, abertura de produção/reflexão por aluno (turma simulada).
+- **Painel do Professor** (`/professor`): 8 estados, contadores-filtro, último acesso, abertura de produção/reflexão por aluno (turma simulada); card "Integrações" (Google Workspace — não configurado).
+- **Infraestrutura Google Workspace** (`modules/integrations`): contratos `AuthProvider`/`ClassroomProvider`, implementação simulada em uso, stub do provedor Google (sem chamada de rede). Ver `GOOGLE_WORKSPACE.md`.
 - **CI/CD completo**: push na `main` → deploy automático na Vercel.
 
 Lista viva e mais detalhada: `STATUS.md` → "Funcionalidades prontas". Histórico entrega-a-entrega: `CHANGELOG.md`.
@@ -95,6 +96,7 @@ Lista viva e mais detalhada: `STATUS.md` → "Funcionalidades prontas". Históri
 ## 7. Funcionalidades pendentes
 
 - **Autenticação real** (Supabase) e persistência em banco — hoje tudo é `localStorage`/simulado.
+- **Google Workspace real** (OAuth + Classroom API) — arquitetura pronta em `modules/integrations`, falta o projeto no Google Cloud Console (credenciais, verificação de escopos restritos); passo a passo em `GOOGLE_WORKSPACE.md`.
 - **Biblioteca**, **Projetos**, **Mentor IA**, **Agenda**, **Perfil**, **Laboratório** — itens da sidebar marcados "Em breve" e desabilitados (honestos, não clicáveis à toa).
 - **Modo Claro funcional** — tokens existem, sem alternância na interface.
 - **Efeitos do Menu de Acessibilidade** — interface pronta, nenhum efeito persiste ainda.
@@ -117,6 +119,7 @@ Resumo das mais importantes (histórico completo com motivo/alternativas/impacto
 - **Itens de navegação não construídos são explicitamente "Em breve"**, nunca um link morto silencioso (D-016).
 - **Skeleton de carregamento** em qualquer tela que dependa de leitura client-side antes de existir banco (D-017).
 - **Consolidação de documentação** em 5 arquivos oficiais, substituindo um conjunto fragmentado e por vezes desatualizado (D-018).
+- **Módulo `integrations` com abstração de provedor, sem dependência externa** (D-019): contratos `AuthProvider`/`ClassroomProvider`, implementação simulada em uso, stub do Google sem chamada de rede — escopo reduzido deliberadamente após análise de risco (verificação de escopos restritos do Google, tela de "app não verificado") antes da demonstração de agosto.
 - **Base UI (não Radix)** por baixo do shadcn/ui: `render` no lugar de `asChild`; `DropdownMenuLabel` exige estar dentro de `Group`/`RadioGroup`.
 
 ## 9. Convenções adotadas
@@ -152,15 +155,17 @@ Nenhuma é obrigatória para o site subir — cada ausência apenas desliga a fu
 | `CONTACT_TO_EMAIL` / `CONTACT_FROM_EMAIL` | Destino/remetente via Resend | usa `contato@iaheducacional.com.br` / remetente de teste |
 | `NEXT_PUBLIC_WHATSAPP_NUMBER` | Botão de WhatsApp (componente pronto, não usado no fluxo atual) | botão não aparece |
 
-Reservadas para o futuro, ainda não usadas: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `OPENAI_API_KEY`, credenciais de Google Classroom/Canva.
+Reservadas para o futuro, ainda não usadas: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `OPENAI_API_KEY`, `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`/`GOOGLE_REDIRECT_URI` (detalhes em `GOOGLE_WORKSPACE.md`), credenciais de Canva.
 
 Segredos existem **só** em `app/.env.local` (gitignored) e no painel da Vercel — nunca em código ou commit.
 
 ## 12. Próximos milestones
 
-1. **Ensaio humano cronometrado da demonstração** — a Sprint de 16/07/2026 validou tecnicamente o fluxo completo (sem erro, sem quebra visual em 5 larguras) e produziu `ROTEIRO-DEMONSTRACAO.md`, mas não substitui um ensaio com pessoa real lendo o roteiro em voz alta com cronômetro. Antes disso, decidir a divergência encontrada: Landing promete "20 minutos", meta interna registrada é "15 minutos" — ver `STATUS.md`.
-2. Corrigir a observação de SEO pendente (título sem sufixo em subpáginas do bloco `(marketing)`).
-3. Pós-piloto (sem data, ordem no `ROADMAP.md`): Biblioteca → Autenticação real → Persistência em banco → Segunda Missão → privacidade do Diário → Projetos → Integrações → Mentor IA → Modo Claro → virada de domínio.
+1. **Painel do Gestor (MVP Comercial)** — próxima Sprint planejada (não implementada ainda) nesta sessão; ver `ROADMAP.md`, "Sprint seguinte", para o planejamento técnico e funcional completo, aguardando aprovação para implementar.
+2. **Ensaio humano cronometrado da demonstração** — a Sprint de 16/07/2026 validou tecnicamente o fluxo completo (sem erro, sem quebra visual em 5 larguras) e produziu `ROTEIRO-DEMONSTRACAO.md`, mas não substitui um ensaio com pessoa real lendo o roteiro em voz alta com cronômetro. Antes disso, decidir a divergência encontrada: Landing promete "20 minutos", meta interna registrada é "15 minutos" — ver `STATUS.md`.
+3. Corrigir a observação de SEO pendente (título sem sufixo em subpáginas do bloco `(marketing)`).
+4. **Google Workspace real** — quando o piloto exigir, criar o projeto no Google Cloud Console e trocar os stubs por implementações reais em `modules/integrations` (ver `GOOGLE_WORKSPACE.md`).
+5. Pós-piloto (sem data, ordem no `ROADMAP.md`): Biblioteca → Autenticação real → Persistência em banco → Segunda Missão → privacidade do Diário → Mentor IA → Modo Claro → virada de domínio.
 
 ## 13. Principais riscos
 

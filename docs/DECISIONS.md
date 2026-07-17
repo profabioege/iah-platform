@@ -177,3 +177,13 @@ Histórico cronológico de toda decisão arquitetural relevante, conforme exigid
 **Alternativas descartadas:** Manter todos os documentos fragmentados anteriores como igualmente oficiais (rejeitado — é exatamente a causa do problema que esta decisão resolve).
 
 **Impacto futuro:** Toda decisão, status e visão nova é registrada nestes 5 arquivos, não em novos documentos soltos. Documentos técnicos complementares (Design System, Domain Model, Brand, Deploy) continuam existindo, mas não duplicam o que já está nos 5 oficiais.
+
+## D-019 — Módulo `integrations` com abstração de provedor, sem dependência externa (16/07/2026)
+
+**Decisão:** Novo módulo `modules/integrations`, com dois contratos de domínio — `AuthProvider` (login) e `ClassroomProvider` (cursos, alunos, publicação de Missão) — cada um com uma implementação simulada (`mock*`, usada hoje) e um stub do provedor real (`google*`, lança erro se chamado). `isGoogleWorkspaceConfigured()` é o único ponto que decide se há credencial real; hoje sempre `false`. Nenhum pacote novo foi instalado (nem SDK do Google, nem NextAuth/Auth.js) — a Sprint foi escopada para não depender de Google Cloud, OAuth ou qualquer API externa.
+
+**Motivo:** Sprint M03 pediu "preparar toda a arquitetura para Google Workspace" para o piloto institucional, mas a análise de risco (aviso de "app não verificado", verificação de escopos restritos do Google podendo levar semanas, necessidade de credenciais reais que não existem) levou a reduzir o escopo para infraestrutura pura — arquitetura pronta, zero risco externo antes de agosto.
+
+**Alternativas descartadas:** Implementar OAuth real com o Google agora (rejeitado — dependeria de credenciais que não existem e poderia introduzir a tela de "app não verificado" bem na frente do mantenedor, o oposto do que a demonstração precisa). Colocar os contratos dentro de `modules/classroom` existente (rejeitado — esse módulo já tem um significado específico, acompanhamento de turma via `ClassMonitorReader`; misturar geraria ambiguidade de nome com "sala de aula do Google").
+
+**Impacto futuro:** Quando as credenciais do Google Cloud existirem (ver `GOOGLE_WORKSPACE.md`), a ativação é: definir as variáveis de ambiente, implementar de fato os dois stubs, e trocar a injeção de `mock*` para `google*` nos pontos que os consomem — nenhum componente de UI muda. O mesmo par de contratos comporta um terceiro provedor futuro (ex.: Microsoft Teams) sem alterar `AuthProvider`/`ClassroomProvider`.
