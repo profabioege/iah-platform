@@ -158,7 +158,7 @@ Segredos existem **só** em `app/.env.local` (gitignored) e no painel da Vercel 
 
 ## 12. Próximos milestones
 
-1. **Ensaio cronometrado da demonstração de agosto** — percorrer o funil completo (Landing → `/demonstracao` → Entrar → Dashboard → Missão → hipótese/veredito nos 4 itens do Dossiê → manchete gerada → Reflexão → Painel do Professor) com tempo real medido; a Landing cresceu e a meta de 15 minutos precisa ser reconfirmada.
+1. **Ensaio humano cronometrado da demonstração** — a Sprint de 16/07/2026 validou tecnicamente o fluxo completo (sem erro, sem quebra visual em 5 larguras) e produziu `ROTEIRO-DEMONSTRACAO.md`, mas não substitui um ensaio com pessoa real lendo o roteiro em voz alta com cronômetro. Antes disso, decidir a divergência encontrada: Landing promete "20 minutos", meta interna registrada é "15 minutos" — ver `STATUS.md`.
 2. Corrigir a observação de SEO pendente (título sem sufixo em subpáginas do bloco `(marketing)`).
 3. Pós-piloto (sem data, ordem no `ROADMAP.md`): Biblioteca → Autenticação real → Persistência em banco → Segunda Missão → privacidade do Diário → Projetos → Integrações → Mentor IA → Modo Claro → virada de domínio.
 

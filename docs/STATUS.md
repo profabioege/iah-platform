@@ -8,11 +8,19 @@ Projeto em **fase de preparação do piloto comercial de agosto/2026**, com um f
 
 ## Último commit
 
-`c0681aa` — *feat(landing): M02 — Comercialização: página /demonstracao (funil de conversão)* (16/07/2026), branch `main`. Este ciclo foi encerrado por proximidade do limite de contexto; `HANDOFF.md` criado como resumo de continuidade, aguardando o commit desta tarefa. Ver `CHANGELOG.md` para o histórico completo.
+`c0681aa` (anterior a esta tarefa) — *feat(landing): M02 — Comercialização: página /demonstracao (funil de conversão)* (16/07/2026), branch `main`. Este ciclo (Ciclo 2) começou com o Ensaio cronometrado da demonstração de agosto — ver "Ciclo 2 — Ensaio da demonstração" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+
+## Ciclo 2 — Ensaio da demonstração (16/07/2026)
+
+Sprint de validação (sem código novo): percorrido o fluxo completo na Vercel de produção (Landing → `/demonstracao` → Entrar → Dashboard → Missão 01 → Dossiê de Auditoria completo → manchete gerada → Reflexão → Diário → Painel do Professor), sem erro de console em nenhuma etapa. Responsividade confirmada em 5 larguras (desktop, notebook 1366×768, projetor 1024×768, tablet, mobile) — nenhuma quebra visual encontrada, nenhuma correção necessária. Roteiro de apresentação por etapa, com tempo estimado por volume de conteúdo (~13–14 min), redigido em `ROTEIRO-DEMONSTRACAO.md`.
+
+**Limite do ensaio:** a estimativa de tempo é calibrada por conteúdo, não por uma leitura humana cronometrada — falta esse ensaio real (roteiro em voz alta, cronômetro em mão) antes de considerar a meta de 15 minutos confirmada.
+
+**Achado a decidir:** a Landing promete "uma demonstração de 20 minutos" no CTA final ([app/src/app/(marketing)/page.tsx:446](../app/src/app/(marketing)/page.tsx)), divergente da meta interna de 15 minutos em `ROADMAP.md`. Não corrigido nesta Sprint — é decisão de produto, não uma quebra visual.
 
 ## Último deploy
 
-**https://iah-platform.vercel.app** — ambiente oficial de homologação. Deploy automático a cada push na `main` (Vercel conectada ao GitHub `profabioege/iah-platform`, privado). Validado manualmente no navegador: fluxo Landing → `/demonstracao` (formulário → confirmação) → Entrar → Dashboard → Missão → Produção → Reflexão → Painel do Professor, sem erros de console.
+**https://iah-platform.vercel.app** — ambiente oficial de homologação. Deploy automático a cada push na `main` (Vercel conectada ao GitHub `profabioege/iah-platform`, privado). Validado manualmente no navegador nesta Sprint: fluxo Landing → `/demonstracao` (formulário → confirmação) → Entrar → Dashboard → Missão → Dossiê completo → Produção → Reflexão → Diário → Painel do Professor, em 5 larguras, sem erros de console.
 
 Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporário** — virada de DNS pendente (checklist em `DEPLOY.md`).
 
@@ -39,16 +47,18 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 
 ## Próxima tarefa
 
-Ensaiar a demonstração de agosto ponta a ponta com o funil comercial completo (Landing → `/demonstracao` → Entrar → Dashboard → Missão → hipótese/veredito nos 4 itens → manchete gerada → Reflexão → Painel do Professor), cronometrando o tempo real — a Landing cresceu com as novas seções e a meta de 15 minutos precisa ser reconfirmada — ver `ROADMAP.md`, "Sprint seguinte".
+Decidir a meta real da demonstração (15 ou 20 minutos — achado desta Sprint) e, com isso resolvido, rodar o ensaio humano cronometrado (roteiro de `ROTEIRO-DEMONSTRACAO.md` lido em voz alta) que a validação técnica desta Sprint não substitui. Ver `ROADMAP.md`, "Sprint seguinte", para o próximo item de backlog depois disso.
 
 ## Riscos conhecidos
 
+- **Meta de tempo da demonstração ainda não validada por um ensaio humano:** a validação técnica desta Sprint confirmou que o fluxo funciona sem erro e sem quebra visual em 5 larguras, mas não mede tempo de fala humana — a meta de 15 (ou 20?) minutos segue não confirmada na prática.
 - **Dados do aluno vivem só no dispositivo** (localStorage): trocar de navegador/computador perde o progresso. Aceitável para demonstração pontual; inviável para uso continuado em turma real sem banco.
 - **Painel do Professor usa turma fictícia**: qualquer demonstração precisa deixar claro que os alunos ali são simulados, não a turma real do professor.
 - **Sem autenticação:** qualquer pessoa com a URL acessa `/professor` e `/dashboard` — aceitável para demonstração controlada, não para uso público.
 
 ## Pendências
 
+- **Divergência de meta de tempo:** Landing promete "20 minutos" ([app/src/app/(marketing)/page.tsx:446](../app/src/app/(marketing)/page.tsx)), `ROADMAP.md`/`STATUS.md` registram meta de 15 minutos — decidir qual é a real e ajustar o outro lado.
 - Definir `RESEND_API_KEY` (e domínio verificado no Resend) para os formulários de demonstração/contato saírem do modo `mailto:`.
 - Acesso ao DNS de `iaheducacional.com.br` para a futura virada do domínio (ver `DEPLOY.md`).
 - Proteção da branch `main` no GitHub (exigir Pull Request) — recomendado, não implementado.

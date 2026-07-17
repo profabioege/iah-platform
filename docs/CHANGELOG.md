@@ -2,6 +2,15 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 16/07/2026 — Ensaio cronometrado da demonstração de agosto
+
+Sprint de validação, sem funcionalidades novas — nenhuma alteração de código foi necessária.
+
+- Percurso completo validado na Vercel de produção: Landing → `/demonstracao` → Entrar → Dashboard → Missão 01 → Dossiê de Auditoria (4 itens, hipótese + veredito) → manchete gerada por IA → entrega do Relatório → Reflexão → Diário do Auditor → Painel do Professor — sem erro de console, sem tela quebrada.
+- Responsividade validada em 5 larguras (desktop 1280px, notebook 1366×768, projetor 1024×768, tablet 768×1024, mobile 375px): sem overflow horizontal em nenhuma das 6 telas do fluxo. Nenhuma correção de código foi necessária.
+- Novo documento `ROTEIRO-DEMONSTRACAO.md`: roteiro de apresentação por etapa, com tempo estimado (~13–14 min) calibrado pelo volume de conteúdo — não uma medição de fala humana; ensaio humano com cronômetro ainda pendente.
+- **Achado, não corrigido:** a Landing promete "uma demonstração de 20 minutos" no CTA final, divergente da meta interna de 15 minutos registrada em `ROADMAP.md`/`STATUS.md`. Decisão de qual é a meta real fica para o próximo ciclo.
+
 ## 16/07/2026 — M02: Comercialização (página /demonstracao)
 
 Nova página de conversão comercial — funil principal da Landing.
