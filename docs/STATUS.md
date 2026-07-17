@@ -4,21 +4,22 @@ Fotografia do estado atual do projeto. **Este é o primeiro documento a consulta
 
 ## Estado atual
 
-Projeto em **fase de preparação do piloto comercial de agosto/2026**, com a experiência de ponta a ponta revisada para demonstração comercial e a Landing agora estruturada como pitch completo para o mantenedor (o quê é, como funciona, como se implanta, prova de confiança). A Plataforma executa uma jornada completa de aula (aluno) e um painel de acompanhamento (professor) para a Missão 01, com o Dossiê de Auditoria completo. Nenhuma autenticação real, nenhum banco de dados — persistência do aluno em localStorage; turma do professor é simulada (autorizada, rotulada como "Turma de demonstração").
+Projeto em **fase de preparação do piloto comercial de agosto/2026**, com um funil comercial completo: Landing (pitch) → `/demonstracao` (conversão) → confirmação. A Plataforma executa uma jornada completa de aula (aluno) e um painel de acompanhamento (professor) para a Missão 01, com o Dossiê de Auditoria completo. Nenhuma autenticação real, nenhum banco de dados — persistência do aluno em localStorage; turma do professor é simulada (autorizada, rotulada como "Turma de demonstração").
 
 ## Último commit
 
-`baea706` — *feat(demo): experiência de demonstração comercial — continuidade e polimento* (16/07/2026), branch `main`. A Sprint "Experiência do Mantenedor" (novas seções da Landing) descrita abaixo está implementada neste momento, aguardando o commit desta tarefa. Ver `CHANGELOG.md` para o histórico completo.
+`b40c8bc` — *feat(landing): M01 — Landing como pitch comercial completo* (16/07/2026), branch `main`. A Sprint M02 (página `/demonstracao`) descrita abaixo está implementada neste momento, aguardando o commit desta tarefa. Ver `CHANGELOG.md` para o histórico completo.
 
 ## Último deploy
 
-**https://iah-platform.vercel.app** — ambiente oficial de homologação. Deploy automático a cada push na `main` (Vercel conectada ao GitHub `profabioege/iah-platform`, privado). Validado manualmente no navegador: fluxo Landing → Entrar → Dashboard → Missão → Produção → Reflexão → Painel do Professor, sem erros de console.
+**https://iah-platform.vercel.app** — ambiente oficial de homologação. Deploy automático a cada push na `main` (Vercel conectada ao GitHub `profabioege/iah-platform`, privado). Validado manualmente no navegador: fluxo Landing → `/demonstracao` (formulário → confirmação) → Entrar → Dashboard → Missão → Produção → Reflexão → Painel do Professor, sem erros de console.
 
 Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporário** — virada de DNS pendente (checklist em `DEPLOY.md`).
 
 ## Funcionalidades prontas
 
-- Landing institucional completa (`/`), estruturada como pitch comercial: Hero com desambiguação imediata ("não é AVA, não é chatbot, é sistema completo"), CTA logo após a Hero, seção "Tudo o que a escola precisa para ensinar IA" (6 pilares), "Como o IAH funciona na prática" (fluxo de 5 etapas), "Implantação em 4 passos", bloco de confiança (metodologia nascida em sala real) e CTA final — com `/contato` (formulário + e-mails institucionais).
+- Landing institucional completa (`/`), estruturada como pitch comercial: Hero com desambiguação imediata ("não é AVA, não é chatbot, é sistema completo"), CTA logo após a Hero, seção "Tudo o que a escola precisa para ensinar IA" (6 pilares), "Como o IAH funciona na prática" (fluxo de 5 etapas), "Implantação em 4 passos", bloco de confiança (metodologia nascida em sala real) e CTA final. Todos os CTAs "Solicitar demonstração" (Hero, faixa pós-Hero, nav, rodapé, CTA final) apontam para `/demonstracao`.
+- `/demonstracao`: funil comercial principal — Hero própria ("Tecnologia sozinha não ensina IA. Metodologia sim."), formulário de 8 campos (Nome, Escola, Cargo, Cidade/Estado, Nº de alunos, E-mail institucional, Telefone, Mensagem), confirmação inline ("Recebemos sua solicitação. Entraremos em contato em até 1 dia útil."), e-mails institucionais, SEO própria (title/description/canonical/OG) e entrada no sitemap. Envio em modo `mailto:`; `/api/contato` já aceita todos os campos para a futura troca por Resend. `/contato` (formulário mais simples, 5 campos) permanece no ar mas não é mais linkado de lugar nenhum — sucedido por `/demonstracao`.
 - Abertura da Plataforma (`/entrar`, sem autenticação real).
 - Dashboard (`/dashboard`) com Missão ativa real e progresso do dispositivo.
 - Lista e detalhe de Missão (`/missoes`, `/missoes/[id]`) — Missão 01 "A Fábrica de Notícias" com os 11 blocos e o **Dossiê de Auditoria completo**: 4 manchetes reais de investigação (2 autênticas, 2 fabricadas — chave de correção só no código-fonte, nunca exibida ao aluno), Guia de Investigação (5 critérios: fonte, data/escopo, evidência, linguagem, coerência interna) e Critérios de Auditoria explícitos.
@@ -38,7 +39,7 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 
 ## Próxima tarefa
 
-Ensaiar a demonstração de agosto ponta a ponta com a Landing e o Dossiê completos (Landing → Entrar → Dashboard → Missão → hipótese/veredito nos 4 itens → manchete gerada → Reflexão → Painel do Professor), cronometrando o tempo real — a Landing cresceu com as novas seções e a meta de 15 minutos precisa ser reconfirmada — ver `ROADMAP.md`, "Sprint seguinte".
+Ensaiar a demonstração de agosto ponta a ponta com o funil comercial completo (Landing → `/demonstracao` → Entrar → Dashboard → Missão → hipótese/veredito nos 4 itens → manchete gerada → Reflexão → Painel do Professor), cronometrando o tempo real — a Landing cresceu com as novas seções e a meta de 15 minutos precisa ser reconfirmada — ver `ROADMAP.md`, "Sprint seguinte".
 
 ## Riscos conhecidos
 
@@ -48,6 +49,7 @@ Ensaiar a demonstração de agosto ponta a ponta com a Landing e o Dossiê compl
 
 ## Pendências
 
-- Definir `RESEND_API_KEY` (e domínio verificado no Resend) para o formulário de contato sair do modo `mailto:`.
+- Definir `RESEND_API_KEY` (e domínio verificado no Resend) para os formulários de demonstração/contato saírem do modo `mailto:`.
 - Acesso ao DNS de `iaheducacional.com.br` para a futura virada do domínio (ver `DEPLOY.md`).
 - Proteção da branch `main` no GitHub (exigir Pull Request) — recomendado, não implementado.
+- **Observação de SEO (não corrigida, fora de escopo desta Sprint):** páginas do bloco `(marketing)` além da home (`/demonstracao`, `/contato`) renderizam `<title>` sem o sufixo "| IAH Educacional", porque o layout do bloco define `title: { absolute: ... }` sem `template`, quebrando a herança do template do layout raiz. Padrão pré-existente (já valia para `/contato` antes desta Sprint), não introduzido agora — mas vale corrigir numa futura passada de SEO.

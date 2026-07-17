@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
 
 /**
- * Rodapé institucional do site. Usado pela Landing e pela página de contato.
+ * Rodapé institucional do site. Usado pela Landing e pelas páginas públicas.
  * E-mails oficiais: contato@ (geral) e comercial@ (demonstrações/vendas).
  */
 export function SiteFooter() {
@@ -26,7 +26,7 @@ export function SiteFooter() {
           <div className="footer-links">
             <Link href="/#plataforma">Plataforma</Link>
             <Link href="/#metodo">Metodologia</Link>
-            <Link href="/contato">Contato</Link>
+            <Link href="/demonstracao">Demonstração</Link>
           </div>
         </nav>
 

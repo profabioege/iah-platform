@@ -2,6 +2,18 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 16/07/2026 — M02: Comercialização (página /demonstracao)
+
+Nova página de conversão comercial — funil principal da Landing.
+
+- **`/demonstracao`**: Hero própria ("Tecnologia sozinha não ensina IA. Metodologia sim." / "Solicite uma demonstração personalizada do IAH para sua escola."), formulário de 8 campos (Nome, Escola, Cargo, Cidade/Estado, Nº de alunos, E-mail institucional, Telefone, Mensagem) e e-mails institucionais no corpo da página.
+- **Confirmação profissional**: após o envio, tela inline "Recebemos sua solicitação." / "Entraremos em contato em até 1 dia útil."
+- **CTAs unificados**: todo "Solicitar demonstração" do site (Hero, faixa pós-Hero, nav desktop/mobile, rodapé, CTA final) agora aponta para `/demonstracao`; `/contato` (formulário mais simples) permanece no ar, sem mais nenhum link apontando para ele.
+- **Arquitetura pronta para Resend**: `/api/contato` estendida para aceitar os novos campos (cidadeEstado, numeroAlunos, telefone); o formulário novo usa `mailto:` por ora (mesmo padrão do `ContactForm`), documentado para troca futura sem mudar nomes de campo.
+- **SEO**: title, description, canonical (`/demonstracao`) e Open Graph próprios; rota incluída no `sitemap.xml` (prioridade 0.9).
+- Validado em mobile (375px), notebook (1366px) e desktop (1920px) — sem overflow, grade do formulário em coluna única no mobile, console limpo.
+- Observação registrada em `STATUS.md`: páginas do bloco `(marketing)` fora da home não herdam o sufixo "| IAH Educacional" no `<title>` — padrão pré-existente, não introduzido por esta Sprint.
+
 ## 16/07/2026 — M01: Experiência do Mantenedor (Landing como pitch comercial)
 
 Sprint de copy/UX na Landing, sem funcionalidades técnicas novas, para que a página sozinha já conte a história do produto a um gestor escolar.

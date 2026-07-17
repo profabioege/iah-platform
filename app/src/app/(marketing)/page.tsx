@@ -227,7 +227,7 @@ export default function Home() {
                 Conheça a Plataforma
                 <ArrowRight aria-hidden="true" />
               </a>
-              <Link className="button button-secondary" href="/contato">
+              <Link className="button button-secondary" href="/demonstracao">
                 Solicitar Demonstração
               </Link>
             </div>
@@ -266,7 +266,7 @@ export default function Home() {
         <section className="hero-cta-strip" aria-label="Solicitar demonstração">
           <div className="container hero-cta-strip-inner">
             <p>Já deu para entender? Fale com a gente antes de continuar lendo.</p>
-            <Link className="button button-primary" href="/contato">
+            <Link className="button button-primary" href="/demonstracao">
               Solicitar demonstração
               <ArrowRight aria-hidden="true" />
             </Link>
@@ -447,7 +447,7 @@ export default function Home() {
               uma aula real, do início à produção — não um slide, o produto
               funcionando.
             </p>
-            <Link className="button button-primary" href="/contato">
+            <Link className="button button-primary" href="/demonstracao">
               Solicitar demonstração
               <ArrowRight aria-hidden="true" />
             </Link>

@@ -39,7 +39,7 @@ export function SiteNav() {
           Entrar
         </Link>
 
-        <Link className="nav-cta" href="/contato">
+        <Link className="nav-cta" href="/demonstracao">
           Solicitar demonstração
           <ArrowRight aria-hidden="true" />
         </Link>
@@ -72,7 +72,7 @@ export function SiteNav() {
             </Link>
             <Link
               className="button button-primary"
-              href="/contato"
+              href="/demonstracao"
               onClick={() => setOpen(false)}
             >
               Solicitar demonstração

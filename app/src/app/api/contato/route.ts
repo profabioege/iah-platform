@@ -2,8 +2,13 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
 /**
- * Endpoint do formulário "Solicitar Demonstração" da Landing.
+ * Endpoint do formulário "Solicitar Demonstração" (/demonstracao e /contato).
  * Recebe os dados do lead e envia por e-mail via Resend.
+ *
+ * Ambos os formulários da Landing (DemonstracaoForm, DemoForm) enviam o
+ * mesmo formato de payload para esta rota — hoje eles usam mailto
+ * (ver seus próprios comentários), mas a rota já está pronta para
+ * receber o POST assim que RESEND_API_KEY for configurada.
  *
  * Variáveis de ambiente (ver .env.example):
  * - RESEND_API_KEY       (obrigatória) — chave da conta Resend.
@@ -20,6 +25,9 @@ interface ContactPayload {
   email?: string;
   escola?: string;
   cargo?: string;
+  cidadeEstado?: string;
+  numeroAlunos?: string;
+  telefone?: string;
   mensagem?: string;
 }
 
@@ -47,6 +55,9 @@ export async function POST(request: Request) {
   const email = data.email?.trim() ?? "";
   const escola = data.escola?.trim() ?? "";
   const cargo = data.cargo?.trim() ?? "";
+  const cidadeEstado = data.cidadeEstado?.trim() ?? "";
+  const numeroAlunos = data.numeroAlunos?.trim() ?? "";
+  const telefone = data.telefone?.trim() ?? "";
   const mensagem = data.mensagem?.trim() ?? "";
 
   if (!nome || !email) {
@@ -81,6 +92,9 @@ export async function POST(request: Request) {
     ["E-mail", email],
     ["Escola/Instituição", escola || "—"],
     ["Cargo", cargo || "—"],
+    ["Cidade/Estado", cidadeEstado || "—"],
+    ["Número de alunos", numeroAlunos || "—"],
+    ["Telefone", telefone || "—"],
     ["Mensagem", mensagem || "—"],
   ];
 
