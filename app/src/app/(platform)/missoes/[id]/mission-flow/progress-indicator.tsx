@@ -8,9 +8,11 @@ import { cn } from "@/lib/utils";
 export function ProgressIndicator({
   current,
   total,
+  minutesRemaining,
 }: {
   current: number;
   total: number;
+  minutesRemaining?: number;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -25,9 +27,16 @@ export function ProgressIndicator({
           />
         ))}
       </div>
-      <span className="text-xs font-medium text-muted-foreground">
-        Etapa {current} de {total}
-      </span>
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-medium text-muted-foreground">
+          Etapa {current} de {total}
+        </span>
+        {minutesRemaining ? (
+          <span className="text-xs font-medium text-muted-foreground">
+            ~{minutesRemaining} min restantes
+          </span>
+        ) : null}
+      </div>
     </div>
   );
 }

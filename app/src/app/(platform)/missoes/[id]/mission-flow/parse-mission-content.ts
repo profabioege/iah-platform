@@ -91,3 +91,12 @@ export function chunkIntoParagraphs(text: string, max = 2): string[] {
   }
   return paragraphs.slice(0, max);
 }
+
+/**
+ * Quebra um texto de reflexão em perguntas individuais (reconhece o
+ * "?" de fechamento) — usado na Reflexão Final para apresentar uma
+ * pergunta metacognitiva por vez, em vez de um parágrafo único.
+ */
+export function splitQuestions(text: string): string[] {
+  return text.split(/(?<=\?)\s+/).filter(Boolean);
+}

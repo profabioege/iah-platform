@@ -14,11 +14,13 @@ export function MissionHeader({
   title,
   step,
   totalSteps,
+  minutesRemaining,
 }: {
   missionNumber: number;
   title: string;
   step: number;
   totalSteps: number;
+  minutesRemaining?: number;
 }) {
   return (
     <div className="flex flex-col gap-3 border-b border-border pb-4">
@@ -35,7 +37,11 @@ export function MissionHeader({
         </Badge>
       </div>
       <p className="truncate text-sm font-medium text-foreground/80">{title}</p>
-      <ProgressIndicator current={step} total={totalSteps} />
+      <ProgressIndicator
+        current={step}
+        total={totalSteps}
+        minutesRemaining={minutesRemaining}
+      />
     </div>
   );
 }

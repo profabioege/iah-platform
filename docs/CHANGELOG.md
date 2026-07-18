@@ -2,6 +2,20 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 17/07/2026 — M09: Mission Flow 3.0 (experiência cognitiva)
+
+Refinamento visual das 9 etapas do Mission Flow (M08) — investigação guiada em vez de formulário dividido em telas. Sem rotas novas, sem schema novo, sem IA, sem banco, sem autenticação, sem dependência nova (reaproveita `tw-animate-css`, já instalado).
+
+- **Indicador de tempo estimado**: novo `mission-timing.ts` — heurística fixa por etapa (mesma escala usada em `ROTEIRO-DEMONSTRACAO.md` para o Dossiê), exibida como "~X min restantes" ao lado de "Etapa X de 9" (`ProgressIndicator`) e como "Cerca de X minutos de investigação" na Capa. Rotulado como estimativa, não promessa de tempo — mesmo cuidado já registrado como risco em `STATUS.md`.
+- **Transição entre etapas**: novo `StepTransition` — rolagem ao topo + fade/slide curto (`tw-animate-css`, respeita `prefers-reduced-motion` via `motion-reduce:animate-none`) a cada troca de etapa ou de evidência dentro da Investigação. Corrige um corte seco herdado da M08 (trocar de etapa numa tela longa deixava o aluno no meio da página seguinte).
+- **Capa**: ganhou tempo estimado, as Competências Desenvolvidas (movidas do rodapé, que existia em todas as 9 telas) e o botão renomeado para "Começar investigação"; visual do ícone (Compass) ampliado com glow em degradê — continua sem foto (D-027 permanece válido: uma imagem "realista" colidiria com o próprio critério de coerência de imagem que a Missão ensina a checar).
+- **Investigação (tela cheia)**: `EvidenceCard` ganhou uma faixa superior em degradê com o ícone (Dual Coding) fazendo as vezes de "imagem" do item, título em destaque maior — mantendo a regra de nunca mostrar mais de uma evidência por tela. Versão `compact` (usada só na Comparação) preservada como cartão simples.
+- **Contexto**: parágrafos (máx. 2, chunking já existente) agora dentro de um cartão com fundo neutro, reduzindo a sensação de bloco de texto solto.
+- **Critérios / Guia de Investigação**: `RubricCard` ganhou selo colorido por índice (Dual Coding), sem acoplar a nenhum rótulo específico de conteúdo — genérico para qualquer Missão futura.
+- **Entrega**: estado "entregue" reformulado como painel de confirmação (mesmo padrão visual do encerramento da Reflexão), botão "Entregar relatório" com o mesmo peso visual do botão da Capa (`size="lg"`).
+- **Reflexão Final**: `mission.reflection` agora é decomposto em perguntas metacognitivas individuais (`splitQuestions`, reconhece o "?" de fechamento — sem novo dado, só apresentação) exibidas como lista numerada acima do campo de resposta; card de encerramento renomeado para "Investigação concluída".
+- Validado no navegador ponta a ponta (Capa → 4 evidências → Comparação → Produção → Critérios → Entrega → Reflexão), incluindo o estado de retomada (reflexão já registrada), em desktop (1280px) e mobile (375px) — sem overflow horizontal, console limpo. `npx tsc --noEmit`, `npm run lint` e `npm run build` limpos.
+
 ## 17/07/2026 — M08: Mission Flow UX 2.0 (baixa carga cognitiva)
 
 Refatoração completa da experiência do aluno em `/missoes/[id]` — sem funcionalidades novas, sem IA, sem banco, sem autenticação. Nenhuma dependência nova.

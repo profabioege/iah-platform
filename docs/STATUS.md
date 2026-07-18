@@ -8,7 +8,11 @@ Projeto em **fase de preparação do piloto comercial de agosto/2026**, com um f
 
 ## Último commit
 
-`5568646` (anterior a esta tarefa) — *feat(authoring): M07 — Mission Studio* (16/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com o Mission Flow (M08) — ver "Ciclo 2 — Mission Flow" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+`e164a54` (anterior a esta tarefa) — *feat(missions): M08 — Mission Flow UX 2.0* (17/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com o refinamento cognitivo do Mission Flow (M09) — ver "Ciclo 2 — Mission Flow 3.0" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+
+## Ciclo 2 — Mission Flow 3.0 (17/07/2026)
+
+Refinamento visual e cognitivo das 9 etapas entregues na M08 — investigação guiada em vez de formulário dividido em telas: indicador de tempo estimado por etapa (`mission-timing.ts`, heurística, rotulada como estimativa), transição com rolagem ao topo + fade/slide entre etapas (`StepTransition`, respeita `prefers-reduced-motion`, sem dependência nova), Capa com tempo estimado e Competências (movidas do rodapé fixo, que existia em todas as 9 telas), `EvidenceCard` em tela cheia com faixa de ícone em degradê (Dual Coding, ainda sem foto — D-027 continua válido), `RubricCard` com selo colorido por índice, Entrega com painel de confirmação, Reflexão Final decomposta em perguntas metacognitivas individuais. Sem rotas novas, sem schema novo, sem IA, sem banco, sem autenticação, sem dependência nova. Validado ponta a ponta em desktop (1280px) e mobile (375px), sem overflow, console limpo, `tsc`/`lint`/`build` limpos. Ver `CHANGELOG.md` para o detalhe completo por etapa.
 
 ## Ciclo 2 — Mission Flow (17/07/2026)
 
@@ -80,7 +84,7 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 - Integração Google Classroom (`modules/integrations/google-classroom`): módulo plugável (real + mock), `ClassroomSyncService`, Import Wizard (`/professor/importar`) e seção Turmas no Painel do Professor — tudo sobre dados simulados rotulados, sem OAuth/banco. Ver `GOOGLE_CLASSROOM_INTEGRATION.md`.
 - Autenticação (Auth.js v5 + Google): login/logout, sessão JWT, middleware de rotas privadas, provisionamento automático do professor no primeiro login (`modules/identity`, migration `0003`) — ativa ao definir as credenciais; sem elas, modo demonstração intacto. Ver `AUTHENTICATION.md`/`SUPABASE.md`.
 - Mission Studio (`/professor/estudio`, módulo `modules/authoring`): biblioteca com filtros/pesquisa, editor em 6 etapas com autosave, versionamento por linhagem (publicada imutável), publicação com pré-condições; missões salvas neste dispositivo (localStorage rotulado); contratos do IPE prontos, sem IA. Ver `MISSION_STUDIO.md`.
-- Mission Flow (`/missoes/[id]`): experiência do aluno como 9 microetapas com baixa carga cognitiva, 7 componentes reutilizáveis, sem alterar `modules/classroom` nem o conteúdo da Missão. Ver `DECISIONS.md` D-027.
+- Mission Flow (`/missoes/[id]`): experiência do aluno como 9 microetapas com baixa carga cognitiva, refinada na M09 (indicador de tempo estimado, transição entre etapas, Capa/Investigação/Critérios/Entrega/Reflexão redesenhadas), 7 componentes reutilizáveis, sem alterar `modules/classroom` nem o conteúdo da Missão. Ver `DECISIONS.md` D-027.
 
 ## Funcionalidades em andamento / lacunas conhecidas
 
@@ -91,7 +95,7 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 
 ## Próxima tarefa
 
-O Mission Flow (M08) mudou a experiência que `ROTEIRO-DEMONSTRACAO.md` descreve — **reensaiar o tempo da demonstração passa a ser a tarefa mais urgente**, antes de qualquer outra coisa: a meta de 15 (ou 20?) minutos nunca foi validada com fluxo algum, e a interface acabou de mudar de novo. Em paralelo: **do fundador** (fora do código, ~15 min) — executar os passos de console de `AUTHENTICATION.md`/`SUPABASE.md` (Google Cloud + Supabase) e fazer o primeiro login real; **da próxima Sprint de código**, com o login validado — implementar o `google-classroom-repository` (hoje stub) para sincronizar turmas reais. Painel do Gestor segue planejado no `ROADMAP.md`.
+O Mission Flow mudou de novo (M08 e agora M09) desde que `ROTEIRO-DEMONSTRACAO.md` foi escrito — **reensaiar o tempo da demonstração segue sendo a tarefa mais urgente**, antes de qualquer outra coisa: a meta de 15 (ou 20?) minutos nunca foi validada com fluxo algum. Em paralelo: **do fundador** (fora do código, ~15 min) — executar os passos de console de `AUTHENTICATION.md`/`SUPABASE.md` (Google Cloud + Supabase) e fazer o primeiro login real; **da próxima Sprint de código**, com o login validado — implementar o `google-classroom-repository` (hoje stub) para sincronizar turmas reais. Painel do Gestor segue planejado no `ROADMAP.md`.
 
 ## Riscos conhecidos
 
