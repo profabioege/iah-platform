@@ -1,13 +1,13 @@
-import { Clock, Layers, Tag, Users } from "lucide-react";
+import { Clock, Layers, Sparkles, Tag, Users } from "lucide-react";
 
-import type { Lesson } from "@/modules/lesson";
+import { LESSON_FORMAT_LABEL, type Lesson } from "@/modules/lesson";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 
 /**
  * Cartão compacto de uma Lesson — Planejamento em relance (Série, Turma,
- * Tempo, Tema, Competências). Reaproveitado na listagem `/professor/aulas`
- * e na Etapa 5 (Preview) do LessonWizard.
+ * Tempo, Tema, Metodologia, Competências). Reaproveitado na listagem
+ * `/professor/aulas` e na Etapa 7 (Preview) do Intelligent Lesson Composer.
  */
 export function LessonSummary({ lesson }: { lesson: Lesson }) {
   const competencyCount =
@@ -39,6 +39,12 @@ export function LessonSummary({ lesson }: { lesson: Lesson }) {
             <span className="inline-flex items-center gap-1.5">
               <Clock className="size-3.5" />
               {lesson.estimatedMinutes} min
+            </span>
+          ) : null}
+          {lesson.format ? (
+            <span className="inline-flex items-center gap-1.5">
+              <Sparkles className="size-3.5" />
+              {LESSON_FORMAT_LABEL[lesson.format]}
             </span>
           ) : null}
           {competencyCount > 0 ? (

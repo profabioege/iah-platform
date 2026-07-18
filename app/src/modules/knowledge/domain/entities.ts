@@ -28,6 +28,23 @@ export type KnowledgeResourceType =
   | "material_professor"
   | "material_aluno";
 
+/** Rótulos legíveis das categorias — usado para agrupar recursos na interface (Sprint M13). */
+export const KNOWLEDGE_RESOURCE_TYPE_LABEL: Record<KnowledgeResourceType, string> = {
+  artigo: "Artigos",
+  pdf: "PDFs",
+  slides: "Slides",
+  video: "Vídeos",
+  estudo_de_caso: "Estudos de Caso",
+  lei: "Leis",
+  normativa: "Normativas",
+  pesquisa: "Pesquisas",
+  infografico: "Infográficos",
+  site: "Sites",
+  livro: "Livros",
+  material_professor: "Materiais do Professor",
+  material_aluno: "Materiais do Aluno",
+};
+
 export type KnowledgeDifficultyLevel = "introdutorio" | "intermediario" | "avancado";
 
 export type KnowledgeScope = "global" | "institution";

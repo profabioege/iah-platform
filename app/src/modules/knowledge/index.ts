@@ -11,20 +11,21 @@
  * zero mudança visual (mesmo padrão de modules/platform, D-023).
  */
 
-export type {
-  KnowledgeCollection,
-  KnowledgeDifficultyLevel,
-  KnowledgeDocument,
-  KnowledgeDocumentStatus,
-  KnowledgeMetadata,
-  KnowledgeReference,
-  KnowledgeReferenceRelation,
-  KnowledgeResourceType,
-  KnowledgeScope,
-  KnowledgeSource,
-  KnowledgeSourceKind,
-  KnowledgeTag,
-  KnowledgeTopic,
+export {
+  KNOWLEDGE_RESOURCE_TYPE_LABEL,
+  type KnowledgeCollection,
+  type KnowledgeDifficultyLevel,
+  type KnowledgeDocument,
+  type KnowledgeDocumentStatus,
+  type KnowledgeMetadata,
+  type KnowledgeReference,
+  type KnowledgeReferenceRelation,
+  type KnowledgeResourceType,
+  type KnowledgeScope,
+  type KnowledgeSource,
+  type KnowledgeSourceKind,
+  type KnowledgeTag,
+  type KnowledgeTopic,
 } from "./domain/entities";
 
 export type {

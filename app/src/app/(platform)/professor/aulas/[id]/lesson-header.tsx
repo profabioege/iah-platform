@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { ProgressIndicator } from "@/app/(platform)/missoes/[id]/mission-flow/progress-indicator";
 
 /**
- * Barra superior do LessonWizard: link de volta, rótulo "Lesson Builder"
- * e progresso — mesmo papel de `MissionHeader` no Mission Flow.
+ * Barra superior do LessonWizard: link de volta, rótulo "Intelligent
+ * Lesson Composer" e progresso — mesmo papel de `MissionHeader` no
+ * Mission Flow.
  */
 export function LessonHeader({
   topic,
@@ -30,7 +31,7 @@ export function LessonHeader({
           <ArrowLeft className="size-4" />
           Minhas Aulas
         </Link>
-        <Badge className="bg-primary/15 text-primary">Lesson Builder</Badge>
+        <Badge className="bg-primary/15 text-primary">Lesson Composer</Badge>
       </div>
       <p className="truncate text-sm font-medium text-foreground/80">
         {topic || "Nova Aula"}

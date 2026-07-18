@@ -2,6 +2,23 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 18/07/2026 — M13: Intelligent Lesson Composer (Método IAH)
+
+Evolução do Lesson Builder MVP (M12) — sem IA externa, sem APIs, sem NotebookLM, sem Google Classroom, sem alterar autenticação. Usa exclusivamente os componentes já implementados (Lesson Architecture, Mission Flow, Knowledge Engine, Lesson Builder, Governança Curricular).
+
+- **Assistente "Nova Lesson" cresce de 6 para 7 etapas**, cada uma com sugestão automática por **regra simples, sem IA** (`modules/lesson/domain/composer.ts` — funções puras, isoladas de propósito para uma futura substituição por IA):
+  1. **Quem é minha turma?** — Série, Turma, Tempo disponível.
+  2. **O que quero ensinar?** — Tema, Objetivo, **Eixo do Planejamento Anual** (novo campo, derivado dos `module` reais das Missões existentes — sem taxonomia inventada), Competências BNCC e BNCC Computação.
+  3. **Como meus alunos irão aprender?** (nova etapa) — sugere um dos 7 formatos do Método IAH (Investigação, Debate, Estudo de Caso, Oficina, Projeto, Laboratório, Produção) por palavra-chave no Tema/Objetivo; "Investigação" é o padrão quando nada combina, coerente com o próprio Método (Auditor da Realidade).
+  4. **Com quais recursos?** — materiais do Knowledge Engine agora **agrupados por categoria** (`KNOWLEDGE_RESOURCE_TYPE_LABEL`, novo em `modules/knowledge`) e ordenados por relevância ao Tema/Competências; o primeiro material relevante é pré-selecionado automaticamente.
+  5. **Como será a missão?** — associação automática da Mission Flow por sobreposição de palavras entre Tema/Objetivo/Eixo e título/pergunta norteadora/módulo da Missão; segue oferecendo criar uma nova no Estúdio quando nenhuma existe.
+  6. **Avaliação** (nova etapa) — Critérios e contagem de Evidências herdados automaticamente da Mission Flow selecionada (mesmo parser do Mission Flow), Competências avaliadas = as já coletadas na etapa 2, nota opcional do Professor.
+  7. **Preview do Pacote Pedagógico completo** — Objetivo, Competências, Tempo, Metodologia, Mission Flow, Recursos, Avaliação, Critérios, Materiais e Portfólio (rotulado honestamente como conceitual, D-028 — nenhum dado fake).
+- **Mesmos 5 componentes da M12** (`LessonWizard`, `LessonPreview`, `LessonSummary`, `LessonHeader`, `LessonStep`) e a mesma reutilização de `MissionNavigation` do Mission Flow — nenhum componente novo além do pedido.
+- **Chave de armazenamento migrada** para `iah:lesson:v2` (o shape da `Lesson` mudou: `objective` substitui `objectives[]`, mais `planningAxis`, `format`, `assessmentNotes`).
+- **Preparação para o futuro**: as funções de sugestão (`suggestLessonFormat`, `rankKnowledgeDocuments`, `suggestMission`) são o ponto de extensão para IA real; a lista de materiais já vem do Knowledge Engine, então NotebookLM/outras integrações (M11, stubs) aparecem no mesmo lugar quando ativadas; nenhuma tela de Adaptação para Neurodivergentes foi criada (D-028 mantém essa pendência sensível — LGPD — em aberto).
+- Validado ponta a ponta (as 7 etapas, sugestões automáticas, Preview, Salvar) em desktop e mobile (375px), sem overflow, console limpo; confirmado que o Mission Flow (`/missoes/[id]`) segue funcionando sem regressão. `npm run lint` e `npm run build` limpos.
+
 ## 18/07/2026 — M12: Lesson Builder MVP
 
 Primeira tela funcional do conceito `Lesson` (D-028) — sem IA, sem NotebookLM, sem Google Classroom, sem banco externo, usando só arquitetura já existente.

@@ -8,15 +8,15 @@ import { getDefaultKnowledgeRepositories } from "@/modules/knowledge";
 import { LessonWizard } from "./lesson-wizard";
 
 export const metadata: Metadata = {
-  title: "Lesson Builder",
-  description: "Monte uma aula completa em 6 etapas.",
+  title: "Intelligent Lesson Composer",
+  description: "Monte uma aula completa em 7 etapas, com sugestões automáticas.",
 };
 
 /**
- * Editor do Lesson Builder — a Lesson é carregada no cliente
- * (localStorage, `use-lesson-builder.ts`); Missions e materiais do
- * Knowledge Engine vêm prontos do servidor (mesmas fontes já usadas em
- * `/missoes` e no futuro consumidor do Knowledge Engine).
+ * Editor do Intelligent Lesson Composer — a Lesson é carregada no
+ * cliente (localStorage, `use-lesson-builder.ts`); Missions e materiais
+ * do Knowledge Engine vêm prontos do servidor (mesmas fontes já usadas
+ * em `/missoes` e no futuro consumidor do Knowledge Engine).
  */
 export default async function LessonBuilderPage({
   params,

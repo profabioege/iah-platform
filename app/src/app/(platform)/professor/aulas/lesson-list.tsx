@@ -51,7 +51,7 @@ export function LessonList({ author }: { author: string }) {
       ) : lessons.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           Nenhuma aula criada neste dispositivo ainda. Use &ldquo;Nova Aula&rdquo;
-          para montar a primeira com o Lesson Builder.
+          para montar a primeira com o Intelligent Lesson Composer.
         </p>
       ) : (
         <div className="flex flex-col gap-3">
