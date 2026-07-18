@@ -19,7 +19,11 @@ Registrado formalmente em `DECISIONS.md` D-029 a D-033 (obrigatoriedade de metad
 
 ## Último commit
 
-`e707ed6` (anterior a esta tarefa) — *docs(lesson): M10 — Lesson Architecture* (17/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com o Alinhamento Normativo (LDB/BNCC/BNCC Computação/Método IAH®) — ver "Alinhamento Normativo" acima. Ver `CHANGELOG.md` para o histórico completo.
+`afc19e0` (anterior a esta tarefa) — *docs(governance): alinhamento normativo LDB/BNCC/BNCC Computação/Método IAH* (18/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com o Knowledge Engine (M11) — ver "Ciclo 2 — Knowledge Engine" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+
+## Ciclo 2 — Knowledge Engine: Biblioteca Inteligente (18/07/2026)
+
+Sprint de arquitetura — novo módulo `modules/knowledge`, zero mudança visual (mesmo padrão de M04/`modules/platform`, D-023; nenhuma página consome o módulo). Materializa a entidade `Biblioteca` de `DOMAIN_MODEL.md` em 6 entidades endereçáveis: `KnowledgeSource`, `KnowledgeDocument` (título + 15 campos de metadados: tipo, autor, fonte, ano, idioma, resumo, palavras-chave, competências BNCC e BNCC Computação, ano escolar, tempo estimado, nível de dificuldade, licença), `KnowledgeCollection`, `KnowledgeTag`, `KnowledgeTopic` e `KnowledgeReference` — **o vínculo direto com `Lesson` (D-028) e Mission Flow** pedido pela Sprint. 13 categorias iniciais de recurso. Mecanismo de busca (`KnowledgeDocumentRepository.search()`) cobrindo as 6 pesquisas pedidas (tema, competência, habilidade, ano, tipo, texto) — filtragem real na implementação seed, não stub. Sete contratos de integração futura (NotebookLM, Google Drive, Google Docs, YouTube, OpenAlex, SciELO, Crossref), mesmo padrão D-019 — nenhuma chamada de rede. Schema versionado (`app/db/migrations/0004_knowledge_engine.sql`, 10 tabelas, sem INSERT); banco stub até haver credenciais, reaproveitando `isDatabaseConfigured` de `modules/platform` (sem cliente Supabase novo). `typecheck`/`lint` limpos. Ver `DECISIONS.md` D-034 e `KNOWLEDGE_ENGINE.md`.
 
 ## Ciclo 2 — Lesson Architecture: Fundação da Aula Inteligente (17/07/2026)
 
@@ -112,7 +116,7 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 
 ## Próxima tarefa
 
-A fundação da Lesson (M10) é só documentação — não muda a prioridade imediata. O Mission Flow mudou de novo (M08 e M09) desde que `ROTEIRO-DEMONSTRACAO.md` foi escrito — **reensaiar o tempo da demonstração segue sendo a tarefa mais urgente**, antes de qualquer outra coisa: a meta de 15 (ou 20?) minutos nunca foi validada com fluxo algum. Em paralelo: **do fundador** (fora do código, ~15 min) — executar os passos de console de `AUTHENTICATION.md`/`SUPABASE.md` (Google Cloud + Supabase) e fazer o primeiro login real; **da próxima Sprint de código**, com o login validado — implementar o `google-classroom-repository` (hoje stub) para sincronizar turmas reais. Painel do Gestor segue planejado no `ROADMAP.md`. A implementação de qualquer componente da Lesson (D-028) é posterior a isso — nenhum componente foi priorizado ainda.
+A fundação da Lesson (M10) e o Knowledge Engine (M11) são arquitetura/documentação — não mudam a prioridade imediata, mesmo o Knowledge Engine tendo ganhado código real (sem UI). O Mission Flow mudou de novo (M08 e M09) desde que `ROTEIRO-DEMONSTRACAO.md` foi escrito — **reensaiar o tempo da demonstração segue sendo a tarefa mais urgente**, antes de qualquer outra coisa: a meta de 15 (ou 20?) minutos nunca foi validada com fluxo algum. Em paralelo: **do fundador** (fora do código, ~15 min) — executar os passos de console de `AUTHENTICATION.md`/`SUPABASE.md` (Google Cloud + Supabase) e fazer o primeiro login real; **da próxima Sprint de código**, com o login validado — implementar o `google-classroom-repository` (hoje stub) para sincronizar turmas reais. Painel do Gestor segue planejado no `ROADMAP.md`. A implementação de qualquer componente da Lesson (D-028) ou de uma integração real do Knowledge Engine (D-034) é posterior a isso — nenhum dos dois foi priorizado ainda.
 
 ## Riscos conhecidos
 

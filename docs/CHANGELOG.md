@@ -2,6 +2,20 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 18/07/2026 — M11: Knowledge Engine (Biblioteca Inteligente)
+
+Sprint de arquitetura — novo módulo `modules/knowledge`, zero mudança visual (mesmo padrão de M04/`modules/platform`; nenhuma página consome o módulo). Nenhuma IA, nenhuma API externa integrada, nenhuma autenticação alterada, nenhuma tabela existente modificada.
+
+- **6 entidades** materializando a `Biblioteca` de `DOMAIN_MODEL.md`: `KnowledgeSource`, `KnowledgeDocument` (título + 15 campos de metadados — tipo, autor, fonte, ano, idioma, resumo, palavras-chave, competências BNCC e BNCC Computação, ano escolar, tempo estimado, nível de dificuldade, licença), `KnowledgeCollection`, `KnowledgeTag`, `KnowledgeTopic`, `KnowledgeReference`.
+- **13 categorias iniciais** de recurso (`KnowledgeResourceType`): Artigos, PDFs, Slides, Vídeos, Estudos de Caso, Leis, Normativas, Pesquisas, Infográficos, Sites, Livros, Materiais do Professor, Materiais do Aluno.
+- **Mecanismo de busca**: `KnowledgeDocumentRepository.search()` cobre as 6 pesquisas pedidas (tema, competência, habilidade, ano, tipo, texto) — filtros combináveis, filtragem real na implementação seed.
+- **7 contratos de integração futura** (`KnowledgeIntegrationProvider`, um stub por origem): NotebookLM, Google Drive, Google Docs, YouTube, OpenAlex, SciELO, Crossref — nenhuma chamada de rede, mesmo padrão D-019.
+- **`KnowledgeReference`** é o vínculo direto entre um Documento e uma `Lesson` (D-028, por id solto) ou uma `Mission` (`modules/library`, com foreign key real) — a relação Biblioteca ↔ Lesson ↔ Mission Flow pedida pela Sprint.
+- **Schema versionado** (`app/db/migrations/0004_knowledge_engine.sql`, 10 tabelas, sem nenhum INSERT); banco stub até haver credenciais, reaproveitando `isDatabaseConfigured` de `modules/platform` — nenhum cliente Supabase novo.
+- **Escopo global/institution**: a maioria dos recursos nasce `global` (catálogo oficial IAH), mesma exceção multi-tenant já aplicada a `Mission`; `institution` fica pronto para quando uma escola quiser curar sua própria coleção.
+- Novo `docs/KNOWLEDGE_ENGINE.md`. `npx tsc --noEmit` e `npm run lint` limpos.
+- Ver `DECISIONS.md` D-034.
+
 ## 18/07/2026 — Strategic Curriculum Alignment (Alinhamento Normativo)
 
 Sprint só de documentação — nenhum código, arquitetura implementada, funcionalidade ou banco de dados alterado.

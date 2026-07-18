@@ -2,7 +2,7 @@
 
 Documento único de transição de contexto. Escrito para que uma nova conversa (ou uma nova pessoa) retome o projeto sem precisar reconstruir nada do histórico. Se este documento divergir do código, o código manda — mas a divergência deve ser corrigida aqui.
 
-Para o dia a dia, os documentos vivos continuam sendo `VISION.md`, `PRODUCT.md`, `ROADMAP.md`, `STATUS.md` e `DECISIONS.md` (`CHANGELOG.md` para o histórico entrega-a-entrega). Este HANDOFF é o resumo de entrada única; aqueles são a fonte de verdade contínua. Referências técnicas complementares: `DOMAIN_MODEL.md` (modelo institucional completo), `IMPORT_ARCHITECTURE.md` (importação de Turma/Aluno de origens externas), `AUTHORING_MODEL.md` (motor de autoria de Missões) e `PERSISTENCE.md` (arquitetura de persistência multi-tenant, seeds, checklist Mock → Banco Real) — consultar antes de qualquer Sprint que envolva Instituição/Turma/Aluno/Professor/integração/autoria/banco além do que já existe hoje.
+Para o dia a dia, os documentos vivos continuam sendo `VISION.md`, `PRODUCT.md`, `ROADMAP.md`, `STATUS.md` e `DECISIONS.md` (`CHANGELOG.md` para o histórico entrega-a-entrega). Este HANDOFF é o resumo de entrada única; aqueles são a fonte de verdade contínua. Referências técnicas complementares: `DOMAIN_MODEL.md` (modelo institucional completo), `IMPORT_ARCHITECTURE.md` (importação de Turma/Aluno de origens externas), `AUTHORING_MODEL.md` (motor de autoria de Missões), `PERSISTENCE.md` (arquitetura de persistência multi-tenant, seeds, checklist Mock → Banco Real) e `KNOWLEDGE_ENGINE.md` (Biblioteca Inteligente — entidades, metadados, busca, integrações futuras) — consultar antes de qualquer Sprint que envolva Instituição/Turma/Aluno/Professor/integração/autoria/banco/Biblioteca além do que já existe hoje.
 
 > **Nota:** este projeto não tem (nem deve ter) um `MASTER.md`. Se uma Sprint pedir para atualizá-lo, o documento equivalente é este `HANDOFF.md` — "documento único de transição de contexto" já é a definição de um master doc (ver `DECISIONS.md` D-018, D-021).
 
@@ -63,7 +63,9 @@ IAH - Educacional/
 │       │   ├── library/          ← Mission (entidade + repositório local)
 │       │   ├── classroom/        ← StudentWork + ClassMonitor (aluno/professor)
 │       │   ├── integrations/     ← AuthProvider/ClassroomProvider/ImportProvider (mock + stubs)
-│       │   └── platform/         ← núcleo multi-tenant (entidades, contratos, seeds, factory)
+│       │   ├── platform/         ← núcleo multi-tenant (entidades, contratos, seeds, factory)
+│       │   ├── authoring/        ← Mission Studio (StudioMission, versionamento, IPE só contratos)
+│       │   └── knowledge/        ← Knowledge Engine (Biblioteca Inteligente — entidades, busca, integrações stub)
 │       ├── lib/                  ← site.ts (config/SEO), utils.ts
 │       └── hooks/
 │   └── db/migrations/            ← schema SQL versionado (sem INSERTs; ver PERSISTENCE.md)
@@ -99,15 +101,17 @@ IAH - Educacional/
 - **Autenticação definitiva** (M07): Auth.js v5 + Google, sessão JWT, middleware de rotas privadas, provisionamento automático do professor no primeiro login (`modules/identity`, migration `0003`), logout no header. **Ativa só quando o fundador executar os passos de console** (`AUTHENTICATION.md`/`SUPABASE.md`); sem credenciais, modo demonstração intacto.
 - **Mission Studio** (M07, `/professor/estudio`, módulo `modules/authoring`): biblioteca com filtros/pesquisa, editor em 6 etapas com autosave, versionamento por linhagem (publicada imutável, nova versão para editar, nada apagado), publicação com pré-condições; **missões salvas neste dispositivo** (localStorage rotulado) até o banco existir; contratos do IPE prontos (sem IA). Ver `MISSION_STUDIO.md`.
 - **Mission Flow** (M08, `/missoes/[id]`): a experiência do aluno virou 9 microetapas (Capa→Contexto→Objetivo→Investigação→Comparação→Produção→Critérios→Entrega→Reflexão), baixa carga cognitiva, 7 componentes reutilizáveis. Sem schema novo — um parser deriva estrutura do `didacticMaterials` existente. `modules/classroom` intocado. Ver `DECISIONS.md` D-027.
+- **Knowledge Engine** (M11, módulo `modules/knowledge`): arquitetura da Biblioteca Inteligente — 6 entidades (`KnowledgeSource`/`Document`/`Collection`/`Tag`/`Topic`/`Reference`), 15 campos de metadados, 13 categorias de recurso, mecanismo de busca real (seed em memória), 7 contratos de integração futura (stub), schema versionado (`0004_knowledge_engine.sql`), vínculo direto com `Lesson`/Mission Flow via `KnowledgeReference`. Nenhuma página consome o módulo ainda. Ver `DECISIONS.md` D-034 e `KNOWLEDGE_ENGINE.md`.
 - **CI/CD completo**: push na `main` → deploy automático na Vercel.
 
 Lista viva e mais detalhada: `STATUS.md` → "Funcionalidades prontas". Histórico entrega-a-entrega: `CHANGELOG.md`.
 
 ## 7. Funcionalidades pendentes
 
-- **Ativação da autenticação e do banco** — o código está completo (M07); faltam os passos de console do fundador: projeto Google Cloud (OAuth), projeto Supabase (migrations 0001–0003 + linha da Instituição) e variáveis na Vercel — roteiros em `AUTHENTICATION.md`/`SUPABASE.md`. Até lá, a UI roda em `localStorage`/simulado.
+- **Ativação da autenticação e do banco** — o código está completo (M07); faltam os passos de console do fundador: projeto Google Cloud (OAuth), projeto Supabase (migrations 0001–0004 + linha da Instituição) e variáveis na Vercel — roteiros em `AUTHENTICATION.md`/`SUPABASE.md`. Até lá, a UI roda em `localStorage`/simulado.
 - **Google Workspace real** (OAuth + Classroom API) — arquitetura pronta em `modules/integrations`, falta o projeto no Google Cloud Console (credenciais, verificação de escopos restritos); passo a passo em `GOOGLE_WORKSPACE.md`.
-- **Biblioteca**, **Projetos**, **Mentor IA**, **Agenda**, **Perfil**, **Laboratório** — itens da sidebar marcados "Em breve" e desabilitados (honestos, não clicáveis à toa).
+- **Biblioteca** — arquitetura pronta desde M11 (`modules/knowledge`, `KNOWLEDGE_ENGINE.md`), mas sem tela: o item da sidebar segue "Em breve" até existir uma página que consuma o módulo.
+- **Projetos**, **Mentor IA**, **Agenda**, **Perfil**, **Laboratório** — itens da sidebar marcados "Em breve" e desabilitados (honestos, não clicáveis à toa).
 - **Modo Claro funcional** — tokens existem, sem alternância na interface.
 - **Efeitos do Menu de Acessibilidade** — interface pronta, nenhum efeito persiste ainda.
 - **Envio real por Resend** — falta `RESEND_API_KEY`; formulários operam em `mailto:`.
@@ -139,6 +143,8 @@ Resumo das mais importantes (histórico completo com motivo/alternativas/impacto
 - **Mission Studio: autoria localStorage rotulada, publicada imutável, IPE só contratos** (D-026, `MISSION_STUDIO.md`): versionamento por linhagem, "Publicar" declara alcance real (Estúdio, não runtime do aluno), nenhum botão de IA sem IA por trás.
 - **Mission Flow: parser de conteúdo em vez de schema novo, imagem via ícone não foto** (D-027, `DECISIONS.md`): `didacticMaterials` decomposto por prefixo já usado na escrita; retomada inteligente deriva a etapa do `StudentWork` já existente, sem novo storage; nenhuma foto fabricada da manchete (colidiria com o critério de coerência de imagem da própria Missão).
 - **Lesson como unidade pedagógica central; Missão vira um recurso dentro dela** (D-028, `DECISIONS.md`): sprint só de documentação, nenhum código. `Lesson` (Aula) é o Pedagogical Package que o Professor usa para conduzir uma aula — agrupa Planejamento, Objetivos, Competências BNCC, Série, Tempo, Pré-requisitos, Mission Flow (referenciado, não substituído), Slides, Material NotebookLM, Biblioteca Oficial, Estudos de Caso, Exercícios, Rubricas, Avaliação Assistida, Adaptações para Neurodivergentes, Portfólio e Analytics. Seis contratos nomeados em prosa (`Lesson`/`LessonBuilder`/`LessonResources`/`LessonMaterial`/`LessonAssessment`/`LessonAccessibility`), sem arquivo `.ts` ainda. `DOMAIN_MODEL.md` não foi tocado (fora do escopo desta Sprint) e continua descrevendo `Missão` como hoje — sem contradição, ver a "Nota de coerência" em D-028. `LessonAccessibility` tem um ponto em aberto sensível (dado de saúde de menor, LGPD) que exige revisão pedagógica/jurídica antes de qualquer implementação.
+- **Alinhamento Normativo: LDB/BNCC/BNCC Computação/Método IAH® como referenciais permanentes** (D-029 a D-033, `DECISIONS.md`): metadados curriculares obrigatórios em `Lesson`/`Mission`, rastreabilidade de competência em toda avaliação (`LessonAssessment`), visualização do alinhamento curricular antes de publicar, relatórios pedagógicos por competência (extensão de `Indicadores`/Painel do Gestor). Só documentação — nenhum campo, validação ou tela implementada.
+- **Knowledge Engine: módulo `modules/knowledge`, seed em memória + banco stub** (D-034, `KNOWLEDGE_ENGINE.md`): 6 entidades materializam a `Biblioteca` de `DOMAIN_MODEL.md`; `KnowledgeReference` é o vínculo direto com `Lesson`/Mission Flow; `search()` cobre as 6 pesquisas pedidas com filtragem real na implementação seed; 7 integrações futuras só como contrato (mesmo padrão D-019); reaproveita `isDatabaseConfigured` de `modules/platform` em vez de um segundo cliente Supabase. Schema em `0004_knowledge_engine.sql`, sem INSERT. Nenhuma página consome o módulo.
 - **Base UI (não Radix)** por baixo do shadcn/ui: `render` no lugar de `asChild`; `DropdownMenuLabel` exige estar dentro de `Group`/`RadioGroup`.
 
 ## 9. Convenções adotadas
