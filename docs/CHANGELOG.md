@@ -2,6 +2,19 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 17/07/2026 — M08: Mission Flow UX 2.0 (baixa carga cognitiva)
+
+Refatoração completa da experiência do aluno em `/missoes/[id]` — sem funcionalidades novas, sem IA, sem banco, sem autenticação. Nenhuma dependência nova.
+
+- **`/missoes/[id]` deixa de ser página única** e passa a ser um fluxo de 9 microetapas: Capa → Contexto → Objetivo → Investigação (uma evidência por tela) → Comparação → Produção → Critérios → Entrega → Reflexão Final. Aplica Cognitive Load Theory, chunking, progressive disclosure, dual coding (ícone + texto), 1 ação principal por tela e "Etapa X de 9" sempre visível.
+- **7 componentes reutilizáveis**: `MissionHeader`, `ProgressIndicator`, `MissionStep`, `EvidenceCard`, `RubricCard`, `ReflectionCard`, `MissionNavigation`.
+- **Sem schema novo**: `parse-mission-content.ts` decompõe o `didacticMaterials` já existente pelos prefixos já usados na escrita ("DOSSIÊ · Item N", "GUIA DE INVESTIGAÇÃO ·", "CRITÉRIOS DE AUDITORIA ·") em cartões — mesma lacuna documentada em D-022, agora com um adaptador de apresentação por cima, sem alterar o domínio.
+- **`modules/classroom` 100% intocado**: mesmo `StudentWork`, mesmo `loadStudentWork`/`saveStudentWork`, mesmos gates (reflexão só após entrega). `mission-workspace.tsx` removido, substituído por `mission-flow/` + `use-student-work.ts` consumindo os mesmos dados.
+- **Retomada inteligente sem novo storage**: a etapa inicial é derivada do `StudentWork` já existente (produção entregue → Entrega/Reflexão; produção com texto → Produção; senão → Capa).
+- **Imagem via ícone + cor, não foto**: uma foto "realista" da manchete confundiria com o próprio critério de coerência de imagem que a Missão ensina a checar.
+- Validado no navegador ponta a ponta (todas as 9 etapas, incluindo as 4 evidências), reload retomando na etapa certa, Diário do Auditor refletindo a reflexão, sem overflow em mobile (375px) e desktop (1280px), console limpo, build/lint/typecheck limpos.
+- **Achado, não resolvido nesta Sprint:** a meta de tempo da demonstração (`ROTEIRO-DEMONSTRACAO.md`) precisa ser reensaiada — mais telas pode mudar o tempo percebido mesmo com menos carga cognitiva por tela. Ver `DECISIONS.md` D-027.
+
 ## 16/07/2026 — M07: Mission Studio (Estúdio de Missões)
 
 Ambiente oficial de criação, edição, versionamento e publicação de Missões — sem IA nesta Sprint (contratos do IPE apenas). Nenhuma dependência nova.

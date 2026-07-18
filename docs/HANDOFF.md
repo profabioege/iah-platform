@@ -98,6 +98,7 @@ IAH - Educacional/
 - **Integração Google Classroom** (`modules/integrations/google-classroom`, M06): módulo plugável (real + mock), `ClassroomSyncService`/`ClassroomSyncState`, Import Wizard em `/professor/importar` (6 passos), seção Turmas no Painel do Professor, contratos de entrega de Missão. Sem OAuth/banco — dados simulados rotulados. Ver `GOOGLE_CLASSROOM_INTEGRATION.md`.
 - **Autenticação definitiva** (M07): Auth.js v5 + Google, sessão JWT, middleware de rotas privadas, provisionamento automático do professor no primeiro login (`modules/identity`, migration `0003`), logout no header. **Ativa só quando o fundador executar os passos de console** (`AUTHENTICATION.md`/`SUPABASE.md`); sem credenciais, modo demonstração intacto.
 - **Mission Studio** (M07, `/professor/estudio`, módulo `modules/authoring`): biblioteca com filtros/pesquisa, editor em 6 etapas com autosave, versionamento por linhagem (publicada imutável, nova versão para editar, nada apagado), publicação com pré-condições; **missões salvas neste dispositivo** (localStorage rotulado) até o banco existir; contratos do IPE prontos (sem IA). Ver `MISSION_STUDIO.md`.
+- **Mission Flow** (M08, `/missoes/[id]`): a experiência do aluno virou 9 microetapas (Capa→Contexto→Objetivo→Investigação→Comparação→Produção→Critérios→Entrega→Reflexão), baixa carga cognitiva, 7 componentes reutilizáveis. Sem schema novo — um parser deriva estrutura do `didacticMaterials` existente. `modules/classroom` intocado. Ver `DECISIONS.md` D-027.
 - **CI/CD completo**: push na `main` → deploy automático na Vercel.
 
 Lista viva e mais detalhada: `STATUS.md` → "Funcionalidades prontas". Histórico entrega-a-entrega: `CHANGELOG.md`.
@@ -136,6 +137,7 @@ Resumo das mais importantes (histórico completo com motivo/alternativas/impacto
 - **Google Classroom plugável, Import Wizard sem OAuth/banco** (D-024, `GOOGLE_CLASSROOM_INTEGRATION.md`): mappers isolam os tipos Google do resto; `ClassroomSyncService` compõe o `ImportService` (não duplica) e é genérico; Wizard e Turmas sobre dados simulados rotulados; entrega de Missão é só contrato. Não se fabricou seed com o nome do Colégio Beryon (instituição real) — a prontidão real depende de OAuth+banco.
 - **Autenticação: Auth.js v5 + Google, sessão JWT, allowlist fechada por padrão** (D-025, `AUTHENTICATION.md`): sem `AUTH_ALLOWED_EMAILS` ninguém entra; Instituição nunca criada automaticamente (inserida pelo responsável — `SUPABASE.md`); sem tabela de sessões (JWT); toda autenticação passa pelo contrato `AuthProvider` via `getAuthProvider()`. Cuidado técnico: o gate `isAuthConfigured()` no middleware fica ANTES de invocar o Auth.js (sem `AUTH_SECRET`, o Auth.js lança `MissingSecret` antes do callback `authorized`).
 - **Mission Studio: autoria localStorage rotulada, publicada imutável, IPE só contratos** (D-026, `MISSION_STUDIO.md`): versionamento por linhagem, "Publicar" declara alcance real (Estúdio, não runtime do aluno), nenhum botão de IA sem IA por trás.
+- **Mission Flow: parser de conteúdo em vez de schema novo, imagem via ícone não foto** (D-027, `DECISIONS.md`): `didacticMaterials` decomposto por prefixo já usado na escrita; retomada inteligente deriva a etapa do `StudentWork` já existente, sem novo storage; nenhuma foto fabricada da manchete (colidiria com o critério de coerência de imagem da própria Missão).
 - **Base UI (não Radix)** por baixo do shadcn/ui: `render` no lugar de `asChild`; `DropdownMenuLabel` exige estar dentro de `Group`/`RadioGroup`.
 
 ## 9. Convenções adotadas
@@ -177,11 +179,11 @@ Segredos existem **só** em `app/.env.local` (gitignored) e no painel da Vercel 
 
 ## 12. Próximos milestones
 
-1. **Painel do Gestor (MVP Comercial)** — próxima Sprint planejada (não implementada ainda) nesta sessão; ver `ROADMAP.md`, "Sprint seguinte", para o planejamento técnico e funcional completo, aguardando aprovação para implementar.
-2. **Ensaio humano cronometrado da demonstração** — a Sprint de 16/07/2026 validou tecnicamente o fluxo completo (sem erro, sem quebra visual em 5 larguras) e produziu `ROTEIRO-DEMONSTRACAO.md`, mas não substitui um ensaio com pessoa real lendo o roteiro em voz alta com cronômetro. Antes disso, decidir a divergência encontrada: Landing promete "20 minutos", meta interna registrada é "15 minutos" — ver `STATUS.md`.
+1. **Reensaiar o tempo da demonstração** — a interface da Missão mudou de novo (Mission Flow, M08, 9 microetapas); `ROTEIRO-DEMONSTRACAO.md` e a meta de 15 min descrevem o fluxo antigo. Prioridade máxima antes de qualquer outra coisa. Decidir também a divergência "15 ou 20 minutos" (Landing vs. meta interna) — ver `STATUS.md`.
+2. **Painel do Gestor (MVP Comercial)** — próxima Sprint planejada (não implementada ainda); ver `ROADMAP.md`, "Sprint seguinte", para o planejamento técnico e funcional completo, aguardando aprovação para implementar.
 3. Corrigir a observação de SEO pendente (título sem sufixo em subpáginas do bloco `(marketing)`).
-4. **Google Workspace real** — quando o piloto exigir, criar o projeto no Google Cloud Console e trocar os stubs por implementações reais em `modules/integrations` (ver `GOOGLE_WORKSPACE.md`).
-5. Pós-piloto (sem data, ordem no `ROADMAP.md`): Biblioteca → Autenticação real → Persistência em banco → Segunda Missão → privacidade do Diário → Mentor IA → Modo Claro → virada de domínio.
+4. **Ativar autenticação + Google Workspace real** — passos de console do fundador (`AUTHENTICATION.md`/`SUPABASE.md`/`GOOGLE_WORKSPACE.md`); depois disso, implementar `google-classroom-repository` (hoje stub) para sincronizar turmas reais.
+5. Pós-piloto (sem data, ordem no `ROADMAP.md`): Biblioteca → Persistência em banco → Segunda Missão → privacidade do Diário → Mentor IA → Modo Claro → virada de domínio.
 
 ## 13. Principais riscos
 

@@ -8,7 +8,13 @@ Projeto em **fase de preparação do piloto comercial de agosto/2026**, com um f
 
 ## Último commit
 
-`16312b4` (anterior a esta tarefa) — *feat(auth): M07 — Primeiro Usuário Real* (16/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com o Mission Studio — ver "Ciclo 2 — Mission Studio" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+`5568646` (anterior a esta tarefa) — *feat(authoring): M07 — Mission Studio* (16/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com o Mission Flow (M08) — ver "Ciclo 2 — Mission Flow" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+
+## Ciclo 2 — Mission Flow (17/07/2026)
+
+`/missoes/[id]` deixou de ser uma página única e virou um fluxo de 9 microetapas (Capa → Contexto → Objetivo → Investigação → Comparação → Produção → Critérios → Entrega → Reflexão Final), aplicando Cognitive Load Theory/chunking/progressive disclosure/dual coding. 7 componentes reutilizáveis (`MissionHeader`, `ProgressIndicator`, `MissionStep`, `EvidenceCard`, `RubricCard`, `ReflectionCard`, `MissionNavigation`). **Sem schema novo**: um parser deriva Evidence/Guia/Critérios do `didacticMaterials` já existente pelos prefixos já usados na escrita ("DOSSIÊ · Item N", "GUIA DE INVESTIGAÇÃO ·", "CRITÉRIOS DE AUDITORIA ·"). Imagem por evidência é ícone + cor (Dual Coding), não foto fabricada. Retomada inteligente deriva a etapa inicial do `StudentWork` já existente (nenhum dado novo persistido). `modules/classroom` (produção, reflexão, gates de entrega) 100% intocado — validado no navegador ponta a ponta (Capa → 4 evidências → Comparação → Produção → Critérios → Entrega → Reflexão → "Aula concluída"; reload retoma na etapa certa; Diário do Auditor reflete a reflexão). Sem overflow em mobile (375px) e desktop (1280px), console limpo. Ver `DECISIONS.md` D-027.
+
+**Pendência aberta por esta Sprint:** a meta de tempo da demonstração (`ROTEIRO-DEMONSTRACAO.md`, ~13–14 min) precisa ser reensaiada — mais telas muda o tempo percebido mesmo com menos carga cognitiva por tela; isso não foi medido aqui.
 
 ## Ciclo 2 — Mission Studio (16/07/2026)
 
@@ -74,6 +80,7 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 - Integração Google Classroom (`modules/integrations/google-classroom`): módulo plugável (real + mock), `ClassroomSyncService`, Import Wizard (`/professor/importar`) e seção Turmas no Painel do Professor — tudo sobre dados simulados rotulados, sem OAuth/banco. Ver `GOOGLE_CLASSROOM_INTEGRATION.md`.
 - Autenticação (Auth.js v5 + Google): login/logout, sessão JWT, middleware de rotas privadas, provisionamento automático do professor no primeiro login (`modules/identity`, migration `0003`) — ativa ao definir as credenciais; sem elas, modo demonstração intacto. Ver `AUTHENTICATION.md`/`SUPABASE.md`.
 - Mission Studio (`/professor/estudio`, módulo `modules/authoring`): biblioteca com filtros/pesquisa, editor em 6 etapas com autosave, versionamento por linhagem (publicada imutável), publicação com pré-condições; missões salvas neste dispositivo (localStorage rotulado); contratos do IPE prontos, sem IA. Ver `MISSION_STUDIO.md`.
+- Mission Flow (`/missoes/[id]`): experiência do aluno como 9 microetapas com baixa carga cognitiva, 7 componentes reutilizáveis, sem alterar `modules/classroom` nem o conteúdo da Missão. Ver `DECISIONS.md` D-027.
 
 ## Funcionalidades em andamento / lacunas conhecidas
 
@@ -84,7 +91,7 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 
 ## Próxima tarefa
 
-**Do fundador (fora do código, ~15 min):** executar os passos de console de `AUTHENTICATION.md`/`SUPABASE.md` — criar projeto Google Cloud (OAuth) e projeto Supabase (migrations 0001–0003 + linha da Instituição), definir as variáveis na Vercel e fazer o primeiro login real. **Da próxima Sprint (código):** com o login validado, implementar o `google-classroom-repository` (hoje stub) para sincronizar as turmas reais — o restante do caminho já está pronto (`GOOGLE_CLASSROOM_INTEGRATION.md`). Em paralelo seguem pendentes: Painel do Gestor (planejado no `ROADMAP.md`), meta da demonstração (15 ou 20 min) e ensaio humano cronometrado (`ROTEIRO-DEMONSTRACAO.md`).
+O Mission Flow (M08) mudou a experiência que `ROTEIRO-DEMONSTRACAO.md` descreve — **reensaiar o tempo da demonstração passa a ser a tarefa mais urgente**, antes de qualquer outra coisa: a meta de 15 (ou 20?) minutos nunca foi validada com fluxo algum, e a interface acabou de mudar de novo. Em paralelo: **do fundador** (fora do código, ~15 min) — executar os passos de console de `AUTHENTICATION.md`/`SUPABASE.md` (Google Cloud + Supabase) e fazer o primeiro login real; **da próxima Sprint de código**, com o login validado — implementar o `google-classroom-repository` (hoje stub) para sincronizar turmas reais. Painel do Gestor segue planejado no `ROADMAP.md`.
 
 ## Riscos conhecidos
 
