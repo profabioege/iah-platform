@@ -8,7 +8,13 @@ Projeto em **fase de preparação do piloto comercial de agosto/2026**, com um f
 
 ## Último commit
 
-`e164a54` (anterior a esta tarefa) — *feat(missions): M08 — Mission Flow UX 2.0* (17/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com o refinamento cognitivo do Mission Flow (M09) — ver "Ciclo 2 — Mission Flow 3.0" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+`3641737` (anterior a esta tarefa) — *feat(missions): M09 — Mission Flow 3.0* (17/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com a fundação da Lesson (M10) — ver "Ciclo 2 — Lesson Architecture" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+
+## Ciclo 2 — Lesson Architecture: Fundação da Aula Inteligente (17/07/2026)
+
+Sprint só de documentação — nenhum código, componente React, página, rota ou banco de dados alterado. Define oficialmente a **Lesson** (Aula) como unidade pedagógica central do IAH: um **Pedagogical Package** completo que o Professor usa para conduzir uma aula, reunindo Planejamento, Objetivos, Competências BNCC, Série, Tempo, Pré-requisitos, Mission Flow (a Missão existente, referenciada — não substituída), Slides, Material NotebookLM, Biblioteca Oficial, Estudos de Caso, Exercícios, Rubricas, Avaliação Assistida, Adaptações para Neurodivergentes, Portfólio e Analytics. Seis contratos nomeados em prosa (`Lesson`, `LessonBuilder`, `LessonResources`, `LessonMaterial`, `LessonAssessment`, `LessonAccessibility`) — nenhum arquivo de código criado nesta Sprint. `LessonBuilder` já nasce como o ponto de extensão onde o IPE (D-026) vai crescer para montar esse pacote automaticamente no futuro, sempre com revisão do Professor. Ver `DECISIONS.md` D-028.
+
+**Achado a decidir, não resolvido nesta Sprint:** `LessonAccessibility` (Adaptações para Neurodivergentes) tocaria em dado sensível de um menor (condição de saúde/diagnóstico) se modelada com rótulos clínicos — precisa de revisão pedagógica e jurídica (LGPD) antes de qualquer implementação, não só de decisão técnica.
 
 ## Ciclo 2 — Mission Flow 3.0 (17/07/2026)
 
@@ -95,7 +101,7 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 
 ## Próxima tarefa
 
-O Mission Flow mudou de novo (M08 e agora M09) desde que `ROTEIRO-DEMONSTRACAO.md` foi escrito — **reensaiar o tempo da demonstração segue sendo a tarefa mais urgente**, antes de qualquer outra coisa: a meta de 15 (ou 20?) minutos nunca foi validada com fluxo algum. Em paralelo: **do fundador** (fora do código, ~15 min) — executar os passos de console de `AUTHENTICATION.md`/`SUPABASE.md` (Google Cloud + Supabase) e fazer o primeiro login real; **da próxima Sprint de código**, com o login validado — implementar o `google-classroom-repository` (hoje stub) para sincronizar turmas reais. Painel do Gestor segue planejado no `ROADMAP.md`.
+A fundação da Lesson (M10) é só documentação — não muda a prioridade imediata. O Mission Flow mudou de novo (M08 e M09) desde que `ROTEIRO-DEMONSTRACAO.md` foi escrito — **reensaiar o tempo da demonstração segue sendo a tarefa mais urgente**, antes de qualquer outra coisa: a meta de 15 (ou 20?) minutos nunca foi validada com fluxo algum. Em paralelo: **do fundador** (fora do código, ~15 min) — executar os passos de console de `AUTHENTICATION.md`/`SUPABASE.md` (Google Cloud + Supabase) e fazer o primeiro login real; **da próxima Sprint de código**, com o login validado — implementar o `google-classroom-repository` (hoje stub) para sincronizar turmas reais. Painel do Gestor segue planejado no `ROADMAP.md`. A implementação de qualquer componente da Lesson (D-028) é posterior a isso — nenhum componente foi priorizado ainda.
 
 ## Riscos conhecidos
 
@@ -104,6 +110,7 @@ O Mission Flow mudou de novo (M08 e agora M09) desde que `ROTEIRO-DEMONSTRACAO.m
 - **Painel do Professor usa turma fictícia**: qualquer demonstração precisa deixar claro que os alunos ali são simulados, não a turma real do professor.
 - **Sem autenticação:** qualquer pessoa com a URL acessa `/professor` e `/dashboard` — aceitável para demonstração controlada, não para uso público.
 - **Google Workspace segue sem credenciais reais:** a arquitetura está pronta (`modules/integrations`), mas login e Classroom reais dependem de um projeto no Google Cloud Console que ainda não existe — ver `GOOGLE_WORKSPACE.md`.
+- **`LessonAccessibility` (D-028) toca em dado sensível de menor se avançar para implementação**: adaptações para neurodivergentes com rótulo clínico/diagnóstico exigem revisão pedagógica e jurídica (LGPD) antes de qualquer campo ser implementado — hoje é só um contrato nomeado, sem modelagem de dado real.
 
 ## Pendências
 

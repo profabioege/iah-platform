@@ -2,6 +2,17 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 17/07/2026 — M10: Lesson Architecture (Fundação da Aula Inteligente)
+
+Sprint só de documentação — nenhum código, componente React, página, rota ou banco de dados alterado.
+
+- **`Lesson` (Aula) definida como unidade pedagógica central do IAH**: um Pedagogical Package completo que o Professor usa para conduzir uma aula, agrupando Planejamento, Objetivos, Competências BNCC, Série, Tempo, Pré-requisitos, **Mission Flow** (a Missão existente, referenciada — não substituída), Slides, Material NotebookLM, Biblioteca Oficial, Estudos de Caso, Exercícios, Rubricas, Avaliação Assistida, Adaptações para Neurodivergentes, Portfólio e Analytics.
+- **Seis contratos nomeados, descritos em prosa** (`Lesson`, `LessonBuilder`, `LessonResources`, `LessonMaterial`, `LessonAssessment`, `LessonAccessibility`) — nenhum arquivo `.ts` criado nesta Sprint, por instrução explícita da Sprint M10. Reaproveitam entidades já existentes onde fazem sentido: `LearningObjective`/`Competency`/`EvaluationCriteria`/`DidacticMaterial` (`AUTHORING_MODEL.md`), `Indicadores` (`DOMAIN_MODEL.md`).
+- **`LessonBuilder`** já nasce como o ponto de extensão onde o IPE (D-026, hoje "só contratos") vai crescer para montar esse pacote automaticamente no futuro — sempre com revisão do Professor, mesmo invariante já registrado para sugestões de campo.
+- **Achado a decidir, não resolvido nesta Sprint**: `LessonAccessibility` tocaria em dado sensível de um menor (condição de saúde/diagnóstico) se modelada com rótulos clínicos — precisa de revisão pedagógica e jurídica (LGPD) antes de qualquer implementação.
+- `DOMAIN_MODEL.md` não foi alterado (fora da lista de documentos autorizados pela Sprint) — `Missão` continua descrita como hoje; ver a "Nota de coerência" em `DECISIONS.md` D-028.
+- Ver `DECISIONS.md` D-028.
+
 ## 17/07/2026 — M09: Mission Flow 3.0 (experiência cognitiva)
 
 Refinamento visual das 9 etapas do Mission Flow (M08) — investigação guiada em vez de formulário dividido em telas. Sem rotas novas, sem schema novo, sem IA, sem banco, sem autenticação, sem dependência nova (reaproveita `tw-animate-css`, já instalado).
