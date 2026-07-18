@@ -8,7 +8,11 @@ Projeto em **fase de preparação do piloto comercial de agosto/2026**, com um f
 
 ## Último commit
 
-`66d0d7a` (anterior a esta tarefa) — *feat(integrations): M06 — Google Classroom plugável + Import Wizard* (16/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com M07 — Primeiro Usuário Real (autenticação) — ver "Ciclo 2 — Primeiro Usuário Real" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+`16312b4` (anterior a esta tarefa) — *feat(auth): M07 — Primeiro Usuário Real* (16/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com o Mission Studio — ver "Ciclo 2 — Mission Studio" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+
+## Ciclo 2 — Mission Studio (16/07/2026)
+
+Estúdio de Missões em `/professor/estudio`: Biblioteca (filtros por ano/disciplina/competência/autor/status + pesquisa, Nova Missão, duplicar) e editor em 6 etapas (Identificação → Pedagogia → Investigação → Avaliação → Materiais → Visualizar & Publicar) com autosave, versionamento por linhagem (publicada é imutável; editar exige nova versão; nada é apagado — só arquivada) e publicação com pré-condições verificáveis. Novo módulo `modules/authoring` (materializa o `MissionTemplate` de `AUTHORING_MODEL.md` + metadados novos da Sprint). **Persistência: neste dispositivo (localStorage), rotulada** — banco entra pelo ponto único `getMissionStudioRepository()` com o Supabase (checklist `PERSISTENCE.md`). "Publicar" declara o alcance real (Biblioteca do Estúdio; runtime do aluno é etapa futura). IPE: só contratos (`IpePedagogicalEngine`), nenhuma IA, nenhum botão fake. Correção de bug real achada na validação: gate `isAuthConfigured()` movido para antes do Auth.js no middleware (lançava `MissingSecret` sem `AUTH_SECRET`). Ver `DECISIONS.md` D-026 e `MISSION_STUDIO.md`.
 
 ## Ciclo 2 — Primeiro Usuário Real / Autenticação (16/07/2026)
 
@@ -69,6 +73,7 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 - Núcleo de persistência multi-tenant (`modules/platform`): entidades, contratos, seeds de demonstração, stub de banco e factory — pronto para a troca futura sem alterar UI; schema SQL versionado em `app/db/migrations/`. Ver `PERSISTENCE.md`.
 - Integração Google Classroom (`modules/integrations/google-classroom`): módulo plugável (real + mock), `ClassroomSyncService`, Import Wizard (`/professor/importar`) e seção Turmas no Painel do Professor — tudo sobre dados simulados rotulados, sem OAuth/banco. Ver `GOOGLE_CLASSROOM_INTEGRATION.md`.
 - Autenticação (Auth.js v5 + Google): login/logout, sessão JWT, middleware de rotas privadas, provisionamento automático do professor no primeiro login (`modules/identity`, migration `0003`) — ativa ao definir as credenciais; sem elas, modo demonstração intacto. Ver `AUTHENTICATION.md`/`SUPABASE.md`.
+- Mission Studio (`/professor/estudio`, módulo `modules/authoring`): biblioteca com filtros/pesquisa, editor em 6 etapas com autosave, versionamento por linhagem (publicada imutável), publicação com pré-condições; missões salvas neste dispositivo (localStorage rotulado); contratos do IPE prontos, sem IA. Ver `MISSION_STUDIO.md`.
 
 ## Funcionalidades em andamento / lacunas conhecidas
 

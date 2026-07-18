@@ -63,6 +63,15 @@ export default async function ProfessorPage() {
             </span>
           </div>
         ) : null}
+        <Link
+          href="/professor/estudio"
+          className={cn(
+            buttonVariants({ variant: "outline", size: "sm" }),
+            "w-fit",
+          )}
+        >
+          Estúdio de Missões
+        </Link>
       </header>
 
       <ClassroomsSection classrooms={classrooms} />

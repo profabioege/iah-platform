@@ -2,6 +2,19 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 16/07/2026 — M07: Mission Studio (Estúdio de Missões)
+
+Ambiente oficial de criação, edição, versionamento e publicação de Missões — sem IA nesta Sprint (contratos do IPE apenas). Nenhuma dependência nova.
+
+- **Novo módulo `modules/authoring`**: `StudioMission` (todos os campos da Sprint: título, descrição, pergunta norteadora, objetivos, competências, ano escolar, disciplina, carga horária, dificuldade, tempo estimado, rubrica, critérios, materiais, links, arquivos-referência, estudos de caso, desafio, produção esperada, reflexão, bibliografia, versão, status, autor, datas), contrato `MissionStudioRepository` e implementação localStorage — **missões salvas neste dispositivo, rotulado na interface**; banco entra pelo ponto único `getMissionStudioRepository()` quando o Supabase existir (checklist `PERSISTENCE.md`).
+- **Biblioteca de Missões** (`/professor/estudio`): pesquisa + filtros por ano, disciplina, competência, autor e status; Nova Missão; duplicar (nova linhagem); cada versão é uma linha transparente (v1, v2…).
+- **Editor em 6 etapas** (`/professor/estudio/[id]`): Identificação → Pedagogia → Investigação → Avaliação → Materiais → Visualizar & Publicar; autosave com debounce; visualização formatada; publicação com pré-condições verificáveis (título, pergunta norteadora, desafio, produção esperada).
+- **Versionamento em código** (regras de `AUTHORING_MODEL.md`): versão publicada é imutável (repositório recusa `save`; campos travam), edição pós-publicação = "Nova versão" (v+1, mesma linhagem), exclusão não existe (só arquivada).
+- **"Publicar" honesto**: declara na interface o alcance real — publicada na Biblioteca do Estúdio; levar ao aluno (runtime `/missoes`, hoje em arquivos) é etapa futura documentada.
+- **IPE (IAH Pedagogical Engine)**: só contratos (`IpePedagogicalEngine`, `IpeFieldSuggestion` com `rationale` e `requiresTeacherReview: true`; o IPE nunca grava) — cada campo do editor já é "sugerível" por construção (`IpeSuggestableField` deriva dos campos). Nenhum botão de IA na interface.
+- **Correção (bug real da M07 anterior, achado na validação)**: middleware lançava `MissingSecret` sem `AUTH_SECRET` — gate `isAuthConfigured()` movido para antes da invocação do Auth.js.
+- Novo `docs/MISSION_STUDIO.md` (arquitetura, fluxo, versionamento, publicação, integração futura com IPE). Ver `DECISIONS.md` D-026.
+
 ## 16/07/2026 — M07: Primeiro Usuário Real — autenticação definitiva (Auth.js + Google)
 
 Infraestrutura completa de login implementada; ativação depende só dos passos de console do fundador (Google Cloud + Supabase), roteirizados em `AUTHENTICATION.md` e `SUPABASE.md`. Única dependência nova: `next-auth@5 (beta)`, pedida na Sprint.
