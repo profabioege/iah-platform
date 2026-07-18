@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { auth } from "@/auth";
 import { isAuthConfigured } from "@/lib/auth-flags";
+import { getWorkspaceUser } from "@/modules/workspace";
 
 import { LessonList } from "./lesson-list";
 
@@ -45,6 +46,9 @@ async function resolveAuthor(): Promise<string> {
     const session = await auth();
     if (session?.user?.name) return session.user.name;
     if (session?.user?.email) return session.user.email;
+  } else {
+    const user = await getWorkspaceUser();
+    if (user) return user.name;
   }
   return "Professor(a) de demonstração";
 }

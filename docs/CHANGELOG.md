@@ -2,6 +2,21 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 18/07/2026 — M15: Institutional Workspace (Fundação Institucional)
+
+A Plataforma vira um ambiente institucional com login: autenticação **local simulada** (sem Google OAuth, sem Supabase Auth, sem APIs externas), autorização por papel e contexto pedagógico automático. Novo módulo `modules/workspace`.
+
+- **Entidades**: `WorkspaceUser`, `Role` (admin/teacher/student), `Permission` (capacidades nomeadas), `Subject` — novas; `Institution`, `SchoolYear` (=`AcademicYear`), `Teacher`, `Student`, `Classroom`, `Enrollment` **reaproveitadas de `modules/platform`** (nenhum segundo modelo institucional; multi-instituição por arquitetura, nada pressupõe uma única escola).
+- **Seed Colégio Beryon** (pedido explícito da Sprint, revendo a reserva de D-024 sobre o nome da escola real): Ano Letivo 2026, disciplina Inteligência Artificial & Humanidades, 5 turmas (1º EM A/B, 2º EM A/B, 3º EM A), 12 usuários — diretor@beryon.edu.br (Administrador Institucional), fabio@beryon.edu.br (Professor), aluno01–10@beryon.edu.br (2 por turma). Senha única de demonstração (`beryon2026`), exibida na própria tela de login — dados 100% simulados e rotulados (D-015).
+- **Login único** (`/entrar`): e-mail + senha, papel identificado automaticamente pelo sistema — jamais escolhido na tela. Erro de credenciais inline. Com a autenticação real (Auth.js, M07) configurada, o login com Google tem precedência — fluxo intacto.
+- **Contexto pedagógico automático**: após o login, Instituição, Ano Letivo, perfil, permissões, Turmas e Disciplinas acompanham toda a navegação (carregados no layout da Plataforma) — instituição no header ("Colégio Beryon · 2026"), identidade real no rodapé da sidebar, nome do usuário como autor no Lesson Composer/Estúdio.
+- **Perfis**: Administrador → novo Painel do Gestor (`/gestor`: Instituição, Professores, Turmas, Usuários + Configurações/Dashboard Gestor honestamente "Em breve", D-016); Professor → `/professor` ganhou o hub de Workspace (Minha Disciplina, Minhas Turmas, Planejamento Anual/Curriculum Engine, Lesson Composer, Estúdio de Missões, Mission Flow + Biblioteca Oficial/Avaliação Assistida/Analytics da Turma "Em breve"); Aluno → sidebar mínima (Minha Aula, Minha Missão, Diário do Auditor + Meu Portfólio/Meu Histórico/Meu Feedback "Em breve") — Progressive Disclosure por papel.
+- **Proteção de rotas** (middleware): sem sessão → redirect `/entrar`; aluno bloqueado de `/professor` e `/gestor`; `/gestor` exclusivo do admin. Sessão = cookie httpOnly com o id do usuário simulado.
+- **Substituível por autenticação real em dois pontos únicos**: contrato `WorkspaceAuthProvider` (preparado para Google OAuth/Workspace, Supabase Auth, Microsoft Entra ID, Sophia by Layers — nenhum implementado, D-019/D-016) e `session-cookie.ts` (cookie simulado → sessão real). Nenhuma tela muda na troca.
+- **Consequência técnica**: rotas da Plataforma deixaram de ser estáticas no build (leem o cookie de sessão — agora dinâmicas). Rotas de marketing seguem estáticas.
+- **Achado (não resolvido)**: o Painel do Professor mistura instituições — header/hub Beryon (workspace) vs. Turmas/acompanhamento nos seeds antigos ("Escola de Demonstração IAH"); unificação fica para a próxima Sprint.
+- Validado nos 3 papéis (login, redirecionamento por papel, bloqueios, logout) em desktop e mobile (375px), sem overflow, console limpo. `npm run lint` e `npm run build` limpos.
+
 ## 18/07/2026 — M14: Curriculum Engine (Currículo Vivo)
 
 Novo módulo `modules/curriculum` e nova rota `/professor/curriculo` — primeira navegação curricular da plataforma, transformando o Planejamento Anual numa estrutura navegável. Sem IA, sem NotebookLM, sem Google Classroom, sem alterar autenticação.

@@ -12,10 +12,18 @@ function sectionTitle(pathname: string): string {
   if (pathname.startsWith("/missoes")) return "Missões";
   if (pathname.startsWith("/diario")) return "Diário do Auditor";
   if (pathname.startsWith("/professor")) return "Painel do Professor";
+  if (pathname.startsWith("/gestor")) return "Painel do Gestor";
   return "Dashboard";
 }
 
-export function AppHeader({ actions }: { actions?: React.ReactNode }) {
+export function AppHeader({
+  actions,
+  badgeLabel,
+}: {
+  actions?: React.ReactNode;
+  /** Rótulo institucional (ex.: "Colégio Beryon · 2026") — vem do Workspace (M15). */
+  badgeLabel?: string;
+}) {
   const pathname = usePathname();
 
   return (
@@ -28,7 +36,7 @@ export function AppHeader({ actions }: { actions?: React.ReactNode }) {
           variant="outline"
           className="hidden border-primary/40 bg-primary/10 text-primary sm:inline-flex"
         >
-          Ensino Médio &middot; 2026
+          {badgeLabel ?? "Ensino Médio · 2026"}
         </Badge>
         {actions}
         <AccessibilityMenu />

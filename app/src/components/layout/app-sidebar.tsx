@@ -3,13 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Building2,
   CalendarDays,
   CircleUser,
   FlaskConical,
   FolderKanban,
   GraduationCap,
+  History,
   LayoutDashboard,
   Library,
+  MessageSquareText,
   NotebookPen,
   Rocket,
   Sparkles,
@@ -30,40 +33,85 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-/**
- * Menus da Plataforma. Os itens com `href` navegam de verdade; os demais
- * permanecem visíveis (visão do produto) mas inativos até serem construídos
- * nas próximas Sprints. O estado ativo é derivado da URL atual.
- */
-const menuItems: { title: string; icon: typeof LayoutDashboard; href?: string }[] =
-  [
-    { title: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-    { title: "Missões", icon: Rocket, href: "/missoes" },
-    { title: "Professor", icon: GraduationCap, href: "/professor" },
-    { title: "Laboratório", icon: FlaskConical },
-    { title: "Biblioteca", icon: Library },
-    { title: "Diário do Auditor", icon: NotebookPen, href: "/diario" },
-    { title: "Projetos", icon: FolderKanban },
-    { title: "Mentor IA", icon: Sparkles },
-    { title: "Agenda", icon: CalendarDays },
-    { title: "Perfil", icon: CircleUser },
-  ];
+type MenuItem = { title: string; icon: typeof LayoutDashboard; href?: string };
 
-export function AppSidebar() {
+/**
+ * Menus da Plataforma, por papel do Workspace (M15) — Progressive
+ * Disclosure: cada perfil vê só o que lhe pertence; o aluno tem a
+ * experiência mais enxuta. Itens sem `href` permanecem visíveis (visão
+ * do produto) mas honestamente "Em breve" (D-016). Sem papel resolvido
+ * (autenticação real ativa, sessão gerida pelo Auth.js), vale o menu
+ * completo de sempre.
+ */
+const TEACHER_MENU: MenuItem[] = [
+  { title: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+  { title: "Missões", icon: Rocket, href: "/missoes" },
+  { title: "Professor", icon: GraduationCap, href: "/professor" },
+  { title: "Laboratório", icon: FlaskConical },
+  { title: "Biblioteca", icon: Library },
+  { title: "Diário do Auditor", icon: NotebookPen, href: "/diario" },
+  { title: "Projetos", icon: FolderKanban },
+  { title: "Mentor IA", icon: Sparkles },
+  { title: "Agenda", icon: CalendarDays },
+  { title: "Perfil", icon: CircleUser },
+];
+
+const STUDENT_MENU: MenuItem[] = [
+  { title: "Minha Aula", icon: LayoutDashboard, href: "/dashboard" },
+  { title: "Minha Missão", icon: Rocket, href: "/missoes" },
+  { title: "Diário do Auditor", icon: NotebookPen, href: "/diario" },
+  { title: "Meu Portfólio", icon: FolderKanban },
+  { title: "Meu Histórico", icon: History },
+  { title: "Meu Feedback", icon: MessageSquareText },
+];
+
+const ADMIN_MENU: MenuItem[] = [
+  { title: "Painel do Gestor", icon: Building2, href: "/gestor" },
+  { title: "Professor", icon: GraduationCap, href: "/professor" },
+  { title: "Missões", icon: Rocket, href: "/missoes" },
+  { title: "Agenda", icon: CalendarDays },
+  { title: "Perfil", icon: CircleUser },
+];
+
+function menuForRole(role: "admin" | "teacher" | "student" | null): MenuItem[] {
+  if (role === "student") return STUDENT_MENU;
+  if (role === "admin") return ADMIN_MENU;
+  return TEACHER_MENU;
+}
+
+export function AppSidebar({
+  role = null,
+  userName = null,
+  roleLabel = null,
+}: {
+  role?: "admin" | "teacher" | "student" | null;
+  userName?: string | null;
+  roleLabel?: string | null;
+}) {
   const pathname = usePathname();
+  const menuItems = menuForRole(role);
 
   function isActive(href: string) {
     if (href === "/dashboard") return pathname === href;
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
+  const displayName = userName ?? "Auditor(a)";
+  const displayRole = roleLabel ?? "Auditor da Realidade";
+  const initials = displayName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border">
         <Link
-          href="/dashboard"
+          href={role === "admin" ? "/gestor" : "/dashboard"}
           className="flex items-center gap-3 px-2 py-2.5"
-          aria-label="IAH Educacional — ir para o Dashboard"
+          aria-label="IAH Educacional — ir para a página inicial"
         >
           <Logo variant="dark" className="h-8 w-auto shrink-0" />
           <div className="flex flex-col leading-tight">
@@ -117,14 +165,12 @@ export function AppSidebar() {
         <div className="flex items-center gap-3 px-2 py-1.5">
           <Avatar className="size-8">
             <AvatarFallback className="bg-primary/20 text-xs font-medium text-primary">
-              AR
+              {initials || "AR"}
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col leading-tight">
-            <span className="text-sm font-medium">Auditor(a)</span>
-            <span className="text-xs text-muted-foreground">
-              Auditor da Realidade
-            </span>
+            <span className="truncate text-sm font-medium">{displayName}</span>
+            <span className="text-xs text-muted-foreground">{displayRole}</span>
           </div>
         </div>
       </SidebarFooter>

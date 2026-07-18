@@ -5,6 +5,8 @@ import { simulatedClassMonitor } from "@/modules/classroom";
 import { localMissionRepository } from "@/modules/library";
 import { isGoogleWorkspaceConfigured } from "@/modules/integrations";
 import { getDefaultRepositories } from "@/modules/platform";
+import { getWorkspaceContext } from "@/modules/workspace";
+import { isAuthConfigured } from "@/lib/auth-flags";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -18,6 +20,7 @@ import { cn } from "@/lib/utils";
 
 import { ClassPanel } from "./class-panel";
 import { ClassroomsSection, type ClassroomRow } from "./classrooms-section";
+import { TeacherWorkspace } from "./teacher-workspace";
 
 /** Instituição do contexto — fixa até existir autenticação real. */
 const INSTITUTION_ID = "inst-demo";
@@ -43,6 +46,7 @@ export default async function ProfessorPage() {
     : [];
   const googleConfigured = isGoogleWorkspaceConfigured();
   const classrooms = await listClassroomRows();
+  const workspace = isAuthConfigured() ? null : await getWorkspaceContext();
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
@@ -63,36 +67,12 @@ export default async function ProfessorPage() {
             </span>
           </div>
         ) : null}
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href="/professor/estudio"
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "w-fit",
-            )}
-          >
-            Estúdio de Missões
-          </Link>
-          <Link
-            href="/professor/aulas"
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "w-fit",
-            )}
-          >
-            Minhas Aulas
-          </Link>
-          <Link
-            href="/professor/curriculo"
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "w-fit",
-            )}
-          >
-            Currículo
-          </Link>
-        </div>
       </header>
+
+      <TeacherWorkspace
+        subjectName={workspace?.subjects[0]?.name ?? null}
+        classrooms={workspace?.classrooms ?? []}
+      />
 
       <ClassroomsSection classrooms={classrooms} />
 

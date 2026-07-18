@@ -21,9 +21,9 @@ Detalhes completos de propósito, público-alvo, diferenciais e critérios de ac
 Dois blocos, um único projeto Next.js:
 
 - **Site Institucional (Landing)** — pitch comercial completo: Hero desambiguada, seções de diferenciais/como funciona/implantação/confiança, e um funil de conversão dedicado em `/demonstracao`.
-- **Plataforma IAH** — executa uma jornada completa de aula para a Missão 01 ("A Fábrica de Notícias", com Dossiê de Auditoria completo): aluno faz login simples, vê a missão ativa, investiga, produz, reflete, conclui; professor acompanha a turma num painel dedicado.
+- **Plataforma IAH** — executa uma jornada completa de aula para a Missão 01 ("A Fábrica de Notícias", com Dossiê de Auditoria completo): aluno entra pelo login institucional, vê a missão ativa, investiga, produz, reflete, conclui; professor acompanha a turma num painel dedicado; gestor tem um painel institucional próprio.
 
-Nenhuma autenticação real, nenhum banco de dados. Persistência do aluno em `localStorage` do dispositivo; turma do professor é simulada (dados fictícios autorizados, rotulados como "Turma de demonstração").
+**Desde a M15, toda a Plataforma exige login** — autenticação **local simulada** do Institutional Workspace (`modules/workspace`): contas do Colégio Beryon (diretor@/fabio@/aluno01–10@beryon.edu.br), senha única de demonstração exibida na tela de login, papel identificado automaticamente, rotas protegidas por papel no middleware. A autenticação real (Auth.js + Google, M07) segue pronta/dormente e tem precedência quando configurada. Nenhum banco de dados. Persistência do aluno em `localStorage` do dispositivo; turma do professor é simulada (dados fictícios autorizados, rotulados como "Turma de demonstração").
 
 Estado minuto-a-minuto (último commit, último deploy, lacunas, riscos, próxima tarefa): **sempre consultar `STATUS.md`** — é o documento mais atualizado e não duplicado aqui.
 
@@ -32,7 +32,7 @@ Estado minuto-a-minuto (último commit, último deploy, lacunas, riscos, próxim
 Aplicação **Next.js 15 (App Router)** com servidor (Node/Vercel), route groups separando os dois blocos sem afetar a URL:
 
 - `(marketing)` — bloco público. `/` (Landing), `/demonstracao` (funil de conversão principal), `/contato` (formulário legado, sem links apontando para ele), `/api/contato` (Route Handler de envio de e-mail).
-- `(platform)` — sistema de ensino. `/entrar` (abertura, fica fora dos dois grupos), `/dashboard`, `/missoes`, `/missoes/[id]`, `/diario`, `/professor`, `/professor/importar` (Import Wizard), `/professor/estudio` e `/professor/estudio/[id]` (Mission Studio). A barreira de autenticação vive no middleware (`src/middleware.ts`), ativa quando as credenciais existem.
+- `(platform)` — sistema de ensino. `/entrar` (login institucional, fica fora dos dois grupos), `/dashboard`, `/missoes`, `/missoes/[id]`, `/diario`, `/professor`, `/professor/importar` (Import Wizard), `/professor/estudio` e `/professor/estudio/[id]` (Mission Studio), `/professor/aulas` e `/professor/aulas/[id]` (Lesson Composer), `/professor/curriculo` (Curriculum Engine), `/gestor` (Painel do Gestor, M15). A barreira de autenticação vive no middleware (`src/middleware.ts`): Workspace local simulado por padrão (M15) ou Auth.js quando as credenciais reais existem.
 - Raiz compartilhada (`src/app/layout.tsx`) — só `<html>`, fontes, metadata base.
 
 Domínio da aplicação vive em `src/modules/*`, um diretório por contexto, cada um com `domain/` (entidades + contratos, sem UI/banco) separado de `infrastructure/` (implementação atual — hoje local/simulada). Trocar a fonte de dados por um banco é trocar a injeção, nunca a UI.
@@ -65,7 +65,10 @@ IAH - Educacional/
 │       │   ├── integrations/     ← AuthProvider/ClassroomProvider/ImportProvider (mock + stubs)
 │       │   ├── platform/         ← núcleo multi-tenant (entidades, contratos, seeds, factory)
 │       │   ├── authoring/        ← Mission Studio (StudioMission, versionamento, IPE só contratos)
-│       │   └── knowledge/        ← Knowledge Engine (Biblioteca Inteligente — entidades, busca, integrações stub)
+│       │   ├── knowledge/        ← Knowledge Engine (Biblioteca Inteligente — entidades, busca, integrações stub)
+│       │   ├── lesson/           ← Lesson Composer (Lesson, regras de sugestão sem IA)
+│       │   ├── curriculum/       ← Curriculum Engine (Unidades/Temas, timeline)
+│       │   └── workspace/        ← Institutional Workspace (auth local simulada, papéis, contexto Beryon)
 │       ├── lib/                  ← site.ts (config/SEO), utils.ts
 │       └── hooks/
 │   └── db/migrations/            ← schema SQL versionado (sem INSERTs; ver PERSISTENCE.md)
@@ -101,7 +104,10 @@ IAH - Educacional/
 - **Autenticação definitiva** (M07): Auth.js v5 + Google, sessão JWT, middleware de rotas privadas, provisionamento automático do professor no primeiro login (`modules/identity`, migration `0003`), logout no header. **Ativa só quando o fundador executar os passos de console** (`AUTHENTICATION.md`/`SUPABASE.md`); sem credenciais, modo demonstração intacto.
 - **Mission Studio** (M07, `/professor/estudio`, módulo `modules/authoring`): biblioteca com filtros/pesquisa, editor em 6 etapas com autosave, versionamento por linhagem (publicada imutável, nova versão para editar, nada apagado), publicação com pré-condições; **missões salvas neste dispositivo** (localStorage rotulado) até o banco existir; contratos do IPE prontos (sem IA). Ver `MISSION_STUDIO.md`.
 - **Mission Flow** (M08, `/missoes/[id]`): a experiência do aluno virou 9 microetapas (Capa→Contexto→Objetivo→Investigação→Comparação→Produção→Critérios→Entrega→Reflexão), baixa carga cognitiva, 7 componentes reutilizáveis. Sem schema novo — um parser deriva estrutura do `didacticMaterials` existente. `modules/classroom` intocado. Ver `DECISIONS.md` D-027.
-- **Knowledge Engine** (M11, módulo `modules/knowledge`): arquitetura da Biblioteca Inteligente — 6 entidades (`KnowledgeSource`/`Document`/`Collection`/`Tag`/`Topic`/`Reference`), 15 campos de metadados, 13 categorias de recurso, mecanismo de busca real (seed em memória), 7 contratos de integração futura (stub), schema versionado (`0004_knowledge_engine.sql`), vínculo direto com `Lesson`/Mission Flow via `KnowledgeReference`. Nenhuma página consome o módulo ainda. Ver `DECISIONS.md` D-034 e `KNOWLEDGE_ENGINE.md`.
+- **Knowledge Engine** (M11, módulo `modules/knowledge`): arquitetura da Biblioteca Inteligente — 6 entidades (`KnowledgeSource`/`Document`/`Collection`/`Tag`/`Topic`/`Reference`), 15 campos de metadados, 13 categorias de recurso, mecanismo de busca real (seed em memória), 7 contratos de integração futura (stub), schema versionado (`0004_knowledge_engine.sql`), vínculo direto com `Lesson`/Mission Flow via `KnowledgeReference`. Consumido pelo Lesson Composer (M12/M13) e pelo Curriculum Engine (M14). Ver `DECISIONS.md` D-034 e `KNOWLEDGE_ENGINE.md`.
+- **Intelligent Lesson Composer** (M12/M13, `/professor/aulas`, módulo `modules/lesson`): assistente "Nova Lesson" em 7 etapas com sugestões automáticas por regra simples (sem IA), Lessons salvas no dispositivo (localStorage rotulado).
+- **Curriculum Engine** (M14, `/professor/curriculo`, módulo `modules/curriculum`): navegação Disciplina → Ano Letivo → Unidades → Temas → Lessons → Mission Flow, com Timeline (concluídas/pendentes/competências).
+- **Institutional Workspace** (M15, módulo `modules/workspace`): login institucional único (`/entrar`, e-mail + senha simulada `beryon2026`, exibida na tela), papel identificado automaticamente (admin/professor/aluno), contexto pedagógico automático em toda a navegação (Instituição, Ano Letivo, perfil, permissões, Turmas, Disciplinas), proteção de rotas por papel no middleware, sidebar por perfil, Painel do Gestor (`/gestor`) e hub de Workspace do Professor. Seed Colégio Beryon (5 turmas, 12 usuários). Troca por autenticação real (Google/Supabase/Microsoft Entra/Sophia) em dois pontos únicos: `WorkspaceAuthProvider` + `session-cookie.ts`.
 - **CI/CD completo**: push na `main` → deploy automático na Vercel.
 
 Lista viva e mais detalhada: `STATUS.md` → "Funcionalidades prontas". Histórico entrega-a-entrega: `CHANGELOG.md`.

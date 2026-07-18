@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { isAuthConfigured } from "@/lib/auth-flags";
 import { localMissionRepository } from "@/modules/library";
 import { getDefaultKnowledgeRepositories } from "@/modules/knowledge";
+import { getWorkspaceUser } from "@/modules/workspace";
 
 import { LessonWizard } from "./lesson-wizard";
 
@@ -45,6 +46,9 @@ async function resolveAuthor(): Promise<string> {
     const session = await auth();
     if (session?.user?.name) return session.user.name;
     if (session?.user?.email) return session.user.email;
+  } else {
+    const user = await getWorkspaceUser();
+    if (user) return user.name;
   }
   return "Professor(a) de demonstração";
 }
