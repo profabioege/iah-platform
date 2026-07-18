@@ -63,15 +63,26 @@ export default async function ProfessorPage() {
             </span>
           </div>
         ) : null}
-        <Link
-          href="/professor/estudio"
-          className={cn(
-            buttonVariants({ variant: "outline", size: "sm" }),
-            "w-fit",
-          )}
-        >
-          Estúdio de Missões
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/professor/estudio"
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "w-fit",
+            )}
+          >
+            Estúdio de Missões
+          </Link>
+          <Link
+            href="/professor/aulas"
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "w-fit",
+            )}
+          >
+            Minhas Aulas
+          </Link>
+        </div>
       </header>
 
       <ClassroomsSection classrooms={classrooms} />

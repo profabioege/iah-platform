@@ -2,6 +2,23 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 18/07/2026 — M12: Lesson Builder MVP
+
+Primeira tela funcional do conceito `Lesson` (D-028) — sem IA, sem NotebookLM, sem Google Classroom, sem banco externo, usando só arquitetura já existente.
+
+- **Novo módulo `modules/lesson`**: entidade `Lesson` (subconjunto do Pedagogical Package completo de D-028: Planejamento, Currículo, Mission Flow, Materiais) e `LessonRepository`, implementação localStorage rotulada — mesmo padrão do Mission Studio.
+- **Fluxo "Nova Lesson"** em `/professor/aulas` (listagem "Minhas Aulas") e `/professor/aulas/[id]` (assistente), 6 etapas:
+  1. **Planejamento** — Série, Turma, Tempo, Tema.
+  2. **Currículo** — Competências BNCC, Competências BNCC Computação, Objetivos da Aula (entrada livre — catálogo formal de códigos ainda não existe, D-029/D-030).
+  3. **Mission Flow** — seleciona uma Missão existente (`modules/library`) ou linka para o Estúdio de Missões para criar uma nova (sem duplicar o formulário de criação).
+  4. **Materiais** — seleciona documentos do Knowledge Engine (`modules/knowledge`, dados de demonstração).
+  5. **Preview** — Plano da Aula, Mission, Materiais, **Critérios** (reaproveita `parseMissionContent` do Mission Flow para extrair os Critérios de Auditoria da Missão selecionada) e Tempo previsto.
+  6. **Salvar Lesson** — grava no dispositivo, com confirmação.
+- **5 componentes novos**: `LessonWizard`, `LessonPreview`, `LessonSummary`, `LessonHeader`, `LessonStep`. A navegação entre etapas **reaproveita `MissionNavigation`** do Mission Flow em vez de duplicar (mesmo padrão "Voltar"/"Continuar", uma ação principal por tela).
+- Link "Minhas Aulas" adicionado ao cabeçalho de `/professor`, ao lado de "Estúdio de Missões".
+- Validado ponta a ponta (as 6 etapas, autosave a cada etapa, retomada ao reabrir uma Lesson salva) em desktop (1280px) e mobile (375px) — sem overflow horizontal, console limpo. `npx tsc --noEmit`, `npm run lint` e `npm run build` limpos.
+- **Limites conhecidos desta Sprint (MVP)**: sem retomada inteligente de etapa (sempre abre na Etapa 1); Materiais selecionados não geram `KnowledgeReference` formal (vínculo direto por id, não pelo registro do Knowledge Engine); sem publicação/versionamento (só rascunho → salva).
+
 ## 18/07/2026 — M11: Knowledge Engine (Biblioteca Inteligente)
 
 Sprint de arquitetura — novo módulo `modules/knowledge`, zero mudança visual (mesmo padrão de M04/`modules/platform`; nenhuma página consome o módulo). Nenhuma IA, nenhuma API externa integrada, nenhuma autenticação alterada, nenhuma tabela existente modificada.
