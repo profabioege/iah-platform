@@ -82,6 +82,15 @@ export default async function ProfessorPage() {
           >
             Minhas Aulas
           </Link>
+          <Link
+            href="/professor/curriculo"
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "w-fit",
+            )}
+          >
+            Currículo
+          </Link>
         </div>
       </header>
 

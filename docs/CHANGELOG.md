@@ -2,6 +2,19 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 18/07/2026 — M14: Curriculum Engine (Currículo Vivo)
+
+Novo módulo `modules/curriculum` e nova rota `/professor/curriculo` — primeira navegação curricular da plataforma, transformando o Planejamento Anual numa estrutura navegável. Sem IA, sem NotebookLM, sem Google Classroom, sem alterar autenticação.
+
+- **Estrutura Disciplina → Ano Letivo → Unidades → Temas → Lessons → Mission Flow**: `Discipline`/`CurriculumUnit`/`CurriculumTheme` são entidades novas; **Ano Letivo reaproveita `AcademicYear` de `modules/platform`** (sem duplicar entidade), Lessons vêm de `modules/lesson` e Mission Flow de `modules/library`.
+- **Cada Tema carrega**: Objetivos, Competências BNCC e BNCC Computação, Tempo previsto, Lessons vinculadas, Mission Flows vinculadas e Recursos do Knowledge Engine. **Avaliação** é derivada das Mission Flows do Tema (mesmo parser/`RubricCard` do Mission Flow — sem duplicar critérios); **Portfólio** segue rotulado honestamente como conceitual (D-028), nenhum dado fake.
+- **Navegação em árvore**: o Professor visualiza o ano inteiro (Unidades), expande qualquer Unidade para ver seus Temas, expande qualquer Tema para ver o detalhe completo, e abre qualquer Lesson (`/professor/aulas/[id]`) ou Mission Flow (`/missoes/[id]`) nas rotas reais — sem duplicar telas.
+- **Timeline do currículo** (`modules/curriculum/domain/timeline.ts`, projeção calculada, nunca persistida — mesmo princípio de `indicator-service.ts`, `modules/platform`): aulas concluídas/pendentes derivadas de `Lesson.savedAt`, competências desenvolvidas = união das competências de todas as Lessons salvas.
+- **Preparação para o Currículo Vivo**: `CurriculumUnit`/`CurriculumTheme` já carregam `status`/`version`, mesmo padrão de versionamento de `StudioMission` (D-022/D-026) — pronto para quando "atualizações automáticas" e "novas versões" ganharem uma Sprint própria; arquitetura seed + banco stub + factory idêntica a `modules/knowledge` (D-034).
+- Link "Currículo" adicionado ao cabeçalho de `/professor`, ao lado de "Estúdio de Missões" e "Minhas Aulas".
+- **Limite conhecido desta Sprint**: só navegação — não há tela para o Professor criar/editar Unidades/Temas (hoje só existem no seed de demonstração) nem para vincular uma Lesson nova a um Tema automaticamente.
+- Validado ponta a ponta (árvore expansível, Timeline, links para Lesson/Mission Flow reais) em desktop e mobile (375px), sem overflow, console limpo; confirmado que o Mission Flow não sofreu regressão. `npm run lint` e `npm run build` limpos.
+
 ## 18/07/2026 — M13: Intelligent Lesson Composer (Método IAH)
 
 Evolução do Lesson Builder MVP (M12) — sem IA externa, sem APIs, sem NotebookLM, sem Google Classroom, sem alterar autenticação. Usa exclusivamente os componentes já implementados (Lesson Architecture, Mission Flow, Knowledge Engine, Lesson Builder, Governança Curricular).
