@@ -151,6 +151,7 @@ Resumo das mais importantes (histórico completo com motivo/alternativas/impacto
 - **Dados simulados/fictícios são sempre identificados como tal** na interface (ex.: "Turma de demonstração"), nunca apresentados como reais.
 - **Commits descritivos em português**, prefixo de tipo (`feat`, `fix`, `docs`) + escopo.
 - Regras gerais herdadas de `CLAUDE.md`: nunca criar funcionalidade não solicitada, sempre explicar o plano antes de implementar, simplicidade sobre completude prematura.
+- **Alinhamento Normativo (referenciais permanentes):** toda funcionalidade pedagógica futura deve considerar conformidade com a LDB, alinhamento à BNCC, alinhamento à BNCC Computação e integração ao Método IAH® (metodologia proprietária que complementa e operacionaliza esses referenciais, não os substitui) — ver `STATUS.md` "Alinhamento Normativo" e `DECISIONS.md` D-029 a D-033.
 
 ## 10. Fluxo de deploy
 

@@ -290,3 +290,53 @@ Seis contratos nomeados (descritos abaixo em prosa — nenhum arquivo `.ts` cria
 **Alternativas descartadas:** Criar `modules/lesson` com os 6 contratos como arquivos `.ts` reais agora (rejeitado — instrução explícita da Sprint foi "criar apenas a arquitetura definitiva", com atualização restrita a 5 documentos; código sem nenhum consumidor ainda seria domínio morto, mesmo risco que `AUTHORING_MODEL.md`/D-022 já evitou ao ficar só em documentação). Modelar `Lesson` como substituição de `Mission` (rejeitado — quebraria D-022/D-026/D-027 inteiros e o piloto de agosto depende do Mission Flow existente funcionando exatamente como está). Expor rótulos clínicos de neurodivergência como enum fechado já nesta Sprint (rejeitado — decisão sensível de LGPD/pedagogia, não deve nascer como detalhe técnico incidental).
 
 **Impacto futuro:** Cada um dos 15 componentes da Lesson vira, em princípio, uma Sprint própria de implementação (mesmo padrão aditivo já usado em `AUTHORING_MODEL.md`) — a ordem entra em `ROADMAP.md` conforme o piloto de agosto exigir, não nesta Sprint. `LessonBuilder` é o contrato que dá nome ao lugar onde o IPE crescerá para montagem automática do pacote pedagógico completo, quando o IPE sair de "só contratos" (D-026). `LessonAccessibility` não avança para implementação sem uma revisão pedagógica/jurídica dedicada sobre dado sensível de menor.
+
+## D-029 — Alinhamento Normativo: LDB, BNCC, BNCC Computação e Método IAH® como referenciais permanentes (18/07/2026)
+
+**Decisão:** Sprint só de documentação — nenhum código, arquitetura implementada, funcionalidade ou banco de dados alterado. A Plataforma IAH® passa a adotar oficialmente LDB, BNCC, BNCC Computação e o Método IAH® como referenciais permanentes de todo desenvolvimento pedagógico. O Método IAH® **complementa e operacionaliza** esses referenciais — não os substitui. Como primeira consequência concreta, os metadados curriculares de `Lesson` (Competências BNCC, já previstos em D-028) deixam de ser um campo opcional e passam a ser **obrigatórios**: toda `Lesson` precisa declarar a quais competências/habilidades da BNCC — e, quando aplicável, da BNCC Computação — ela se conecta.
+
+**Motivo:** Registrar formalmente o compromisso normativo do produto antes de qualquer Sprint de implementação curricular, para que Biblioteca, Segunda Missão, Avaliação Assistida, Mentor IA e o próprio `Lesson` (D-028) nasçam já alinhados, em vez de precisarem de uma migração de conformidade depois.
+
+**Alternativas descartadas:** Tratar o vínculo curricular como recomendação/boa prática não obrigatória (rejeitado — contradiz o próprio objetivo de tornar LDB/BNCC referenciais permanentes, não apenas sugeridos). Modelar já um enum fechado de códigos BNCC (rejeitado — exige a tabela oficial completa de competências/habilidades, ainda não mapeada; ver "Governança Curricular", `ROADMAP.md`).
+
+**Impacto futuro:** A obrigatoriedade só passa a valer de fato quando `Lesson` ganhar implementação real (D-028) — até lá é uma regra registrada, não aplicada por nenhuma validação. Bloqueia, por design, qualquer publicação futura de Lesson sem competência BNCC associada.
+
+## D-030 — Toda Mission Flow deve estar vinculada às competências/habilidades da BNCC e, quando aplicável, da BNCC Computação (18/07/2026)
+
+**Decisão:** Estende a obrigatoriedade curricular de D-029 à `Mission` em si, não só à `Lesson` que a envolve: toda `Mission`/`MissionTemplate` deve declarar suas competências e habilidades BNCC correspondentes. Hoje o campo `competencies: string[]` (`modules/library/domain/mission.ts`) existe mas é texto livre, sem vínculo com um código BNCC oficial — nenhuma mudança de schema nesta Sprint.
+
+**Motivo:** Mission Flow é a experiência de aprendizagem em si; sem vínculo curricular explícito na própria Missão — não só na Lesson que a contém — os relatórios pedagógicos por competência (D-033) não conseguiriam atribuir competências no nível de uma aula individual quando uma Lesson futura compuser mais de uma Mission Flow.
+
+**Alternativas descartadas:** Vincular BNCC só no nível de `Lesson`, nunca no de `Mission` (rejeitado — perderia granularidade quando uma Lesson futura compuser mais de uma Mission Flow).
+
+**Impacto futuro:** Quando `Competency` (`AUTHORING_MODEL.md`) ganhar o campo de código BNCC apontado como pendente em D-028, tanto `Mission` quanto `Lesson` passam a referenciá-lo pela mesma entidade compartilhada, sem duplicar modelagem.
+
+## D-031 — Toda avaliação deve indicar quais competências e habilidades está evidenciando (18/07/2026)
+
+**Decisão:** O contrato `LessonAssessment` (D-028) — Rubricas + Avaliação Assistida — passa a exigir que toda avaliação declare explicitamente quais competências/habilidades BNCC (ou do Método IAH®) está evidenciando, não apenas emitir uma nota ou parecer genérico.
+
+**Motivo:** Uma avaliação sem rastreabilidade de competência não serve como evidência pedagógica perante LDB/BNCC nem alimenta os futuros relatórios por competência (D-033).
+
+**Alternativas descartadas:** Deixar essa rastreabilidade como responsabilidade manual do Professor, fora do contrato (rejeitado — sem campo estruturado, o relatório por competência de D-033 dependeria de preenchimento manual não confiável).
+
+**Impacto futuro:** `LessonAssessment`, quando implementado, precisa nascer com esse campo desde a v1 — adicioná-lo depois que houver dado real de avaliação em produção deixaria de ser uma migração trivial.
+
+## D-032 — O Professor poderá visualizar o alinhamento curricular antes de publicar uma aula ou missão (18/07/2026)
+
+**Decisão:** Registra intenção de produto (nenhuma tela criada nesta Sprint): antes de publicar uma `Lesson` ou `Mission`, a interface futura deve mostrar ao Professor um resumo do alinhamento curricular — quais competências/habilidades BNCC estão cobertas. Mesmo espírito das "pré-condições verificáveis antes de publicar" já usadas no Mission Studio (D-026), agora aplicado à dimensão curricular.
+
+**Motivo:** O Professor que autora uma aula precisa conseguir confirmar a cobertura curricular antes de publicar, não descobrir depois — mesmo princípio de "nunca criar botão que finge" (D-016): a visualização deve refletir dado real, não ser decorativa.
+
+**Alternativas descartadas:** Validar o alinhamento curricular só no backend, sem superfície visível ao Professor (rejeitado — é o Professor quem precisa confiar nessa cobertura e explicá-la à coordenação/gestão, não só o sistema).
+
+**Impacto futuro:** Quando o editor do Mission Studio (ou um futuro editor de Lesson) ganhar essa tela, deve reaproveitar as pré-condições de publicação já existentes (`MISSION_STUDIO.md`) como padrão de interação, em vez de inventar um fluxo novo de confirmação.
+
+## D-033 — A Plataforma deve gerar relatórios pedagógicos por competência e habilidade (18/07/2026)
+
+**Decisão:** Registra intenção de produto (nenhum relatório implementado nesta Sprint): relatórios pedagógicos agregados por competência/habilidade BNCC, apoiando Professor, Coordenação e Gestão — extensão natural de `Indicadores` (`DOMAIN_MODEL.md`) e do Painel do Gestor já planejado (`ROADMAP.md`, "Sprint seguinte recomendada").
+
+**Motivo:** Fecha o ciclo do Alinhamento Normativo — declarar competências (D-029/D-030) e evidenciá-las em avaliação (D-031) só tem valor de gestão escolar se puder ser agregado e relatado, não só registrado aula a aula.
+
+**Alternativas descartadas:** Tratar esse relatório como parte do escopo já definido do Painel do Gestor, sem registro próprio (rejeitado — o Painel do Gestor, como planejado hoje em `ROADMAP.md`, agrega adesão/progresso/competências como lista simples, não como relatório por competência com evidência de avaliação; são adjacentes, não idênticos, e merecem decisão própria).
+
+**Impacto futuro:** Quando implementado, deve consumir os mesmos dados agregados que o Painel do Gestor usa (`ClassMonitorReader`/`Indicadores`), evitando uma segunda fonte de verdade para o mesmo tipo de métrica. Entra no Roadmap junto com "Governança Curricular".

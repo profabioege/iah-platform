@@ -8,6 +8,18 @@ Fonte oficial e única de verdade sobre **o que já foi entregue e o que vem a s
 
 Este norte **substitui** o sequenciamento original de Sprints temáticas (Missões → Biblioteca → Professor → Aluno → Diário → Integrações → Mentor IA). Módulos foram entregues fora dessa ordem, na sequência que o piloto de agosto exigia (ver "Funcionalidades concluídas"). Ver `DECISIONS.md` (D-014) para o registro desse pivô.
 
+## Iniciativa transversal — Governança Curricular
+
+A Plataforma IAH® adota oficialmente LDB, BNCC, BNCC Computação e o Método IAH® como referenciais permanentes (`STATUS.md`, "Alinhamento Normativo"; `DECISIONS.md` D-029 a D-033). Isso não é uma Sprint isolada — é uma lente aplicada ao longo do desenvolvimento, a implementar de forma incremental conforme cada módulo pedagógico (Lesson, Mission Studio, Painel do Gestor) amadurecer:
+
+- Mapeamento de competências da BNCC.
+- Mapeamento de habilidades da BNCC.
+- Mapeamento das competências da BNCC Computação.
+- Associação automática entre `Lesson`, Mission Flow e competências curriculares.
+- Relatórios pedagógicos por competência.
+
+Nenhum item acima está implementado ou priorizado com data — cada um entra como Sprint própria quando o piloto de agosto ou o amadurecimento de `Lesson` (D-028) exigir.
+
 ## Funcionalidades concluídas
 
 | Entrega | O que ficou pronto |

@@ -2,6 +2,17 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 18/07/2026 — Strategic Curriculum Alignment (Alinhamento Normativo)
+
+Sprint só de documentação — nenhum código, arquitetura implementada, funcionalidade ou banco de dados alterado.
+
+- **Inclusão oficial da LDB** como referência normativa da Plataforma IAH®.
+- **Inclusão oficial da BNCC** como referência curricular.
+- **Inclusão oficial da BNCC Computação** como referência para o ensino de Computação e IA.
+- **Consolidação do Método IAH®** como metodologia proprietária incorporada à Plataforma IAH® — complementa e operacionaliza LDB/BNCC/BNCC Computação, não os substitui.
+- Novo `STATUS.md` "Alinhamento Normativo" e `ROADMAP.md` "Iniciativa transversal — Governança Curricular" (mapeamento de competências/habilidades BNCC e BNCC Computação, associação automática entre `Lesson`/Mission Flow e competências, relatórios pedagógicos por competência — nenhum item implementado ainda).
+- Ver `DECISIONS.md` D-029 a D-033 (metadados curriculares obrigatórios em `Lesson`, vínculo BNCC em toda Mission Flow, rastreabilidade de competência em avaliação, visualização de alinhamento antes de publicar, relatórios pedagógicos por competência).
+
 ## 17/07/2026 — M10: Lesson Architecture (Fundação da Aula Inteligente)
 
 Sprint só de documentação — nenhum código, componente React, página, rota ou banco de dados alterado.

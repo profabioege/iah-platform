@@ -6,9 +6,20 @@ Fotografia do estado atual do projeto. **Este é o primeiro documento a consulta
 
 Projeto em **fase de preparação do piloto comercial de agosto/2026**, com um funil comercial completo: Landing (pitch) → `/demonstracao` (conversão) → confirmação. A Plataforma executa uma jornada completa de aula (aluno) e um painel de acompanhamento (professor) para a Missão 01, com o Dossiê de Auditoria completo. Nenhuma autenticação real, nenhum banco de dados — persistência do aluno em localStorage; turma do professor é simulada (autorizada, rotulada como "Turma de demonstração").
 
+## Alinhamento Normativo
+
+A Plataforma IAH® adota oficialmente, como referenciais permanentes de todo desenvolvimento pedagógico presente e futuro:
+
+- **LDB** (Lei de Diretrizes e Bases da Educação Nacional) — conformidade legal do ensino ofertado.
+- **BNCC** (Base Nacional Comum Curricular) — referencial curricular nacional.
+- **BNCC Computação** — complemento da BNCC específico para o ensino de Computação, base curricular para o ensino de IA.
+- **Método IAH®** — metodologia proprietária que **complementa e operacionaliza** esses referenciais; não os substitui.
+
+Registrado formalmente em `DECISIONS.md` D-029 a D-033 (obrigatoriedade de metadados curriculares em `Lesson`/`Mission`, rastreabilidade de competência em avaliação, visualização de alinhamento antes de publicar, relatórios pedagógicos por competência). Nenhuma implementação de código nesta Sprint — o mapeamento de competências/habilidades entra no Roadmap como iniciativa transversal "Governança Curricular" (`ROADMAP.md`).
+
 ## Último commit
 
-`3641737` (anterior a esta tarefa) — *feat(missions): M09 — Mission Flow 3.0* (17/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com a fundação da Lesson (M10) — ver "Ciclo 2 — Lesson Architecture" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+`e707ed6` (anterior a esta tarefa) — *docs(lesson): M10 — Lesson Architecture* (17/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com o Alinhamento Normativo (LDB/BNCC/BNCC Computação/Método IAH®) — ver "Alinhamento Normativo" acima. Ver `CHANGELOG.md` para o histórico completo.
 
 ## Ciclo 2 — Lesson Architecture: Fundação da Aula Inteligente (17/07/2026)
 
