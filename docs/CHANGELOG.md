@@ -2,6 +2,17 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 18/07/2026 — M16: Unificação Institucional Beryon
+
+Resolve o achado registrado na M15: o Painel do Professor misturava duas instituições (header/hub Colégio Beryon vs. Turmas nos seeds antigos da "Escola de Demonstração IAH"). Sprint de unificação de fontes — nenhuma funcionalidade nova.
+
+- **`modules/platform/seeds/demo-seed.ts` virou a fonte institucional canônica**: Colégio Beryon (`inst-beryon`), Ano Letivo 2026 (`year-beryon-2026`), Professor Fábio, as 5 turmas do piloto (1º EM A/B, 2º EM A/B, 3º EM A) e os 10 alunos de demonstração (2 por turma — os mesmos das contas de login do Workspace), com progresso da Missão 01 por aluno (base do futuro indicator-service).
+- **`modules/workspace/seeds/beryon-seed.ts` deixou de duplicar dados institucionais**: importa Instituição/Ano/Professor/Turmas/Alunos/Matrículas do seed do platform (import direto do arquivo de seed, não do barrel — que puxa o cliente Supabase e quebraria o middleware edge) e mantém só a camada de identidade: contas, papéis, disciplina, senha de demonstração. Direção de dependência workspace → platform, já existente.
+- **Fim do hardcode `"inst-demo"`**: `/professor` e `/professor/curriculo` resolvem a instituição de `repositories.institutions.list()` (regra "não realizar hardcode" da M15); o seed do Curriculum Engine aponta para `year-beryon-2026`.
+- **Resultado visível**: a seção Turmas do Painel do Professor lista as 5 turmas Beryon (2 alunos cada) — coerente com o hub do Workspace, com `/gestor` e com o Import Wizard.
+- **Pendência preservada e honesta**: o acompanhamento da turma (ClassPanel) segue no roster simulado de 11 alunos do `simulated-class-monitor` (`modules/classroom`), rotulado "Turma de demonstração" — aposentá-lo em favor dos dados do platform é o item 7 do checklist Mock → Banco Real (`PERSISTENCE.md`), agora destravado pelos dados Beryon.
+- Validado no navegador (login professor → Turmas Beryon; Currículo; Import Wizard; gate do `/gestor` intacto) em desktop e mobile (375px), sem overflow, console limpo. `npm run lint` e `npm run build` limpos.
+
 ## 18/07/2026 — M15: Institutional Workspace (Fundação Institucional)
 
 A Plataforma vira um ambiente institucional com login: autenticação **local simulada** (sem Google OAuth, sem Supabase Auth, sem APIs externas), autorização por papel e contexto pedagógico automático. Novo módulo `modules/workspace`.

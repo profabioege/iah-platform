@@ -7,9 +7,6 @@ import { getDefaultKnowledgeRepositories } from "@/modules/knowledge";
 
 import { CurriculumExplorer } from "./curriculum-explorer";
 
-/** Instituição do contexto — fixa até existir autenticação real (mesmo padrão de `/professor`). */
-const INSTITUTION_ID = "inst-demo";
-
 export const metadata: Metadata = {
   title: "Currículo",
   description: "Navegue pelo Planejamento Anual do IAH: unidades, temas, aulas e missões.",
@@ -36,9 +33,12 @@ export default async function CurriculoPage() {
     themesByUnit[unit.id] = await curriculumRepositories.themes.listByUnit(unit.id);
   }
 
-  const academicYears = await getDefaultRepositories().academicYears.listByInstitution(
-    INSTITUTION_ID,
-  );
+  // Instituição resolvida da fonte de dados, nunca fixa em código (M16).
+  const platformRepositories = getDefaultRepositories();
+  const institutionId = (await platformRepositories.institutions.list())[0]?.id;
+  const academicYears = institutionId
+    ? await platformRepositories.academicYears.listByInstitution(institutionId)
+    : [];
   const missions = await localMissionRepository.list();
   const knowledgeDocuments = await getDefaultKnowledgeRepositories().documents.list();
 

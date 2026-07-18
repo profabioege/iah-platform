@@ -22,8 +22,6 @@ import { ClassPanel } from "./class-panel";
 import { ClassroomsSection, type ClassroomRow } from "./classrooms-section";
 import { TeacherWorkspace } from "./teacher-workspace";
 
-/** Instituição do contexto — fixa até existir autenticação real. */
-const INSTITUTION_ID = "inst-demo";
 
 export const metadata: Metadata = {
   title: "Painel do Professor",
@@ -122,16 +120,21 @@ export default async function ProfessorPage() {
  */
 async function listClassroomRows(): Promise<ClassroomRow[]> {
   const repositories = getDefaultRepositories();
+  // Instituição resolvida da fonte de dados, nunca fixa em código (M16) —
+  // hoje o seed tem só o Colégio Beryon; multi-instituição chega com a
+  // autenticação real amarrando o usuário ao tenant.
+  const institutionId = (await repositories.institutions.list())[0]?.id;
+  if (!institutionId) return [];
   const [classrooms, academicYears, syncStates] = await Promise.all([
-    repositories.classrooms.listByInstitution(INSTITUTION_ID),
-    repositories.academicYears.listByInstitution(INSTITUTION_ID),
-    repositories.classroomSyncStates.listByInstitution(INSTITUTION_ID),
+    repositories.classrooms.listByInstitution(institutionId),
+    repositories.academicYears.listByInstitution(institutionId),
+    repositories.classroomSyncStates.listByInstitution(institutionId),
   ]);
 
   return Promise.all(
     classrooms.map(async (classroom) => {
       const enrollments = await repositories.enrollments.listByClassroom(
-        INSTITUTION_ID,
+        institutionId,
         classroom.id,
       );
       return {

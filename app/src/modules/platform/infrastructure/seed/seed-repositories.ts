@@ -20,7 +20,7 @@ import type {
 import type { PlatformRepositories } from "../../domain/repositories";
 import {
   DEMO_ACADEMIC_YEAR,
-  DEMO_CLASSROOM,
+  DEMO_CLASSROOMS,
   DEMO_ENROLLMENTS,
   DEMO_INSTITUTION,
   DEMO_MISSION_PROGRESS,
@@ -31,7 +31,7 @@ import {
 
 export function createSeedRepositories(): PlatformRepositories {
   // Cópias mutáveis por instância — escritas não vazam entre factories.
-  const classrooms: Classroom[] = [DEMO_CLASSROOM];
+  const classrooms: Classroom[] = [...DEMO_CLASSROOMS];
   const students: Student[] = [...DEMO_STUDENTS];
   const enrollments: Enrollment[] = [...DEMO_ENROLLMENTS];
   const progress: MissionProgress[] = [...DEMO_MISSION_PROGRESS];
