@@ -13,12 +13,20 @@ import { createDatabaseCurriculumRepositories } from "./database/database-reposi
 
 export type CurriculumRepositorySource = "seed" | "database";
 
+// Singleton em `globalThis` — mesma correção de
+// `modules/platform/infrastructure/repository-factory.ts` (M17): um
+// `let` de módulo não sobrevive a instâncias de módulo separadas entre
+// Server Actions e Server Components no Next.js.
+declare global {
+  var __iahCurriculumSeedRepositories: CurriculumRepositories | undefined;
+}
+
 export function createCurriculumRepositories(
   source: CurriculumRepositorySource,
 ): CurriculumRepositories {
-  return source === "database"
-    ? createDatabaseCurriculumRepositories()
-    : createSeedCurriculumRepositories();
+  if (source === "database") return createDatabaseCurriculumRepositories();
+  globalThis.__iahCurriculumSeedRepositories ??= createSeedCurriculumRepositories();
+  return globalThis.__iahCurriculumSeedRepositories;
 }
 
 /** Fonte padrão: banco real quando configurado, seeds de demonstração caso contrário. */

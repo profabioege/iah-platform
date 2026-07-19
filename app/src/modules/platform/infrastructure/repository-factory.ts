@@ -11,12 +11,23 @@ import { isDatabaseConfigured } from "./database/supabase-client";
 
 export type RepositorySource = "seed" | "database";
 
+// Singleton do lado seed guardado em `globalThis`: a documentação
+// sempre disse "escritas afetam só a memória do processo"
+// (docs/PERSISTENCE.md), mas um `let` de módulo não bastava — Server
+// Actions e Server Components do Next.js podem carregar o mesmo
+// arquivo em instâncias de módulo separadas dentro do mesmo processo
+// (mesmo problema clássico do singleton do Prisma Client em Next.js).
+// `globalThis` é compartilhado de verdade entre essas instâncias.
+declare global {
+  var __iahPlatformSeedRepositories: PlatformRepositories | undefined;
+}
+
 export function createRepositories(
   source: RepositorySource,
 ): PlatformRepositories {
-  return source === "database"
-    ? createDatabaseRepositories()
-    : createSeedRepositories();
+  if (source === "database") return createDatabaseRepositories();
+  globalThis.__iahPlatformSeedRepositories ??= createSeedRepositories();
+  return globalThis.__iahPlatformSeedRepositories;
 }
 
 /**

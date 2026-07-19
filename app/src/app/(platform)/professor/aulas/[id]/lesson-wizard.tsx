@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, CheckCircle2, PartyPopper, Plus, X } from "lucide-react";
 
 import type { Mission } from "@/modules/library";
+import type { Classroom } from "@/modules/workspace";
 import {
   KNOWLEDGE_RESOURCE_TYPE_LABEL,
   type KnowledgeDocument,
@@ -52,11 +53,13 @@ export function LessonWizard({
   author,
   missions,
   knowledgeDocuments,
+  classrooms,
 }: {
   lessonId: string;
   author: string;
   missions: Mission[];
   knowledgeDocuments: KnowledgeDocument[];
+  classrooms: Classroom[];
 }) {
   const { lesson, update, blockers, saved } = useLessonBuilder(lessonId, author);
   const [step, setStep] = React.useState(1);
@@ -132,11 +135,22 @@ export function LessonWizard({
             </Field>
             <Field label="Turma">
               <select
-                value={lesson.classroomLabel}
-                onChange={(e) => update({ classroomLabel: e.target.value })}
+                value={lesson.classroomId ?? ""}
+                onChange={(e) => {
+                  const classroom = classrooms.find((c) => c.id === e.target.value);
+                  update({
+                    classroomId: classroom?.id ?? null,
+                    classroomLabel: classroom?.name ?? "",
+                  });
+                }}
                 className={selectClassName}
               >
-                <option value="Turma de demonstração">Turma de demonstração</option>
+                <option value="">Selecione a turma</option>
+                {classrooms.map((classroom) => (
+                  <option key={classroom.id} value={classroom.id}>
+                    {classroom.name}
+                  </option>
+                ))}
               </select>
             </Field>
             <Field label="Tempo disponível (minutos)">

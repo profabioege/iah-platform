@@ -31,6 +31,8 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
+import { MyLessonCard } from "./my-lesson-card";
+
 /** Dados da Missão que o Dashboard precisa (vindos do servidor). */
 export interface DashboardMission {
   id: string;
@@ -53,7 +55,14 @@ interface Loaded {
  * aparecer aqui apenas com o cadastro do arquivo de conteúdo, sem tocar nesta
  * interface. O progresso vem do trabalho salvo no dispositivo.
  */
-export function DashboardHome({ missions }: { missions: DashboardMission[] }) {
+export function DashboardHome({
+  missions,
+  classroomId,
+}: {
+  missions: DashboardMission[];
+  /** Turma do aluno (Institutional Workspace, M17) — habilita o card "Minha Lesson". */
+  classroomId?: string;
+}) {
   const [loaded, setLoaded] = React.useState<Loaded | null>(null);
 
   React.useEffect(() => {
@@ -101,6 +110,8 @@ export function DashboardHome({ missions }: { missions: DashboardMission[] }) {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+      {classroomId ? <MyLessonCard classroomId={classroomId} missionId={active.id} /> : null}
+
       {/* Missão ativa */}
       <section className="relative overflow-hidden rounded-xl border border-border bg-gradient-to-br from-primary/15 via-card to-card p-6 md:p-8">
         <div className="pointer-events-none absolute -right-24 -top-24 size-64 rounded-full bg-primary/20 blur-3xl" />

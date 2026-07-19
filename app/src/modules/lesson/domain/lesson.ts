@@ -50,6 +50,8 @@ export interface Lesson {
 
   // Etapa 1 — Quem é minha turma?
   grade: string;
+  /** -> `Classroom.id` (`modules/platform`) — M17: Turma real do Colégio Beryon, não mais texto livre. */
+  classroomId: string | null;
   classroomLabel: string;
   estimatedMinutes: number | null;
 
@@ -88,7 +90,8 @@ export function createEmptyLesson(author: string): Lesson {
     id: crypto.randomUUID(),
     author,
     grade: "",
-    classroomLabel: "Turma de demonstração",
+    classroomId: null,
+    classroomLabel: "",
     estimatedMinutes: null,
     topic: "",
     objective: "",
@@ -109,6 +112,7 @@ export function createEmptyLesson(author: string): Lesson {
 export function lessonSaveBlockers(lesson: Lesson): string[] {
   const blockers: string[] = [];
   if (!lesson.grade.trim()) blockers.push("Série é obrigatória.");
+  if (!lesson.classroomId) blockers.push("Turma é obrigatória.");
   if (!lesson.topic.trim()) blockers.push("Tema é obrigatório.");
   if (!lesson.objective.trim()) blockers.push("Objetivo é obrigatório.");
   if (!lesson.missionId) blockers.push("Selecione uma Mission Flow.");

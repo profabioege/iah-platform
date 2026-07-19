@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { simulatedClassMonitor } from "@/modules/classroom";
 import { localMissionRepository } from "@/modules/library";
 import { isGoogleWorkspaceConfigured } from "@/modules/integrations";
-import { getDefaultRepositories } from "@/modules/platform";
+import { createInstitutionalClassMonitor, getDefaultRepositories } from "@/modules/platform";
 import { getWorkspaceContext } from "@/modules/workspace";
 import { isAuthConfigured } from "@/lib/auth-flags";
 import { Badge } from "@/components/ui/badge";
@@ -39,12 +38,23 @@ export const metadata: Metadata = {
 export default async function ProfessorPage() {
   const missions = await localMissionRepository.list();
   const mission = missions[0];
-  const students = mission
-    ? await simulatedClassMonitor.listByMission(mission.id)
-    : [];
   const googleConfigured = isGoogleWorkspaceConfigured();
   const classrooms = await listClassroomRows();
   const workspace = isAuthConfigured() ? null : await getWorkspaceContext();
+
+  // Acompanhamento institucional (M17) — substitui definitivamente o
+  // simulated-class-monitor; mostra a primeira Turma do Professor
+  // enquanto não há um seletor aqui (o fluxo completo com Turma
+  // escolhida vive em /professor/turmas).
+  const activeClassroom = workspace?.classrooms[0] ?? null;
+  const students =
+    mission && workspace && activeClassroom
+      ? await createInstitutionalClassMonitor(
+          getDefaultRepositories(),
+          workspace.institution.id,
+          activeClassroom.id,
+        ).listByMission(mission.id)
+      : [];
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
@@ -61,7 +71,8 @@ export default async function ProfessorPage() {
               Missão {String(mission.number).padStart(2, "0")}
             </Badge>
             <span className="text-sm text-muted-foreground">
-              {mission.title} · Turma de demonstração
+              {mission.title}
+              {activeClassroom ? ` · ${activeClassroom.name}` : ""}
             </span>
           </div>
         ) : null}

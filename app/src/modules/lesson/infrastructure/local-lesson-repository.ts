@@ -10,10 +10,10 @@
 import type { Lesson } from "../domain/lesson";
 import type { LessonRepository } from "../domain/lesson-repository";
 
-// v2 (Sprint M13): shape da Lesson mudou (objective, planningAxis,
-// format, assessmentNotes) — chave nova para não tentar ler dados no
-// formato antigo do Lesson Builder MVP (M12).
-const STORAGE_KEY = "iah:lesson:v2";
+// v3 (Sprint M17): `classroomLabel` (texto livre) virou `classroomId`
+// real (-> Classroom, modules/platform) — chave nova para não tentar
+// ler dados no formato antigo.
+const STORAGE_KEY = "iah:lesson:v3";
 
 function readAll(): Lesson[] {
   if (typeof window === "undefined") return [];

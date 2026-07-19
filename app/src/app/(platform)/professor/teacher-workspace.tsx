@@ -38,15 +38,23 @@ export function TeacherWorkspace({
       ) : null}
 
       {classrooms.length > 0 ? (
-        <InfoCard icon={UsersRound} title="Minhas Turmas">
-          <div className="flex flex-wrap gap-1.5">
-            {classrooms.map((classroom) => (
-              <Badge key={classroom.id} variant="outline" className="font-normal">
-                {classroom.name}
-              </Badge>
-            ))}
-          </div>
-        </InfoCard>
+        <Link href="/professor/turmas">
+          <Card className="h-full transition-colors hover:border-primary/50">
+            <CardContent className="flex flex-col gap-2 py-2">
+              <CardLabel icon={UsersRound} title="Minhas Turmas" />
+              <div className="flex flex-wrap gap-1.5">
+                {classrooms.map((classroom) => (
+                  <Badge key={classroom.id} variant="outline" className="font-normal">
+                    {classroom.name}
+                  </Badge>
+                ))}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Lessons, Mission publicada e acompanhamento por turma.
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
       ) : null}
 
       <LinkCard

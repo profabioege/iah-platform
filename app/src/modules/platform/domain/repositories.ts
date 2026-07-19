@@ -25,6 +25,7 @@ import type {
   Student,
   Teacher,
 } from "./entities";
+import type { MissionAssignment } from "./mission-delivery";
 
 export interface InstitutionRepository {
   getById(id: string): Promise<Institution | null>;
@@ -84,6 +85,12 @@ export interface ProductionRepository {
     institutionId: string,
     studentId: string,
   ): Promise<Production[]>;
+  /** Todas as produções de uma Turma numa Missão (M17 — acompanhamento institucional). */
+  listByClassroomMission(
+    institutionId: string,
+    classroomId: string,
+    missionId: string,
+  ): Promise<Production[]>;
   save(institutionId: string, production: Production): Promise<void>;
 }
 
@@ -92,7 +99,29 @@ export interface ReflectionRepository {
     institutionId: string,
     studentId: string,
   ): Promise<Reflection[]>;
+  /** Todas as reflexões de uma Turma numa Missão (M17 — acompanhamento institucional). */
+  listByClassroomMission(
+    institutionId: string,
+    classroomId: string,
+    missionId: string,
+  ): Promise<Reflection[]>;
   save(institutionId: string, reflection: Reflection): Promise<void>;
+}
+
+/**
+ * Publicação de uma Missão numa Turma (M17) — mesma entidade
+ * `MissionAssignment` de `domain/mission-delivery.ts`, agora com
+ * persistência real (seed em memória): o contrato ficou "arquitetura
+ * apenas" desde D-023 porque publicar exigia Atividade, persistência e
+ * autenticação — as três já existem (Workspace, M15).
+ */
+export interface MissionAssignmentRepository {
+  listByClassroom(
+    institutionId: string,
+    classroomId: string,
+  ): Promise<MissionAssignment[]>;
+  getById(institutionId: string, id: string): Promise<MissionAssignment | null>;
+  save(institutionId: string, assignment: MissionAssignment): Promise<void>;
 }
 
 export interface ClassroomIntegrationRepository {
@@ -122,4 +151,5 @@ export interface PlatformRepositories {
   reflections: ReflectionRepository;
   classroomIntegrations: ClassroomIntegrationRepository;
   classroomSyncStates: ClassroomSyncStateRepository;
+  missionAssignments: MissionAssignmentRepository;
 }

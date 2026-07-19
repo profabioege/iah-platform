@@ -17,6 +17,7 @@ import type {
   Student,
   Classroom,
 } from "../../domain/entities";
+import type { MissionAssignment } from "../../domain/mission-delivery";
 import type { PlatformRepositories } from "../../domain/repositories";
 import {
   DEMO_ACADEMIC_YEAR,
@@ -25,6 +26,8 @@ import {
   DEMO_INSTITUTION,
   DEMO_MISSION_PROGRESS,
   DEMO_MISSION_RECORD,
+  DEMO_PRODUCTIONS,
+  DEMO_REFLECTIONS,
   DEMO_STUDENTS,
   DEMO_TEACHER,
 } from "../../seeds/demo-seed";
@@ -35,10 +38,11 @@ export function createSeedRepositories(): PlatformRepositories {
   const students: Student[] = [...DEMO_STUDENTS];
   const enrollments: Enrollment[] = [...DEMO_ENROLLMENTS];
   const progress: MissionProgress[] = [...DEMO_MISSION_PROGRESS];
-  const productions: Production[] = [];
-  const reflections: Reflection[] = [];
+  const productions: Production[] = [...DEMO_PRODUCTIONS];
+  const reflections: Reflection[] = [...DEMO_REFLECTIONS];
   const integrations: ClassroomIntegration[] = [];
   const syncStates: ClassroomSyncState[] = [];
+  const assignments: MissionAssignment[] = [];
 
   return {
     institutions: {
@@ -151,6 +155,14 @@ export function createSeedRepositories(): PlatformRepositories {
             p.institutionId === institutionId && p.studentId === studentId,
         );
       },
+      async listByClassroomMission(institutionId, classroomId, missionId) {
+        return productions.filter(
+          (p) =>
+            p.institutionId === institutionId &&
+            p.classroomId === classroomId &&
+            p.missionId === missionId,
+        );
+      },
       async save(institutionId, item) {
         const index = productions.findIndex(
           (p) => p.institutionId === institutionId && p.id === item.id,
@@ -164,6 +176,14 @@ export function createSeedRepositories(): PlatformRepositories {
         return reflections.filter(
           (r) =>
             r.institutionId === institutionId && r.studentId === studentId,
+        );
+      },
+      async listByClassroomMission(institutionId, classroomId, missionId) {
+        return reflections.filter(
+          (r) =>
+            r.institutionId === institutionId &&
+            r.classroomId === classroomId &&
+            r.missionId === missionId,
         );
       },
       async save(institutionId, item) {
@@ -194,6 +214,28 @@ export function createSeedRepositories(): PlatformRepositories {
         );
         if (index >= 0) syncStates[index] = { ...state, institutionId };
         else syncStates.push({ ...state, institutionId });
+      },
+    },
+    missionAssignments: {
+      async listByClassroom(institutionId, classroomId) {
+        return assignments.filter(
+          (a) =>
+            a.institutionId === institutionId && a.classroomId === classroomId,
+        );
+      },
+      async getById(institutionId, id) {
+        return (
+          assignments.find(
+            (a) => a.institutionId === institutionId && a.id === id,
+          ) ?? null
+        );
+      },
+      async save(institutionId, assignment) {
+        const index = assignments.findIndex(
+          (a) => a.institutionId === institutionId && a.id === assignment.id,
+        );
+        if (index >= 0) assignments[index] = { ...assignment, institutionId };
+        else assignments.push({ ...assignment, institutionId });
       },
     },
   };

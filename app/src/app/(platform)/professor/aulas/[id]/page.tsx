@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { isAuthConfigured } from "@/lib/auth-flags";
 import { localMissionRepository } from "@/modules/library";
 import { getDefaultKnowledgeRepositories } from "@/modules/knowledge";
-import { getWorkspaceUser } from "@/modules/workspace";
+import { getWorkspaceContext, getWorkspaceUser } from "@/modules/workspace";
 
 import { LessonWizard } from "./lesson-wizard";
 
@@ -28,6 +28,9 @@ export default async function LessonBuilderPage({
   const author = await resolveAuthor();
   const missions = await localMissionRepository.list();
   const knowledgeDocuments = await getDefaultKnowledgeRepositories().documents.list();
+  // Turmas reais do Colégio Beryon (M17) — sem autenticação real
+  // configurada, o Workspace ainda resolve todas as turmas do professor.
+  const workspace = isAuthConfigured() ? null : await getWorkspaceContext();
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
@@ -36,6 +39,7 @@ export default async function LessonBuilderPage({
         author={author}
         missions={missions}
         knowledgeDocuments={knowledgeDocuments}
+        classrooms={workspace?.classrooms ?? []}
       />
     </div>
   );

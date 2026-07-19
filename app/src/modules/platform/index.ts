@@ -6,9 +6,10 @@
  * (dados de demonstração, nunca persistidos). Schema SQL correspondente:
  * app/db/migrations/. Documentação: docs/PERSISTENCE.md.
  *
- * NENHUMA página consome este módulo ainda — a UI segue nos stores
- * atuais (localStorage + turma simulada) até a troca documentada em
- * docs/PERSISTENCE.md.
+ * Desde a M17, este módulo é a fonte real do acompanhamento de turma
+ * (`institutional-class-monitor.ts`) e da publicação de Missão
+ * (`mission-publishing-service.ts`) — o Painel do Professor não depende
+ * mais de `modules/classroom/infrastructure/simulated-class-monitor`.
  */
 
 export type {
@@ -43,6 +44,7 @@ export type {
   ClassroomSyncStateRepository,
   EnrollmentRepository,
   InstitutionRepository,
+  MissionAssignmentRepository,
   MissionProgressRepository,
   MissionRecordRepository,
   PlatformRepositories,
@@ -62,6 +64,8 @@ export {
   createClassroomSyncService,
   type SyncResult,
 } from "./services/classroom-sync-service";
+export { createMissionPublishingService } from "./services/mission-publishing-service";
+export { createInstitutionalClassMonitor } from "./services/institutional-class-monitor";
 
 export {
   createRepositories,

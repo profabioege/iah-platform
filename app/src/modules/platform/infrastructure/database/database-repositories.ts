@@ -86,6 +86,9 @@ export function createDatabaseRepositories(): PlatformRepositories {
       async listByStudent() {
         notConfigured("productions.listByStudent");
       },
+      async listByClassroomMission() {
+        notConfigured("productions.listByClassroomMission");
+      },
       async save() {
         notConfigured("productions.save");
       },
@@ -93,6 +96,9 @@ export function createDatabaseRepositories(): PlatformRepositories {
     reflections: {
       async listByStudent() {
         notConfigured("reflections.listByStudent");
+      },
+      async listByClassroomMission() {
+        notConfigured("reflections.listByClassroomMission");
       },
       async save() {
         notConfigured("reflections.save");
@@ -112,6 +118,17 @@ export function createDatabaseRepositories(): PlatformRepositories {
       },
       async save() {
         notConfigured("classroomSyncStates.save");
+      },
+    },
+    missionAssignments: {
+      async listByClassroom() {
+        notConfigured("missionAssignments.listByClassroom");
+      },
+      async getById() {
+        notConfigured("missionAssignments.getById");
+      },
+      async save() {
+        notConfigured("missionAssignments.save");
       },
     },
   };

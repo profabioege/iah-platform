@@ -13,10 +13,12 @@
  * ARQUIVO EDGE-SAFE: só dados e imports de tipo — o middleware chega
  * aqui via modules/workspace/seeds.
  *
- * O acompanhamento da turma no Painel do Professor
- * (simulated-class-monitor, modules/classroom) segue sendo um roster
- * simulado próprio, rotulado "Turma de demonstração" — aposentá-lo em
- * favor destes dados é o item 7 do checklist Mock → Banco Real.
+ * M17 — Learning Lifecycle: este seed passou a ser a fonte real do
+ * acompanhamento de turma no Painel do Professor (`institutional-class-
+ * monitor.ts`), aposentando definitivamente o `simulated-class-monitor`
+ * de `modules/classroom`. `DEMO_PRODUCTIONS`/`DEMO_REFLECTIONS` migram o
+ * mesmo conteúdo fictício rico que vivia lá — nenhum texto novo, só
+ * mudança de fonte.
  */
 
 import type {
@@ -26,6 +28,8 @@ import type {
   Institution,
   MissionProgress,
   MissionRecord,
+  Production,
+  Reflection,
   Student,
   Teacher,
 } from "../domain/entities";
@@ -72,10 +76,6 @@ export const DEMO_CLASSROOMS: Classroom[] = CLASSROOM_LABELS.map(
     teacherIds: [DEMO_TEACHER.id],
   }),
 );
-
-/** Turma em que a Missão 01 está ativa na demonstração. */
-export const DEMO_CLASSROOM: Classroom =
-  DEMO_CLASSROOMS.find((c) => c.id === "class-2em-a") ?? DEMO_CLASSROOMS[0];
 
 export const DEMO_MISSION_RECORD: MissionRecord = {
   id: "01-a-fabrica-de-noticias",
@@ -139,4 +139,69 @@ export const DEMO_MISSION_PROGRESS: MissionProgress[] = DEMO_STUDENTS.map(
     status: DEMO_ROSTER[i].status,
     lastAccessAt: DEMO_ROSTER[i].lastAccessAt,
   }),
+);
+
+/** Texto de Produção — só para quem já entregou (índices 0–3: 1º EM A e 1º EM B). */
+const DEMO_PRODUCTION_TEXT: Record<number, string> = {
+  0:
+    "Veredito 1: falsa — nenhuma outra fonte confirma. Veredito 2: real — " +
+    "duas agências publicaram no mesmo dia. Veredito 3: falsa — a foto é de " +
+    "2019. Veredito 4: real. Minha manchete: \"Prefeitura anuncia aulas de " +
+    "drone para o 6º ano\" — engana porque cita uma fonte oficial que não existe.",
+  1:
+    "Auditoria: 1 falsa (sem autor), 2 real, 3 falsa (site imita portal " +
+    "conhecido), 4 real. Manchete criada: \"Escola de Itu proíbe caneta azul\" " +
+    "— crível porque parece regra escolar comum; denuncia-se pela ausência de fonte.",
+  2:
+    "Vereditos: falsa, real, falsa, real. A manchete que gerei usa números " +
+    "exatos (\"87% dos alunos\") para parecer pesquisa séria — é isso que a denuncia: " +
+    "nenhuma pesquisa é citada.",
+  3:
+    "1: falsa — o \"jornal\" não existe. 2: real. 3: falsa — IA gerou a imagem " +
+    "(mão com seis dedos). 4: real. Manchete: \"Merenda terá robô cozinheiro\".",
+};
+
+/** Reflexão registrada — só para quem concluiu o Diário (índices 0–1). */
+const DEMO_REFLECTION_TEXT: Record<number, string> = {
+  0:
+    "Quase acreditei na manchete 3 porque a foto parecia recente. Aprendi a " +
+    "procurar a data original da imagem antes de confiar.",
+  1:
+    "Percebi que manchete boa de compartilhar é justamente a que merece mais " +
+    "desconfiança.",
+};
+
+export const DEMO_PRODUCTIONS: Production[] = Object.entries(DEMO_PRODUCTION_TEXT).map(
+  ([indexStr, content]) => {
+    const i = Number(indexStr);
+    const student = DEMO_STUDENTS[i];
+    return {
+      id: `production-${student.id}`,
+      institutionId: DEMO_INSTITUTION.id,
+      classroomId: DEMO_ENROLLMENTS[i].classroomId,
+      studentId: student.id,
+      missionId: DEMO_MISSION_RECORD.id,
+      content,
+      status: "delivered",
+      deliveredAt: DEMO_ROSTER[i].lastAccessAt,
+      updatedAt: DEMO_ROSTER[i].lastAccessAt ?? DEMO_ACADEMIC_YEAR.startsOn,
+    };
+  },
+);
+
+export const DEMO_REFLECTIONS: Reflection[] = Object.entries(DEMO_REFLECTION_TEXT).map(
+  ([indexStr, text]) => {
+    const i = Number(indexStr);
+    const student = DEMO_STUDENTS[i];
+    return {
+      id: `reflection-${student.id}`,
+      institutionId: DEMO_INSTITUTION.id,
+      classroomId: DEMO_ENROLLMENTS[i].classroomId,
+      studentId: student.id,
+      missionId: DEMO_MISSION_RECORD.id,
+      text,
+      recordedAt: DEMO_ROSTER[i].lastAccessAt ?? DEMO_ACADEMIC_YEAR.startsOn,
+      visibility: "shared_with_teacher",
+    };
+  },
 );

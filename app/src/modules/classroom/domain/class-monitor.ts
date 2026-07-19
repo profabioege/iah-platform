@@ -1,9 +1,12 @@
 /**
  * Acompanhamento da turma durante uma Missão (visão do Professor).
  *
- * O painel consome apenas o contrato {@link ClassMonitorReader}; a fonte
- * atual é simulada (infrastructure/simulated-class-monitor) e será
- * substituída pelo banco de dados sem alterar a interface do painel.
+ * O painel (`ClassPanel`) consome apenas o contrato
+ * {@link ClassMonitorReader}. Desde a M17, a implementação em uso é
+ * `createInstitutionalClassMonitor` (`modules/platform`), sobre a
+ * arquitetura institucional real — a troca para banco fica só na
+ * implementação dos repositórios de `modules/platform`, sem alterar
+ * este contrato nem `ClassPanel`.
  */
 
 /** Estados possíveis de um aluno dentro de uma Missão, em ordem de avanço. */

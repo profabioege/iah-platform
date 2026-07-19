@@ -2,6 +2,20 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 18/07/2026 — M17: Learning Lifecycle (Fluxo Completo Professor → Aluno)
+
+Conecta todos os módulos já existentes (Institutional Workspace, Curriculum Engine, Lesson Composer, Knowledge Engine, Mission Flow) num único fluxo de aprendizagem — nenhum módulo novo criado, sem IA, sem Google Classroom/NotebookLM, sem alterar autenticação.
+
+- **Nova rota `/professor/turmas`** — o hub do fluxo Professor: seleciona uma Turma real do Colégio Beryon (chips) → vê as Lessons daquela turma → abre uma Lesson (reaproveita `LessonPreview`: Objetivos, Competências, Mission Flow, Materiais, Tempo) → **"Publicar Mission para a turma"**.
+- **`Lesson.classroomId` real** (`modules/lesson`): a Etapa 1 do Lesson Composer troca o único valor fixo "Turma de demonstração" pelas 5 turmas reais do Colégio Beryon (`modules/workspace`/`modules/platform`). Chave de armazenamento migrada para `iah:lesson:v3`.
+- **`MissionPublishingService` implementado de verdade** (`modules/platform/services/mission-publishing-service.ts`): o contrato `MissionAssignment`/`MissionPublishingService` existia desde D-023 como "arquitetura apenas" — publicar exigia Atividade, persistência e autenticação; as três já existem agora (Workspace, M15). Novo `MissionAssignmentRepository` (seed em memória + banco stub, D-019).
+- **Dashboard do Aluno ganha "Minha Lesson"**: quando existe uma Lesson publicada para a turma do aluno, um card mostra Tema/Objetivo antes da Missão — "Minha Missão"/Status/Iniciar/Concluir/Entregar seguem no Mission Flow já existente (M08), **intocado**.
+- **`simulated-class-monitor` eliminado definitivamente** (`modules/classroom`, arquivo removido): novo `createInstitutionalClassMonitor` (`modules/platform/services/institutional-class-monitor.ts`) implementa o mesmo contrato `ClassMonitorReader` sobre `Student`/`Enrollment`/`MissionProgress`/`Production`/`Reflection` reais — `ClassPanel` (UI) não mudou uma linha, só a fonte trocou (D-001). `/professor` (painel geral) também migrou para essa fonte.
+- **Seed institucional ganhou conteúdo**: `DEMO_PRODUCTIONS`/`DEMO_REFLECTIONS` (mesmo texto fictício rico que vivia em `simulated-class-monitor`, migrado — nenhum texto novo) e novos métodos `listByClassroomMission` em `ProductionRepository`/`ReflectionRepository`.
+- **Painel do Professor pós-entrega** (`/professor/turmas`): quantidade de alunos, quantos iniciaram, quantos concluíram, pendentes, percentual da turma, lista de entregas e abertura de entrega individual (produção + reflexão) — tudo com dados reais do seed institucional.
+- **Correção de bug real, achada na validação**: as factories de repositórios seed (`modules/platform`, `modules/knowledge`, `modules/curriculum`) criavam uma instância nova a cada chamada — sem uma referência compartilhada, nenhuma escrita sobrevivia à leitura seguinte, mesmo dentro do mesmo processo Node (Server Actions e Server Components do Next.js podem carregar o mesmo módulo em instâncias separadas). Corrigido com singleton em `globalThis` (mesmo padrão usado para o singleton do Prisma Client em apps Next.js) nas três factories.
+- Validado manualmente o fluxo completo (Professor publica → Aluno vê "Minha Lesson" e faz a Missão → Professor acompanha, abre entrega individual) em desktop e mobile (375px), sem overflow, console limpo; confirmado que Mission Flow, Curriculum Engine e o gate de papéis (`/gestor`, `/professor`) não sofreram regressão. `npm run lint` e `npm run build` limpos.
+
 ## 18/07/2026 — M16: Unificação Institucional Beryon
 
 Resolve o achado registrado na M15: o Painel do Professor misturava duas instituições (header/hub Colégio Beryon vs. Turmas nos seeds antigos da "Escola de Demonstração IAH"). Sprint de unificação de fontes — nenhuma funcionalidade nova.

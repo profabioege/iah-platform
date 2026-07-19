@@ -23,5 +23,3 @@ export {
   type StudentMissionSnapshot,
   type StudentMissionStatus,
 } from "./domain/class-monitor";
-
-export { simulatedClassMonitor } from "./infrastructure/simulated-class-monitor";
