@@ -5,7 +5,9 @@
  * institucional/pedagógico (Instituição, Ano Letivo, perfil, Turmas,
  * Disciplinas, permissões) carregado automaticamente após o login.
  * Multi-instituição por arquitetura: nada aqui pressupõe uma única
- * escola — o Colégio Beryon é só o seed desta fase.
+ * escola — o Instituto Horizonte (D-039, instituição fictícia) é só o
+ * seed desta fase (M18: nem os nomes dos símbolos dependem mais dela —
+ * ver `seeds/institution-seed.ts`).
  *
  * Troca futura por autenticação real (Google/Supabase/Microsoft/
  * Sophia): contrato `WorkspaceAuthProvider` + `session-cookie.ts` são
@@ -45,16 +47,16 @@ export {
 export { getWorkspaceContext, getWorkspaceUser } from "./infrastructure/session";
 
 export {
-  BERYON_CLASSROOMS,
-  BERYON_ENROLLMENTS,
-  BERYON_INSTITUTION,
-  BERYON_SCHOOL_YEAR,
-  BERYON_STUDENTS,
-  BERYON_SUBJECT,
-  BERYON_TEACHER,
-  BERYON_USERS,
+  WORKSPACE_CLASSROOMS,
   WORKSPACE_DEMO_PASSWORD,
-} from "./seeds/beryon-seed";
+  WORKSPACE_ENROLLMENTS,
+  WORKSPACE_INSTITUTION,
+  WORKSPACE_SCHOOL_YEAR,
+  WORKSPACE_STUDENTS,
+  WORKSPACE_SUBJECT,
+  WORKSPACE_TEACHER,
+  WORKSPACE_USERS,
+} from "./seeds/institution-seed";
 
 import { localWorkspaceAuthProvider } from "./infrastructure/local-auth-provider";
 import type { WorkspaceAuthProvider } from "./domain/auth-provider";

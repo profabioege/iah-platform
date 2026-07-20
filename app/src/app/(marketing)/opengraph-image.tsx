@@ -26,21 +26,21 @@ export default function OpengraphImage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          {/* Marca IAH — mesmo desenho do componente Logo */}
-          <svg width="150" height="53" viewBox="0 0 340 120">
-            <rect x="8" y="8" width="34" height="104" rx="9" fill="#f4f8fc" />
+          {/* Marca IAH — cópia da geometria master (brand/logo.tsx, M18.3); não redesenhar aqui */}
+          <svg width="165" height="78" viewBox="0 0 1100 520">
+            <rect x="20" y="20" width="90" height="480" rx="25" fill="#f4f8fc" />
             <path
-              d="M70 112 L120 14 L170 112"
+              d="M435 22 L205 498 M435 22 L665 498"
               fill="none"
               stroke="#f4f8fc"
-              strokeWidth="34"
+              strokeWidth="86"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            <path d="M120 66 L142 108 L98 108 Z" fill="#42e8f1" />
-            <rect x="206" y="8" width="34" height="104" rx="9" fill="#f4f8fc" />
-            <rect x="298" y="8" width="34" height="104" rx="9" fill="#f4f8fc" />
-            <rect x="206" y="45" width="126" height="30" rx="9" fill="#f4f8fc" />
+            <path d="M435 315 L530 500 L340 500 Z" fill="#00a9c6" />
+            <rect x="730" y="20" width="90" height="480" rx="25" fill="#f4f8fc" />
+            <rect x="990" y="20" width="90" height="480" rx="25" fill="#f4f8fc" />
+            <rect x="775" y="200" width="260" height="95" fill="#f4f8fc" />
           </svg>
           <span style={{ fontSize: 22, letterSpacing: 6, color: "#42e8f1" }}>
             EDUCACIONAL

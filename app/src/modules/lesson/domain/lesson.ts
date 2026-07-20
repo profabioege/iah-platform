@@ -50,7 +50,7 @@ export interface Lesson {
 
   // Etapa 1 — Quem é minha turma?
   grade: string;
-  /** -> `Classroom.id` (`modules/platform`) — M17: Turma real do Colégio Beryon, não mais texto livre. */
+  /** -> `Classroom.id` (`modules/platform`) — M17: Turma real da instituição, não mais texto livre. */
   classroomId: string | null;
   classroomLabel: string;
   estimatedMinutes: number | null;

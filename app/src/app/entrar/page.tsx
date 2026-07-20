@@ -10,7 +10,9 @@ import {
   getWorkspaceUser,
   roleHome,
   WORKSPACE_DEMO_PASSWORD,
+  WORKSPACE_INSTITUTION,
   WORKSPACE_SESSION_COOKIE,
+  WORKSPACE_TEACHER,
 } from "@/modules/workspace";
 import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
@@ -94,7 +96,7 @@ export default async function EntrarPage({
                 name="email"
                 required
                 autoComplete="email"
-                placeholder="voce@beryon.edu.br"
+                placeholder={`voce@${WORKSPACE_INSTITUTION.domain}`}
               />
             </label>
             <label className="flex flex-col gap-1.5 text-left">
@@ -119,8 +121,9 @@ export default async function EntrarPage({
               <ArrowRight className="size-4" />
             </Button>
             <p className="text-xs leading-relaxed text-muted-foreground">
-              Ambiente de demonstração — contas simuladas do Colégio Beryon
-              (ex.: fabio@beryon.edu.br), senha {WORKSPACE_DEMO_PASSWORD}.
+              Ambiente de demonstração — contas simuladas do{" "}
+              {WORKSPACE_INSTITUTION.name} (ex.: {WORKSPACE_TEACHER.email}),
+              senha {WORKSPACE_DEMO_PASSWORD}.
             </p>
           </form>
         )}

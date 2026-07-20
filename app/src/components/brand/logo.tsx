@@ -1,12 +1,19 @@
 import { cn } from "@/lib/utils";
 
-type LogoVariant = "auto" | "light" | "dark";
+/**
+ * "primary" (= "light") — letras navy, fundos claros; "reverse"
+ * (= "dark") — letras brancas, fundos escuros; "auto" herda currentColor.
+ * Os nomes oficiais da M18.3 são primary/reverse; light/dark permanecem
+ * como sinônimos retrocompatíveis.
+ */
+type LogoVariant = "auto" | "light" | "dark" | "primary" | "reverse";
 
 interface LogoProps {
   /**
-   * Cor das letras: "dark" (brancas, p/ fundo escuro), "light" (navy, p/
-   * fundo claro) ou "auto" (herda `currentColor`). O acento (triângulo) e a
-   * palavra EDUCACIONAL usam sempre o ciano da marca.
+   * Versão oficial: "primary"/"light" (navy, p/ fundo claro),
+   * "reverse"/"dark" (branca, p/ fundo escuro) ou "auto" (herda
+   * `currentColor`). O Núcleo IAH (triângulo) e a palavra EDUCACIONAL
+   * usam sempre o ciano da marca.
    */
   variant?: LogoVariant;
   /** Exibe "EDUCACIONAL" abaixo do símbolo. */
@@ -16,14 +23,18 @@ interface LogoProps {
 }
 
 /**
- * Logo oficial do IAH Educacional — fonte única do desenho da marca.
+ * Logo oficial do IAH Educacional — MASTER VETORIAL e fonte única do
+ * desenho da marca (M18.3). Toda cópia estática (public/brand/*.svg,
+ * src/app/icon.svg, opengraph-image, apple-icon) é derivada DESTE
+ * arquivo — nunca o contrário.
  *
- * As letras usam `currentColor` para se adaptarem ao tema; o acento e o
- * wordmark usam o ciano da marca (design system, ADR-006).
+ * ATIVO INSTITUCIONAL PROTEGIDO: nenhum agente de IA ou desenvolvedor
+ * pode redesenhar ou reinterpretar esta geometria. Qualquer alteração
+ * exige aprovação explícita do fundador e atualização de TODAS as
+ * cópias derivadas (checklist em BRAND_GUIDELINES.md, neste diretório).
  *
- * Para adotar o vetor oficial no futuro, basta substituir o conteúdo <svg>
- * deste arquivo: a API (variant/wordmark) e todos os pontos de uso
- * (header, sidebar, login, OG, etc.) permanecem inalterados.
+ * As letras usam `currentColor` para se adaptarem ao tema; o Núcleo IAH
+ * e o wordmark usam o ciano da marca (design system, ADR-006).
  */
 export function Logo({
   variant = "auto",
@@ -32,13 +43,16 @@ export function Logo({
   title = "IAH Educacional",
 }: LogoProps) {
   const color =
-    variant === "dark"
+    variant === "dark" || variant === "reverse"
       ? "#ffffff"
-      : variant === "light"
+      : variant === "light" || variant === "primary"
         ? "var(--iah-ink)"
         : undefined;
 
-  const viewBox = wordmark ? "0 0 340 168" : "0 0 340 120";
+  // Proporções reconstruídas a partir do arquivo oficial logoIAH1.png
+  // fornecido pelo fundador em 19/07/2026. A versão anterior condensava
+  // o conjunto e alterava de forma perceptível o A e o wordmark.
+  const viewBox = wordmark ? "0 0 1100 700" : "0 0 1100 520";
 
   return (
     <svg
@@ -51,35 +65,38 @@ export function Logo({
     >
       <title>{title}</title>
 
-      {/* I */}
-      <rect x="8" y="8" width="34" height="104" rx="9" fill="currentColor" />
+      {/* I — haste larga, com terminações arredondadas como no master oficial. */}
+      <rect x="20" y="20" width="90" height="480" rx="25" fill="currentColor" />
 
-      {/* A — montanha (Λ) com triângulo ciano interno */}
+      {/* A oficial: ápice, pés e junção arredondados; sem travessão. */}
       <path
-        d="M70 112 L120 14 L170 112"
+        d="M435 22 L205 498 M435 22 L665 498"
         fill="none"
         stroke="currentColor"
-        strokeWidth="34"
+        strokeWidth="86"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <path d="M120 66 L142 108 L98 108 Z" fill="var(--iah-cyan-400, #42e8f1)" />
+      <path
+        d="M435 315 L530 500 L340 500 Z"
+        fill="#00a9c6"
+      />
 
       {/* H */}
-      <rect x="206" y="8" width="34" height="104" rx="9" fill="currentColor" />
-      <rect x="298" y="8" width="34" height="104" rx="9" fill="currentColor" />
-      <rect x="206" y="45" width="126" height="30" rx="9" fill="currentColor" />
+      <rect x="730" y="20" width="90" height="480" rx="25" fill="currentColor" />
+      <rect x="990" y="20" width="90" height="480" rx="25" fill="currentColor" />
+      <rect x="775" y="200" width="260" height="95" fill="currentColor" />
 
       {wordmark ? (
         <text
-          x="170"
-          y="152"
+          x="550"
+          y="665"
           textAnchor="middle"
           fontFamily="var(--iah-font-sans), system-ui, sans-serif"
-          fontSize="26"
-          fontWeight="700"
-          letterSpacing="7"
-          fill="var(--iah-cyan-400, #42e8f1)"
+          fontSize="68"
+          fontWeight="300"
+          letterSpacing="30"
+          fill="#00a9c6"
         >
           EDUCACIONAL
         </text>

@@ -28,8 +28,8 @@ export default async function LessonBuilderPage({
   const author = await resolveAuthor();
   const missions = await localMissionRepository.list();
   const knowledgeDocuments = await getDefaultKnowledgeRepositories().documents.list();
-  // Turmas reais do Colégio Beryon (M17) — sem autenticação real
-  // configurada, o Workspace ainda resolve todas as turmas do professor.
+  // Turmas reais do Instituto Horizonte (M17/D-039) — sem autenticação
+  // real configurada, o Workspace ainda resolve todas as turmas do professor.
   const workspace = isAuthConfigured() ? null : await getWorkspaceContext();
 
   return (

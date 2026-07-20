@@ -11,13 +11,13 @@ import type { WorkspaceUser } from "../domain/entities";
 import type { WorkspaceContext } from "../domain/workspace-context";
 import { ROLE_PERMISSIONS } from "../domain/workspace-context";
 import {
-  BERYON_CLASSROOMS,
-  BERYON_ENROLLMENTS,
-  BERYON_INSTITUTION,
-  BERYON_SCHOOL_YEAR,
-  BERYON_SUBJECT,
   findWorkspaceUserById,
-} from "../seeds/beryon-seed";
+  WORKSPACE_CLASSROOMS,
+  WORKSPACE_ENROLLMENTS,
+  WORKSPACE_INSTITUTION,
+  WORKSPACE_SCHOOL_YEAR,
+  WORKSPACE_SUBJECT,
+} from "../seeds/institution-seed";
 import { WORKSPACE_SESSION_COOKIE } from "./session-cookie";
 
 export async function getWorkspaceUser(): Promise<WorkspaceUser | null> {
@@ -38,22 +38,22 @@ export async function getWorkspaceContext(): Promise<WorkspaceContext | null> {
 
   const classrooms =
     user.role === "student"
-      ? BERYON_CLASSROOMS.filter((classroom) =>
-          BERYON_ENROLLMENTS.some(
+      ? WORKSPACE_CLASSROOMS.filter((classroom) =>
+          WORKSPACE_ENROLLMENTS.some(
             (enrollment) =>
               enrollment.classroomId === classroom.id &&
               enrollment.studentId === user.studentId,
           ),
         )
-      : BERYON_CLASSROOMS;
+      : WORKSPACE_CLASSROOMS;
 
   return {
     user,
     role: user.role,
     permissions: ROLE_PERMISSIONS[user.role],
-    institution: BERYON_INSTITUTION,
-    schoolYear: BERYON_SCHOOL_YEAR,
-    subjects: [BERYON_SUBJECT],
+    institution: WORKSPACE_INSTITUTION,
+    schoolYear: WORKSPACE_SCHOOL_YEAR,
+    subjects: [WORKSPACE_SUBJECT],
     classrooms,
   };
 }

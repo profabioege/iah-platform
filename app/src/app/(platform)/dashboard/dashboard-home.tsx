@@ -18,6 +18,7 @@ import {
   listAllStudentWork,
   loadStudentWork,
   type StudentWork,
+  type StudentWorkScope,
 } from "@/modules/classroom";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -58,25 +59,32 @@ interface Loaded {
 export function DashboardHome({
   missions,
   classroomId,
+  scope,
 }: {
   missions: DashboardMission[];
   /** Turma do aluno (Institutional Workspace, M17) — habilita o card "Minha Lesson". */
   classroomId?: string;
+  /** Instituição + usuário do Institutional Workspace — isola o trabalho salvo por aluno. */
+  scope: StudentWorkScope | null;
 }) {
   const [loaded, setLoaded] = React.useState<Loaded | null>(null);
 
   React.useEffect(() => {
     const works: Record<string, StudentWork> = {};
-    for (const mission of missions) works[mission.id] = loadStudentWork(mission.id);
+    for (const mission of missions) {
+      works[mission.id] = scope
+        ? loadStudentWork(scope, mission.id)
+        : emptyStudentWork(mission.id);
+    }
 
-    const lastReflection = listAllStudentWork()
+    const lastReflection = (scope ? listAllStudentWork(scope) : [])
       .filter(isReflectionRecorded)
       .sort((a, b) =>
         (b.reflectionRecordedAt ?? "").localeCompare(a.reflectionRecordedAt ?? ""),
       )[0];
 
     setLoaded({ works, lastReflection });
-  }, [missions]);
+  }, [missions, scope]);
 
   // O progresso vive no dispositivo e só é lido após a hidratação; até lá,
   // mostramos o esqueleto para não piscar uma tela vazia.

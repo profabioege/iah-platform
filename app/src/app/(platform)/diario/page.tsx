@@ -1,4 +1,6 @@
 import { localMissionRepository } from "@/modules/library";
+import { isAuthConfigured } from "@/lib/auth-flags";
+import { getWorkspaceContext } from "@/modules/workspace";
 
 import { DiarioList, type MissionRef } from "./diario-list";
 
@@ -15,6 +17,14 @@ export default async function DiarioPage() {
     title: m.title,
   }));
 
+  const workspace = isAuthConfigured() ? null : await getWorkspaceContext();
+  const scope = workspace
+    ? {
+        institutionId: workspace.institution.id,
+        ownerId: workspace.user.studentId ?? workspace.user.id,
+      }
+    : null;
+
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
       <header className="flex flex-col gap-1">
@@ -30,7 +40,7 @@ export default async function DiarioPage() {
         </p>
       </header>
 
-      <DiarioList missions={refs} />
+      <DiarioList missions={refs} scope={scope} />
     </div>
   );
 }

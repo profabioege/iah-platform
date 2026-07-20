@@ -10,10 +10,30 @@
 
 import type { StudentMissionStatus } from "@/modules/classroom";
 
-/** Instituição de ensino — o tenant. Raiz de todo o modelo. */
+/** Paleta institucional para branding futuro (white-label) — sem consumidor ainda. */
+export interface InstitutionColors {
+  primary: string;
+  secondary: string;
+}
+
+/**
+ * Instituição de ensino — o tenant. Raiz de todo o modelo, e fonte única
+ * de configuração institucional (D-035): toda a Plataforma lê estes
+ * campos, nenhuma tela duplica o dado em texto literal.
+ */
 export interface Institution {
   id: string;
+  /** Identificador curto e estável (ex.: usado em `AUTH_DEFAULT_INSTITUTION_SLUG`). */
+  slug: string;
   name: string;
+  /** Domínio de e-mail institucional (ex.: "institutohorizonte.edu.br") — nunca a identidade do tenant, só um atributo. */
+  domain: string;
+  /** URL do logotipo da instituição (branding/white-label) — `null` até existir o asset real. */
+  logoUrl: string | null;
+  /** Paleta de marca da instituição (branding/white-label) — `null` até existir o asset real. */
+  colors: InstitutionColors | null;
+  /** Fuso horário da instituição (IANA, ex.: "America/Sao_Paulo"). */
+  timezone: string;
   status: "active" | "suspended";
   createdAt: string;
 }

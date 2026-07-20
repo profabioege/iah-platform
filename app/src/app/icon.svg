@@ -1,5 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 100 100">
-  <rect width="100" height="100" rx="22" fill="#07101d"/>
-  <path d="M28 74 L50 30 L72 74" fill="none" stroke="#ffffff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M50 52 L62 73 L38 73 Z" fill="#42e8f1"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 520 520">
+  <!-- Favicon — Núcleo IAH: mesmo path do master (brand/symbol.tsx), só escalado com margem (M18.3). -->
+  <rect width="520" height="520" rx="112" fill="#07101d"/>
+  <g transform="translate(50 48) scale(0.81)">
+    <path d="M260 22 L30 498 M260 22 L490 498" fill="none" stroke="#ffffff" stroke-width="86" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M260 315 L355 500 L165 500 Z" fill="#00a9c6"/>
+  </g>
 </svg>

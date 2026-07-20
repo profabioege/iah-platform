@@ -26,6 +26,12 @@ export default async function DashboardPage() {
   const workspace = isAuthConfigured() ? null : await getWorkspaceContext();
   const classroomId =
     workspace?.role === "student" ? workspace.classrooms[0]?.id : undefined;
+  const scope = workspace
+    ? {
+        institutionId: workspace.institution.id,
+        ownerId: workspace.user.studentId ?? workspace.user.id,
+      }
+    : null;
 
-  return <DashboardHome missions={items} classroomId={classroomId} />;
+  return <DashboardHome missions={items} classroomId={classroomId} scope={scope} />;
 }

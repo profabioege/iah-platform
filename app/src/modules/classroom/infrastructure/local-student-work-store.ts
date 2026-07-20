@@ -3,21 +3,54 @@ import { emptyStudentWork, type StudentWork } from "../domain/student-work";
 /**
  * Persistência local do trabalho do aluno (Fase 1 do MVP — localStorage).
  *
- * Um registro por Missão, no dispositivo do aluno. Uso exclusivo em
- * componentes cliente ("use client"); em ambiente sem window (SSR),
- * as funções degradam com segurança.
+ * Um registro por Instituição + Aluno + Missão, no dispositivo. Uso
+ * exclusivo em componentes cliente ("use client"); em ambiente sem window
+ * (SSR), as funções degradam com segurança.
  */
 const KEY_PREFIX = "iah:student-work:";
 
-function storageKey(missionId: string): string {
+/** Identifica o dono do trabalho: instituição + usuário (Institutional Workspace). */
+export interface StudentWorkScope {
+  institutionId: string;
+  ownerId: string;
+}
+
+function storageKey(scope: StudentWorkScope, missionId: string): string {
+  return `${KEY_PREFIX}${scope.institutionId}:${scope.ownerId}:${missionId}`;
+}
+
+/**
+ * Chave usada antes do isolamento por Instituição/Aluno (M15–M19): um só
+ * registro por Missão, compartilhado por qualquer conta que usasse o mesmo
+ * navegador. Migração explícita (nunca leitura silenciosa): na primeira
+ * leitura de um escopo novo, se a chave antiga existir, o conteúdo é
+ * transferido para a chave do usuário atual e a chave antiga é removida —
+ * ela não pode continuar visível a outra conta depois disso.
+ */
+function legacyStorageKey(missionId: string): string {
   return `${KEY_PREFIX}${missionId}`;
 }
 
-/** Carrega o trabalho da Missão; retorna vazio se nunca foi salvo. */
-export function loadStudentWork(missionId: string): StudentWork {
+function migrateLegacyIfPresent(scope: StudentWorkScope, missionId: string): void {
+  const legacyKey = legacyStorageKey(missionId);
+  const legacyRaw = window.localStorage.getItem(legacyKey);
+  if (legacyRaw === null) return;
+  window.localStorage.setItem(storageKey(scope, missionId), legacyRaw);
+  window.localStorage.removeItem(legacyKey);
+}
+
+/** Carrega o trabalho da Missão para o dono do escopo; retorna vazio se nunca foi salvo. */
+export function loadStudentWork(
+  scope: StudentWorkScope,
+  missionId: string,
+): StudentWork {
   if (typeof window === "undefined") return emptyStudentWork(missionId);
   try {
-    const raw = window.localStorage.getItem(storageKey(missionId));
+    const key = storageKey(scope, missionId);
+    if (window.localStorage.getItem(key) === null) {
+      migrateLegacyIfPresent(scope, missionId);
+    }
+    const raw = window.localStorage.getItem(key);
     if (!raw) return emptyStudentWork(missionId);
     const parsed = JSON.parse(raw) as Partial<StudentWork>;
     // Mescla sobre o vazio para tolerar registros de versões anteriores.
@@ -27,26 +60,30 @@ export function loadStudentWork(missionId: string): StudentWork {
   }
 }
 
-/** Salva o trabalho da Missão, atualizando o carimbo de modificação. */
-export function saveStudentWork(work: StudentWork): StudentWork {
+/** Salva o trabalho da Missão do dono do escopo, atualizando o carimbo de modificação. */
+export function saveStudentWork(
+  scope: StudentWorkScope,
+  work: StudentWork,
+): StudentWork {
   const updated: StudentWork = { ...work, updatedAt: new Date().toISOString() };
   if (typeof window !== "undefined") {
     window.localStorage.setItem(
-      storageKey(work.missionId),
+      storageKey(scope, work.missionId),
       JSON.stringify(updated),
     );
   }
   return updated;
 }
 
-/** Lista todos os trabalhos salvos neste dispositivo (todas as Missões). */
-export function listAllStudentWork(): StudentWork[] {
+/** Lista todos os trabalhos salvos neste dispositivo para o dono do escopo (todas as Missões). */
+export function listAllStudentWork(scope: StudentWorkScope): StudentWork[] {
   if (typeof window === "undefined") return [];
+  const prefix = storageKey(scope, "");
   const works: StudentWork[] = [];
   for (let i = 0; i < window.localStorage.length; i += 1) {
     const key = window.localStorage.key(i);
-    if (!key || !key.startsWith(KEY_PREFIX)) continue;
-    works.push(loadStudentWork(key.slice(KEY_PREFIX.length)));
+    if (!key || !key.startsWith(prefix)) continue;
+    works.push(loadStudentWork(scope, key.slice(prefix.length)));
   }
   return works;
 }

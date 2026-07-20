@@ -3,12 +3,14 @@
 import * as React from "react";
 
 import {
+  emptyStudentWork,
   isMissionCompleted,
   isProductionDelivered,
   isReflectionRecorded,
   loadStudentWork,
   saveStudentWork,
   type StudentWork,
+  type StudentWorkScope,
 } from "@/modules/classroom";
 
 /**
@@ -16,19 +18,29 @@ import {
  * extraído para hook para ser compartilhado pelas etapas Produção,
  * Critérios, Entrega e Reflexão do Mission Flow, sem duplicar a lógica
  * de carregar/salvar que já existia em mission-workspace.tsx.
+ *
+ * `scope` (Instituição + usuário do Institutional Workspace) isola o
+ * armazenamento por aluno; sem sessão resolvida (ex.: Auth.js real, ainda
+ * sem contexto institucional — ver docs/AUTHENTICATION.md), o trabalho
+ * não é persistido, para nunca gravar sob uma identidade desconhecida.
  */
-export function useStudentWork(missionId: string) {
+export function useStudentWork(scope: StudentWorkScope | null, missionId: string) {
   const [work, setWork] = React.useState<StudentWork | null>(null);
 
   React.useEffect(() => {
-    setWork(loadStudentWork(missionId));
-  }, [missionId]);
+    setWork(scope ? loadStudentWork(scope, missionId) : emptyStudentWork(missionId));
+  }, [scope, missionId]);
 
-  const update = React.useCallback((partial: Partial<StudentWork>) => {
-    setWork((current) =>
-      current ? saveStudentWork({ ...current, ...partial }) : current,
-    );
-  }, []);
+  const update = React.useCallback(
+    (partial: Partial<StudentWork>) => {
+      setWork((current) => {
+        if (!current) return current;
+        const next = { ...current, ...partial };
+        return scope ? saveStudentWork(scope, next) : next;
+      });
+    },
+    [scope],
+  );
 
   return {
     work,

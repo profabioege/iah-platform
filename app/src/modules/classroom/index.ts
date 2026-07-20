@@ -15,6 +15,7 @@ export {
   listAllStudentWork,
   loadStudentWork,
   saveStudentWork,
+  type StudentWorkScope,
 } from "./infrastructure/local-student-work-store";
 
 export {

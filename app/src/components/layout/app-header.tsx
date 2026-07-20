@@ -21,7 +21,7 @@ export function AppHeader({
   badgeLabel,
 }: {
   actions?: React.ReactNode;
-  /** Rótulo institucional (ex.: "Colégio Beryon · 2026") — vem do Workspace (M15). */
+  /** Rótulo institucional (ex.: "Instituto Horizonte · 2026") — vem do Workspace (M15). */
   badgeLabel?: string;
 }) {
   const pathname = usePathname();

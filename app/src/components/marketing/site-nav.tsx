@@ -23,8 +23,13 @@ export function SiteNav() {
     <header className="site-header">
       <nav className="container nav" aria-label="Navegação principal">
         <Link className="brand" href="/#inicio" aria-label="IAH Educacional, início">
-          <Logo variant="dark" className="h-6 w-auto" title="IAH" />
-          <small>Educacional</small>
+          {/* M18.3: reduzido no mobile, completo do tablet em diante — nunca abaixo do mínimo legível (BRAND_GUIDELINES.md) */}
+          <Logo
+            variant="reverse"
+            wordmark
+            className="h-10 w-auto md:h-12"
+            title="IAH Educacional"
+          />
         </Link>
 
         <div className="nav-links">

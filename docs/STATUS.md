@@ -1,10 +1,37 @@
 # Status — IAH Educacional
 
+> **Correção de marca (19/07/2026):** o vetor da plataforma foi confrontado
+> novamente com o arquivo oficial `logoIAH1.png` fornecido pelo fundador. A
+> divergência introduzida em M18.1/M18.3 foi corrigida no master, símbolo,
+> ativos estáticos, favicon, Apple icon e Open Graph. O PNG oficial é a
+> autoridade visual até existir um vetor-fonte oficial.
+
+> **Estabilização do build (19/07/2026):** removida a dependência de rede de
+> `next/font/google` no layout raiz. O build, que excedia quatro minutos sem
+> concluir enquanto aguardava acesso indisponível ao Google Fonts, passou a
+> terminar em 29,86 s no modo padrão (40,85 s em execução limpa com debug).
+> Lint, TypeScript, build de produção, inicialização e rotas dos três perfis
+> foram validados; servidor e console do navegador sem erros.
+
 Fotografia do estado atual do projeto. **Este é o primeiro documento a consultar antes de qualquer nova implementação.** Atualizado ao final de cada tarefa — se este arquivo diverge do código, o código manda, mas a divergência deve ser corrigida aqui imediatamente. Histórico entrega-a-entrega em `CHANGELOG.md`. **Retomando o projeto numa nova conversa (janela de contexto reiniciada): leia `HANDOFF.md` primeiro** — é o resumo único de todo o histórico, escrito para esse exato momento.
 
 ## Estado atual
 
-Projeto em **fase de preparação do piloto comercial de agosto/2026**, com um funil comercial completo: Landing (pitch) → `/demonstracao` (conversão) → confirmação. A Plataforma executa o **fluxo completo de aprendizagem** (M17): Professor seleciona uma Turma real do Colégio Beryon, monta uma Lesson, publica a Mission, o Aluno investiga e entrega, e o Professor acompanha — tudo sobre a arquitetura institucional (`modules/platform`), sem depender mais de dados simulados soltos fora dela. Desde a M15, **toda a Plataforma exige login** (autenticação local simulada do Institutional Workspace — contas do Colégio Beryon, senha de demonstração exibida na tela de login); autenticação real (Auth.js + Google) segue pronta e dormente. Nenhum banco de dados — persistência do aluno em localStorage; turmas e acompanhamento vêm do seed institucional Beryon (autorizado, rotulado).
+Projeto em **fase de preparação da primeira implantação comercial**, com um funil comercial completo: Landing (pitch) → `/demonstracao` (conversão) → confirmação. A Plataforma executa o **fluxo completo de aprendizagem** (M17): Professor seleciona uma Turma real do Instituto Horizonte (instituição fictícia do ambiente de demonstração, D-039 — o Cliente Fundador real é tratado à parte, fora do produto), monta uma Lesson, publica a Mission, o Aluno investiga e entrega, e o Professor acompanha — tudo sobre a arquitetura institucional (`modules/platform`), sem depender mais de dados simulados soltos fora dela. Desde a M15, **toda a Plataforma exige login** (autenticação local simulada do Institutional Workspace — contas do Instituto Horizonte, senha de demonstração exibida na tela de login); autenticação real (Auth.js + Google) segue pronta e dormente. Nenhum banco de dados — persistência do aluno em localStorage; turmas e acompanhamento vêm do seed institucional do Instituto Horizonte (fictício, rotulado).
+
+## Product Experience — Epic 01: Executive Experience (19/07/2026)
+
+O Painel do Gestor (`/gestor`) passou a ser a principal tela de demonstração
+comercial. A experiência responde, em ordem, estado da implantação, situação do
+professor, participação dos alunos e operação da disciplina. Nova navegação
+local em cinco leituras — Visão geral, Implantação, Professores, Alunos e
+Disciplina — sem criar rotas, módulos ou analytics novos. Os indicadores usam o
+Workspace e o seed institucional existentes: 5 turmas, 10 alunos, 1 professor e
+progresso da Mission ativa. O percentual de implantação (75%) é explicitamente
+rotulado como demonstrativo até existir persistência operacional da jornada de
+Setup. Paleta preservada integralmente por tokens do Design System. Validado em
+desktop e mobile (375px), sem overflow da página ou erros no console; lint e
+tipagem limpos. Decisão em `DECISIONS.md` D-040.
 
 ## Alinhamento Normativo
 
@@ -19,7 +46,23 @@ Registrado formalmente em `DECISIONS.md` D-029 a D-033 (obrigatoriedade de metad
 
 ## Último commit
 
-`2d62f72` (anterior a esta tarefa) — *refactor(platform): M16 — unificação institucional Beryon* (18/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com o Learning Lifecycle (M17) — ver "Ciclo 2 — Learning Lifecycle" abaixo. Ver `CHANGELOG.md` para o histórico completo.
+`c880caf` (anterior a esta tarefa) — *feat(lifecycle): M17 — Learning Lifecycle: fluxo completo Professor -> Aluno* (18/07/2026), branch `main`. Este ciclo (Ciclo 2) segue com a Arquitetura Institucional Multi-Instituição (M18) — ver seção abaixo. Ver `CHANGELOG.md` para o histórico completo.
+
+## Ciclo 2 — Ambiente Institucional Neutro para Demonstração (D-039, 19/07/2026)
+
+Nova decisão estratégica: o ambiente de demonstração deixa de exibir nome/dados do Colégio Beryon (Cliente Fundador real, tratado à parte no plano comercial) e passa a usar **Instituto Horizonte** — instituição fictícia, `institutohorizonte.edu.br`. `DEMO_INSTITUTION` (fonte única, `modules/platform/seeds/demo-seed.ts`) muda `id`/`slug`/`name`/`domain`; ids derivados e senha de demonstração acompanham (`horizonte2026`). Professor real mantido: Fabio Ege, agora `fabio.ege@institutohorizonte.edu.br`. Como toda a Plataforma já lia a instituição por referência (D-035/D-036), a troca propagou automaticamente a login, Painel do Gestor, Painel do Professor, Import Wizard e o wizard de Implantação Institucional — nenhuma tela editada. `AUTHENTICATION.md`/`SUPABASE.md`/`.env.example` (processo real do Colégio Beryon no banco real) ficam intocados, de propósito — tenant diferente do seed de demonstração. Validado no navegador (login rejeita domínio antigo/aceita o novo; 5 telas conferidas; console limpo, desktop e mobile). Lint e build limpos.
+
+## Ciclo 2 — M19: Implantação Institucional (19/07/2026)
+
+Assistente de implantação do Método IAH® em `/gestor/implantacao` (D-038) — a experiência de confiança comercial pedida na atualização estratégica desta data (objetivo deixou de ser "validar MVP" e passou a ser "primeira implantação comercial"). 8 etapas (Boas-vindas → Instituição → Estrutura Acadêmica → Equipe → Turmas → Alunos → Currículo → Resumo), rota aninhada em `/gestor` (herda proteção admin-only, zero mudança de autenticação/arquitetura). Todos os números exibidos são reais (fonte única `getWorkspaceContext()`/seeds do Workspace) — nenhum dado fabricado; campos sem correspondente no modelo (cidade, estado, logo, coordenador) ficam honestamente vazios/"Em breve". "Onboarding" removido do vocabulário do produto (Landing corrigida). Validado ponta a ponta (Instituição→Equipe→Turmas→Alunos→Currículo→Resumo→Dashboard→Professor) em desktop/tablet/mobile; um overflow de header pré-existente em 768px (não introduzido por esta Sprint) foi identificado e sinalizado à parte. Lint e build limpos.
+
+## Ciclo 2 — M18.1/M18.3: Refinamento Institucional e Sistema Oficial de Identidade Visual (19/07/2026)
+
+Duas Sprints de branding/percepção institucional sobre a base da M18 — nenhuma mudança de arquitetura, banco, autenticação ou fluxo. **M18.1**: card "⭐ Instituição Fundadora do IAH®" no Painel do Gestor (dados lidos do contexto institucional; termo "Projeto Piloto" evitado em favor de "Escola Parceira de Validação"); correção do logotipo (o "A" em stroke arredondado transbordava a caixa óptica de I/H — virou forma preenchida com overshoot óptico deliberado); professor principal do piloto alinhado ao usuário real (**Fabio Ege**, `fabio.ege@colegioberyon.com.br`, sem duplicidade, turmas vinculadas por referência derivada). **M18.3 (D-036)**: identidade visual institucionalizada com fonte única — `components/brand/logo.tsx` é o master vetorial; novo símbolo oficial **Núcleo IAH** (`components/brand/symbol.tsx`, geometria idêntica transladada); ativos estáticos em `public/brand/` (logo-primary/logo-reverse/symbol); favicon regenerado do path literal do símbolo; novos `apple-icon.tsx` e `manifest.ts`; logotipo duplicado desatualizado do `opengraph-image.tsx` eliminado; sidebar `collapsible="icon"` (recolhida = só o Núcleo IAH); `BRAND_GUIDELINES.md` com a regra permanente de ativo protegido. Validado nos 3 papéis, desktop/tablet/mobile, 6 endpoints de ativos, console limpo; lint e build limpos.
+
+## Ciclo 2 — M18: Arquitetura Institucional Multi-Instituição (19/07/2026)
+
+Sprint exclusivamente arquitetural (D-035) — nenhum fluxo pedagógico, UX ou funcionalidade nova; só elimina o acoplamento de nome de escola que restava no código. **Domínio institucional padronizado**: todo e-mail de demonstração passa a `@colegioberyon.com.br` (antes `@beryon.edu.br`), sempre derivado do novo campo `Institution.domain` (`modules/platform/domain/entities.ts`, que ganhou também `slug`) — nunca retipado. **`modules/workspace/seeds/beryon-seed.ts` → `institution-seed.ts`, `BERYON_*` → `WORKSPACE_*`**: os 8 símbolos e os 5 arquivos que os importavam (`session.ts`, `session-cookie.ts`, `local-auth-provider.ts`, o barrel `workspace/index.ts`, `gestor/page.tsx`) foram renomeados — nenhum símbolo de código carrega mais o nome de uma escola específica, só os dados do seed. **Login local de demonstração valida o domínio institucional** (`local-auth-provider.ts`): só e-mails de `WORKSPACE_INSTITUTION.domain` são aceitos, regra lida do dado. `entrar/page.tsx` deixou de citar "Colégio Beryon"/domínio antigo como texto literal. A autenticação real (Auth.js + Google, D-025) já resolvia a instituição por `slug`/variável de ambiente e não precisou de nenhuma mudança. Validado no navegador: login rejeita o domínio antigo e aceita o novo; Painel do Professor, Painel do Gestor e Import Wizard renderizam a instituição corretamente em desktop e mobile (375px), console limpo. `npm run lint` e `npm run build` limpos.
 
 ## Ciclo 2 — Learning Lifecycle: fluxo completo Professor → Aluno (18/07/2026)
 
@@ -138,7 +181,7 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 - Mission Flow (`/missoes/[id]`): experiência do aluno como 9 microetapas com baixa carga cognitiva, refinada na M09 (indicador de tempo estimado, transição entre etapas, Capa/Investigação/Critérios/Entrega/Reflexão redesenhadas), 7 componentes reutilizáveis, sem alterar `modules/classroom` nem o conteúdo da Missão. Ver `DECISIONS.md` D-027.
 - Intelligent Lesson Composer (`/professor/aulas`, módulo `modules/lesson`, M12→M13): assistente "Nova Lesson" em 7 etapas com sugestão automática por regra simples (sem IA) em Metodologia/Recursos/Mission Flow — Planejamento → Currículo → Metodologia → Recursos do Knowledge Engine (agrupados) → Mission Flow → Avaliação → Preview do Pacote Pedagógico. Autosave a cada etapa, Lessons salvas neste dispositivo (localStorage rotulado). Reaproveita `MissionNavigation` e o parser de Critérios/Evidências do Mission Flow — nenhum componente duplicado.
 - Curriculum Engine (`/professor/curriculo`, módulo `modules/curriculum`, M14): navegação Disciplina → Ano Letivo → Unidades → Temas → Lessons → Mission Flow, com Timeline (aulas concluídas/pendentes, competências desenvolvidas) e Avaliação derivada das Mission Flows de cada Tema. Reaproveita `AcademicYear` (`modules/platform`) e o parser do Mission Flow — nenhuma entidade/componente duplicado. Só navegação nesta Sprint, sem UI de autoria.
-- Institutional Workspace (`modules/workspace`, M15): login institucional único em `/entrar` (e-mail + senha simulada, papel identificado automaticamente), contexto pedagógico em toda a navegação (Instituição, Ano Letivo, perfil, permissões, Turmas, Disciplinas), proteção de rotas por papel no middleware, sidebar por perfil (aluno com experiência mínima), Painel do Gestor (`/gestor`) e hub de Workspace do Professor em `/professor`. Seed Colégio Beryon (5 turmas, 12 usuários). Troca futura por autenticação real em dois pontos únicos (`WorkspaceAuthProvider` + `session-cookie.ts`).
+- Institutional Workspace (`modules/workspace`, M15): login institucional único em `/entrar` (e-mail + senha simulada, papel identificado automaticamente), contexto pedagógico em toda a navegação (Instituição, Ano Letivo, perfil, permissões, Turmas, Disciplinas), proteção de rotas por papel no middleware, sidebar por perfil (aluno com experiência mínima), Painel do Gestor (`/gestor`) e hub de Workspace do Professor em `/professor`. Seed Colégio Beryon (5 turmas, 12 usuários), domínio institucional `@colegioberyon.com.br` (M18), validado no login local. Troca futura por autenticação real em dois pontos únicos (`WorkspaceAuthProvider` + `session-cookie.ts`).
 - Learning Lifecycle (`/professor/turmas`, M17): fluxo completo Professor→Aluno→Professor — seleciona Turma real, abre Lesson (`LessonPreview` reaproveitado), publica a Mission (`MissionPublishingService`, `modules/platform`), aluno vê "Minha Lesson" no Dashboard e faz a Missão (Mission Flow intocado), professor acompanha (quantidade/iniciaram/concluíram/pendentes/percentual, entregas individuais) via `createInstitutionalClassMonitor`. `simulated-class-monitor` eliminado — `/professor` também usa a fonte institucional.
 
 ## Funcionalidades em andamento / lacunas conhecidas

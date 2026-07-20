@@ -24,10 +24,10 @@ A plataforma nunca cria instituições sozinha (D-025). Insira a linha da sua es
 ```sql
 insert into institutions (id, name, slug, domain, status)
 values (
-  'inst-beryon',           -- id estável, minúsculas, sem espaços
-  'Colégio Beryon',        -- nome exibido
-  'beryon',                -- slug usado em AUTH_DEFAULT_INSTITUTION_SLUG
-  null,                    -- domínio de e-mail institucional (opcional)
+  'inst-beryon',              -- id estável, minúsculas, sem espaços
+  'Colégio Beryon',           -- nome exibido
+  'beryon',                   -- slug usado em AUTH_DEFAULT_INSTITUTION_SLUG
+  'colegioberyon.com.br',     -- domínio de e-mail institucional (opcional, mesmo padrão do seed de demonstração — M18)
   'active'
 );
 ```

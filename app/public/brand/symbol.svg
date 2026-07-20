@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 520" role="img" aria-label="IAH">
+  <!--
+    NÚCLEO IAH (símbolo institucional) — cópia estática GERADA do master
+    src/components/brand/symbol.tsx (M18.3), que por sua vez translada a
+    geometria do logo master (offset x−60, y+3 — nenhum ponto redesenhado).
+    Versão em ink para fundos claros; em fundos escuros, usar o componente
+    BrandSymbol variant="dark" (branco) ou o favicon (src/app/icon.svg).
+  -->
+  <path d="M260 22 L30 498 M260 22 L490 498" fill="none" stroke="#07101d" stroke-width="86" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M260 315 L355 500 L165 500 Z" fill="#00a9c6"/>
+</svg>

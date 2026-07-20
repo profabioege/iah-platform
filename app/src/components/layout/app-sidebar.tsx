@@ -6,6 +6,7 @@ import {
   Building2,
   CalendarDays,
   CircleUser,
+  ClipboardList,
   FlaskConical,
   FolderKanban,
   GraduationCap,
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 
 import { Logo } from "@/components/brand/logo";
+import { BrandSymbol } from "@/components/brand/symbol";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Sidebar,
@@ -67,6 +69,11 @@ const STUDENT_MENU: MenuItem[] = [
 
 const ADMIN_MENU: MenuItem[] = [
   { title: "Painel do Gestor", icon: Building2, href: "/gestor" },
+  {
+    title: "Implantação Institucional",
+    icon: ClipboardList,
+    href: "/gestor/implantacao",
+  },
   { title: "Professor", icon: GraduationCap, href: "/professor" },
   { title: "Missões", icon: Rocket, href: "/missoes" },
   { title: "Agenda", icon: CalendarDays },
@@ -106,22 +113,23 @@ export function AppSidebar({
     .join("");
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
         <Link
           href={role === "admin" ? "/gestor" : "/dashboard"}
-          className="flex items-center gap-3 px-2 py-2.5"
+          className="flex items-center gap-3 px-2 py-2.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
           aria-label="IAH Educacional — ir para a página inicial"
         >
-          <Logo variant="dark" className="h-8 w-auto shrink-0" />
-          <div className="flex flex-col leading-tight">
-            <span className="text-sm font-semibold tracking-tight">
-              Educacional
-            </span>
-            <span className="text-xs text-muted-foreground">
-              Laboratório do Auditor
-            </span>
-          </div>
+          {/* M18.3: logo completo expandida; recolhida, só o Núcleo IAH — nunca o logotipo reduzido a tamanho ilegível */}
+          <Logo
+            variant="reverse"
+            wordmark
+            className="h-12 w-auto shrink-0 group-data-[collapsible=icon]:hidden"
+          />
+          <BrandSymbol
+            variant="dark"
+            className="hidden h-7 w-auto shrink-0 group-data-[collapsible=icon]:block"
+          />
         </Link>
       </SidebarHeader>
 
@@ -162,13 +170,13 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border">
-        <div className="flex items-center gap-3 px-2 py-1.5">
+        <div className="flex items-center gap-3 px-2 py-1.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
           <Avatar className="size-8">
             <AvatarFallback className="bg-primary/20 text-xs font-medium text-primary">
               {initials || "AR"}
             </AvatarFallback>
           </Avatar>
-          <div className="flex flex-col leading-tight">
+          <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
             <span className="truncate text-sm font-medium">{displayName}</span>
             <span className="text-xs text-muted-foreground">{displayRole}</span>
           </div>

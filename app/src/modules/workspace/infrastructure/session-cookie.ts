@@ -10,7 +10,7 @@
  */
 
 import type { Role } from "../domain/entities";
-import { findWorkspaceUserById } from "../seeds/beryon-seed";
+import { findWorkspaceUserById } from "../seeds/institution-seed";
 
 export const WORKSPACE_SESSION_COOKIE = "iah_workspace_session";
 

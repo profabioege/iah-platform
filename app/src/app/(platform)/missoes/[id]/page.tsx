@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 
 import { localMissionRepository } from "@/modules/library";
+import { isAuthConfigured } from "@/lib/auth-flags";
+import { getWorkspaceContext } from "@/modules/workspace";
 
 import { MissionFlow } from "./mission-flow/mission-flow";
 
@@ -20,5 +22,13 @@ export default async function MissaoDetalhePage({
 
   if (!mission) notFound();
 
-  return <MissionFlow mission={mission} />;
+  const workspace = isAuthConfigured() ? null : await getWorkspaceContext();
+  const scope = workspace
+    ? {
+        institutionId: workspace.institution.id,
+        ownerId: workspace.user.studentId ?? workspace.user.id,
+      }
+    : null;
+
+  return <MissionFlow mission={mission} scope={scope} />;
 }

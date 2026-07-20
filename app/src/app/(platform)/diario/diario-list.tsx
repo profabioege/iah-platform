@@ -8,6 +8,7 @@ import {
   isReflectionRecorded,
   listAllStudentWork,
   type StudentWork,
+  type StudentWorkScope,
 } from "@/modules/classroom";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -27,21 +28,28 @@ export interface MissionRef {
  * aluno (localStorage) com os títulos das Missões (vindos do servidor).
  * Mais recentes primeiro.
  */
-export function DiarioList({ missions }: { missions: MissionRef[] }) {
+export function DiarioList({
+  missions,
+  scope,
+}: {
+  missions: MissionRef[];
+  /** Instituição + usuário do Institutional Workspace — isola o trabalho salvo por aluno. */
+  scope: StudentWorkScope | null;
+}) {
   const [entries, setEntries] = React.useState<
     { work: StudentWork; mission: MissionRef | undefined }[] | null
   >(null);
 
   React.useEffect(() => {
     const byId = new Map(missions.map((m) => [m.id, m]));
-    const recorded = listAllStudentWork()
+    const recorded = (scope ? listAllStudentWork(scope) : [])
       .filter(isReflectionRecorded)
       .sort((a, b) =>
         (b.reflectionRecordedAt ?? "").localeCompare(a.reflectionRecordedAt ?? ""),
       )
       .map((work) => ({ work, mission: byId.get(work.missionId) }));
     setEntries(recorded);
-  }, [missions]);
+  }, [missions, scope]);
 
   if (entries === null) return <DiarioSkeleton />;
 

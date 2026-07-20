@@ -4,7 +4,7 @@ Guia estratégico de marca. Para a implementação técnica dos tokens (nomes de
 
 ## Identidade da marca
 
-IAH é a abreviação de **Inteligência Artificial & Humanidades**. A marca se apoia em três ideias: **laboratório** (investigação ativa, não sala de aula tradicional), **auditoria** (rigor crítico sobre o que se vê, inclusive sobre a própria IA) e **método** (processo estruturado, não improviso). O logótipo é um marcador minimalista de três barras verticais em ciano sobre navy, lembrando um equalizador/gráfico de laboratório.
+IAH é a abreviação de **Inteligência Artificial & Humanidades**. A marca se apoia em três ideias: **laboratório** (investigação ativa, não sala de aula tradicional), **auditoria** (rigor crítico sobre o que se vê, inclusive sobre a própria IA) e **método** (processo estruturado, não improviso). O logótipo oficial é o letreiro **IAH** minimalista com o **Núcleo IAH** — o triângulo ciano no interior do "A", símbolo institucional da marca (M18.3). Ativo protegido: implementação, versões (Primary/Reverse), área de proteção e tamanhos mínimos estão em [`app/src/components/brand/BRAND_GUIDELINES.md`](../app/src/components/brand/BRAND_GUIDELINES.md) — nenhum agente de IA ou desenvolvedor pode redesenhá-lo ou reinterpretá-lo.
 
 ## Linguagem — glossário de termos da marca
 

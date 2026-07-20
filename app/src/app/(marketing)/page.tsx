@@ -78,7 +78,7 @@ const implementationSteps = [
     number: "02",
     icon: GraduationCap,
     title: "Capacitar professores",
-    description: "Onboarding direto na metodologia — sem curso longo, sem burocracia.",
+    description: "Implantação direta na metodologia — sem curso longo, sem burocracia.",
   },
   {
     number: "03",

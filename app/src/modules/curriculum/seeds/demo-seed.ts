@@ -6,9 +6,9 @@
  *
  * `academicYearId` referencia por id solto o `DEMO_ACADEMIC_YEAR` de
  * `modules/platform/seeds/demo-seed.ts` — desde a M16, o Ano Letivo
- * 2026 do Colégio Beryon (mesmo padrão de referência por id já usado
- * entre módulos neste projeto, ex.: `Lesson.missionId`) — sem importar
- * o seed de outro módulo diretamente (D-001).
+ * 2026 do Instituto Horizonte (mesmo padrão de referência por id já
+ * usado entre módulos neste projeto, ex.: `Lesson.missionId`) — sem
+ * importar o seed de outro módulo diretamente (D-001).
  */
 
 import type { CurriculumTheme, CurriculumUnit, Discipline } from "../domain/entities";
@@ -21,7 +21,7 @@ export const DEMO_DISCIPLINE: Discipline = {
 export const DEMO_UNIT: CurriculumUnit = {
   id: "unit-modulo-1",
   disciplineId: DEMO_DISCIPLINE.id,
-  academicYearId: "year-beryon-2026",
+  academicYearId: "year-horizonte-2026",
   label: "Módulo 1 — O Auditor da Realidade",
   order: 1,
   status: "published",

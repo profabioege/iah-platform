@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import type { Mission } from "@/modules/library";
+import type { StudentWorkScope } from "@/modules/classroom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -43,8 +44,15 @@ const TOTAL_STEPS = 9;
  * decisões em DECISIONS.md D-027 e o refinamento cognitivo da
  * Sprint M09.
  */
-export function MissionFlow({ mission }: { mission: Mission }) {
-  const { work, update, delivered, recorded } = useStudentWork(mission.id);
+export function MissionFlow({
+  mission,
+  scope,
+}: {
+  mission: Mission;
+  /** Instituição + usuário do Institutional Workspace — isola o trabalho salvo por aluno. */
+  scope: StudentWorkScope | null;
+}) {
+  const { work, update, delivered, recorded } = useStudentWork(scope, mission.id);
   const parsed = React.useMemo(
     () => parseMissionContent(mission.didacticMaterials),
     [mission.didacticMaterials],

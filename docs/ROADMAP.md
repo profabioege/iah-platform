@@ -51,14 +51,24 @@ Nenhum item acima está implementado ou priorizado com data — cada um entra co
 | M10 — Lesson Architecture (fundação) | Sprint só de documentação. Define `Lesson` (Aula) como unidade pedagógica central — um Pedagogical Package que agrupa Planejamento, Objetivos, Competências BNCC, Série, Tempo, Pré-requisitos, Mission Flow (referenciado, não substituído), Slides, Material NotebookLM, Biblioteca Oficial, Estudos de Caso, Exercícios, Rubricas, Avaliação Assistida, Adaptações para Neurodivergentes, Portfólio e Analytics. Seis contratos nomeados em prosa (`Lesson`, `LessonBuilder`, `LessonResources`, `LessonMaterial`, `LessonAssessment`, `LessonAccessibility`) — nenhum código criado. Ver `DECISIONS.md` D-028 |
 | Alinhamento Normativo (Governança Curricular) | LDB, BNCC, BNCC Computação e Método IAH® registrados como referenciais permanentes; 5 decisões (D-029 a D-033) tornando metadados curriculares obrigatórios em `Lesson`/`Mission`, exigindo rastreabilidade de competência em avaliação e relatórios pedagógicos por competência. Só documentação. Ver `DECISIONS.md` D-029 a D-033 |
 | M11 — Knowledge Engine (Biblioteca Inteligente) | Novo módulo `modules/knowledge` (arquitetura, zero mudança visual): 6 entidades (`KnowledgeSource`/`Document`/`Collection`/`Tag`/`Topic`/`Reference`), 15 campos de metadados, 13 categorias de recurso, mecanismo de busca (`search()`, 6 filtros combináveis), 7 contratos de integração futura (stub), schema versionado (`0004_knowledge_engine.sql`), vínculo direto com `Lesson`/Mission Flow via `KnowledgeReference`. Ver `DECISIONS.md` D-034 e `KNOWLEDGE_ENGINE.md` |
+| M12–M17 — Curriculum Engine, Institutional Workspace, Unificação Beryon, Learning Lifecycle | Ver `CHANGELOG.md` e `STATUS.md` para o detalhe entrega-a-entrega — esta tabela não foi mantida linha a linha nesse intervalo. |
+| M18 — Arquitetura Institucional Multi-Instituição | Sprint só arquitetural (nenhuma UX/funcionalidade nova): `Institution` ganha `slug`/`domain`; domínio institucional padronizado para `@colegioberyon.com.br` em todo o seed; `modules/workspace/seeds/beryon-seed.ts` → `institution-seed.ts` com `BERYON_*` → `WORKSPACE_*` (nenhum símbolo de código preso ao nome de uma escola); login local de demonstração passa a validar o domínio institucional. Ver `DECISIONS.md` D-035 |
+| Product Experience · Epic 01 — Executive Experience | Dashboard Executivo em `/gestor`: diagnóstico imediato, implantação, atenção executiva e leituras agregadas de professores, alunos e disciplina; cinco visões locais; dados do seed institucional; paleta Premium Dark preservada. Ver `DECISIONS.md` D-040 |
 
 ## Sprint atual
 
-**Nenhuma em execução.** Última tarefa concluída: M11 — Knowledge Engine (arquitetura da Biblioteca Inteligente; código real, zero UI/rota nova). **Prioridade imediata:** reensaiar o tempo da demonstração — a interface mudou de novo desde `ROTEIRO-DEMONSTRACAO.md` (M08 e M09). Depois: **(a)** fundador executa os passos de console (`AUTHENTICATION.md`/`SUPABASE.md`) → primeiro login real → sincronizar turmas reais do Google Classroom e migrar o Estúdio para banco; **(b)** sem dependência de infra: Painel do Gestor (abaixo) ou a ponte Estúdio → runtime do aluno. A implementação de qualquer componente da `Lesson` (D-028), de uma integração real do Knowledge Engine (D-034) ou de "Governança Curricular" (D-029 a D-033) ainda não foi priorizada — cada uma entra neste Roadmap como Sprint própria, na ordem que o piloto de agosto exigir.
+**Epic 01 — Executive Experience concluído.** O Painel do Gestor agora é a
+principal tela da demonstração comercial (D-040). A próxima iniciativa de
+Product Experience aguarda definição e aprovação; nenhuma nova engine,
+integração de IA ou expansão Premium está autorizada. Prioridade operacional
+imediata: reensaiar o roteiro comercial sobre a nova abertura executiva e medir
+o tempo real da demonstração.
 
-## Sprint seguinte (recomendada) — Painel do Gestor (MVP Comercial)
+## Registro histórico do planejamento — Painel do Gestor (MVP Comercial)
 
-**Planejamento técnico e funcional** (não implementado ainda — ver instrução explícita de "apenas planejar").
+> Planejamento original preservado para histórico. Foi superado pela Product
+> Experience · Epic 01 e pela decisão D-040; o estado implementado está em
+> `STATUS.md` e `CHANGELOG.md`.
 
 ### Por que este é o próximo passo
 

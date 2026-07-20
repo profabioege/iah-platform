@@ -2,6 +2,93 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 19/07/2026 — Estabilização do build Next.js
+
+Correção estritamente técnica, sem alteração funcional, arquitetural ou de UX.
+
+- **Causa raiz:** `next/font/google` tentava buscar Geist e Geist Mono durante
+  o build; o acesso HTTPS ao Google Fonts não estava disponível e os timeouts
+  anteriores deixavam processos filhos do compilador ativos.
+- **Correção mínima:** o layout raiz deixou de inicializar fontes remotas e os
+  tokens tipográficos passaram a usar a pilha local já prevista (`Arial`,
+  `Helvetica`, `ui-monospace`). O cache gerado foi reconstruído do zero.
+- **Resultado:** build limpo com debug em 40,85 s; build padrão final em 29,86
+  s; versão de produção pronta em 831 ms.
+- **Validação:** ESLint e TypeScript sem emissão aprovados; 25 páginas geradas;
+  rotas públicas, autenticação e rotas principais de Gestor, Professor e Aluno
+  aprovadas; console do navegador e stderr do servidor sem erros.
+
+## 19/07/2026 — Product Experience · Epic 01: Executive Experience (D-040)
+
+O antigo hub institucional de `/gestor` foi substituído pelo Dashboard
+Executivo aprovado para a principal demonstração comercial do IAH.
+
+- **Leitura imediata:** diagnóstico executivo, implantação em destaque, atenção
+  da semana e quatro indicadores centrais.
+- **Cinco visões:** Visão geral, Implantação, Professores, Alunos e Disciplina,
+  alternadas localmente sem nova rota ou dependência.
+- **Dados existentes:** números calculados a partir do Workspace e do seed
+  institucional; nenhum analytics, banco ou integração fabricados.
+- **Privacidade:** camada executiva apresenta dados agregados, sem lista ou
+  produção individual de alunos.
+- **Design System preservado:** somente tokens semânticos e cores `chart-*` já
+  existentes; nenhuma cor literal ou nova primitiva.
+- **Validação:** desktop e mobile (375px), navegação entre visões, console
+  limpo, lint e TypeScript aprovados.
+
+## 19/07/2026 — Ambiente Institucional Neutro para Demonstração (D-039)
+
+Toda referência ao Colégio Beryon no ambiente de demonstração passa a ser **Instituto Horizonte** (instituição fictícia, `institutohorizonte.edu.br`) — o produto deixa de exibir nome/dados de um cliente real em demonstrações a outros prospects.
+
+- **`DEMO_INSTITUTION`** (fonte institucional única, `modules/platform/seeds/demo-seed.ts`): `id`/`slug`/`name`/`domain` atualizados; ids derivados (`year-horizonte-2026`, `student-horizonte-NN`, `enroll-horizonte-NN`) e senha de demonstração (`horizonte2026`) acompanham.
+- **Professor real mantido**: Fabio Ege, agora `fabio.ege@institutohorizonte.edu.br`.
+- **Propagação automática**: como toda a Plataforma já lia `Institution.name`/`.domain` por referência (nunca texto literal, desde D-035/D-036), a troca chegou a login, Painel do Gestor, Painel do Professor, Import Wizard e o wizard de Implantação Institucional (M19) sem editar nenhuma tela — só o dado mudou.
+- **Fora do escopo, deliberadamente**: `AUTHENTICATION.md`/`SUPABASE.md`/`.env.example` (processo real de configurar o Colégio Beryon — Cliente Fundador real — no banco real) continuam intocados; são um tenant diferente do seed de demonstração.
+- Validado no navegador: login rejeita o domínio antigo (`@colegioberyon.com.br`) e aceita o novo; Painel do Gestor, Painel do Professor, Import Wizard, wizard de Implantação e Dashboard do Aluno mostram "Instituto Horizonte" corretamente; console limpo em desktop e mobile. `npm run lint` e `npm run build` limpos.
+
+## 19/07/2026 — M19: Implantação Institucional (Primeira Venda)
+
+Assistente de implantação do Método IAH® — a experiência de confiança que um diretor escolar percorre para decidir contratar (D-038). Nenhum Mentor IA, IAH Intelligence, Analytics, Dashboard novo, integração ou Engine — exclusivamente a experiência de implantação.
+
+- **Nova rota `/gestor/implantacao`** (aninhada em `/gestor`, herda a proteção admin-only do middleware — zero mudança de autenticação): assistente de 8 etapas — Boas-vindas, Instituição, Estrutura Acadêmica, Equipe, Turmas, Alunos, Currículo, Resumo — com stepper de progresso, mesmo padrão visual do Import Wizard já existente.
+- **Dados 100% reais, nada fabricado**: professor, turmas, alunos e domínio institucional exibidos vêm da mesma fonte única (`getWorkspaceContext()`/seeds do Workspace) usada em toda a Plataforma. Campos sem dado real (Cidade, Estado, Logo, Coordenador) ficam honestamente vazios/"Em breve" — nunca inventados.
+- **Currículo**: única opção real selecionada (Método IAH®, badges LDB/BNCC/BNCC Computação); outros currículos citados como "futuros", sem nomes inventados.
+- **"Onboarding" banido do vocabulário do produto**: trocado por "Implantação Institucional"/"Implantação do Método IAH®" — corrigida a única outra ocorrência (Landing, seção "Implantação em 4 passos").
+- Pontos de entrada: item "Implantação Institucional" na sidebar do Gestor e botão "Ver Implantação Institucional" no Painel do Gestor.
+- Validado ponta a ponta: Instituição → Equipe → Turmas → Alunos → Currículo → Resumo → "Iniciar utilização da Plataforma" → Painel do Gestor real → Professor acessa `/professor/turmas` normalmente. Desktop, tablet e mobile (375px) sem overflow introduzido pelo wizard — um overflow de header pré-existente (768px, também presente em `/gestor` antes desta Sprint) foi identificado e sinalizado à parte, fora do escopo deste commit. `npm run lint` e `npm run build` limpos.
+
+## 19/07/2026 — M18.3: Sistema Oficial de Identidade Visual
+
+Institucionalização completa da marca (D-036) — fonte única de verdade para todos os ativos, sem alterar arquitetura, banco, autenticação ou fluxos.
+
+- **Master vetorial único**: `src/components/brand/logo.tsx` é a única definição da geometria da marca; toda cópia estática deriva dele (regra documentada e protegida). Versões oficiais nomeadas: **Primary** (fundos claros, `variant="primary"` = `"light"`) e **Reverse** (fundos escuros, `variant="reverse"` = `"dark"`) — aliases aditivos, nenhum consumidor quebrou.
+- **Núcleo IAH (símbolo institucional)**: novo `src/components/brand/symbol.tsx` — o "A" com o triângulo ciano como ativo independente, geometria idêntica ao master (só transladada, nenhum ponto redesenhado). Usos futuros: loading, notificações, Mentor IA, certificados, app.
+- **Ativos estáticos oficiais**: `public/brand/logo-primary.svg`, `logo-reverse.svg`, `symbol.svg` (cópias geradas e comentadas); favicon (`icon.svg`) regenerado com o path literal do símbolo; novos `apple-icon.tsx` (PNG 180×180 no build) e `manifest.ts`.
+- **Logotipo duplicado eliminado**: `opengraph-image.tsx` ainda usava o desenho antigo do "A" (stroke pré-M18.1) — atualizado para a geometria master.
+- **Responsividade da marca**: sidebar da Plataforma agora é `collapsible="icon"` — expandida mostra o logo completo, recolhida mostra somente o Núcleo IAH; Landing com `h-6 md:h-7`. Nunca o logotipo completo em tamanho ilegível.
+- **BRAND_GUIDELINES.md** (`src/components/brand/`): versões, fundos permitidos/proibidos, área de proteção, tamanhos mínimos, proporções, checklist de regeneração e a regra permanente de ativo protegido (nenhum agente de IA ou desenvolvedor pode redesenhar/reinterpretar a marca). `docs/03_BRAND_GUIDELINES.md` corrigido (descrevia um logótipo antigo de "três barras" inexistente).
+- Validado no navegador: Landing (nav + footer), login, sidebar expandida/recolhida (logo ↔ símbolo confirmado via DOM), dashboards dos 3 papéis, desktop/tablet/mobile, 6 endpoints de ativos respondendo 200, console limpo. `npm run lint` e `npm run build` limpos.
+
+## 19/07/2026 — M18.1: Refinamento Institucional e Identidade Visual
+
+Sprint de percepção institucional para a apresentação à mantenedora — sem funcionalidades novas.
+
+- **Reconhecimento institucional no Painel do Gestor**: card "⭐ Instituição Fundadora do IAH®" — "O Colégio Beryon é a primeira instituição parceira na implantação oficial do Método IAH®…", com Ano da implantação, Status do Programa e o rótulo "Escola Parceira de Validação" (termo "Projeto Piloto" evitado, conforme diretriz). Nome/ano/status lidos do contexto institucional, nada fixo em código.
+- **Correção do logotipo**: o "A" era desenhado como stroke com juntas arredondadas (raio 17px), transbordando a caixa óptica de I/H — a letra parecia maior. Redesenhado como forma preenchida com contorno explícito (overshoot óptico deliberado de 2px no ápice, padrão tipográfico), triângulo interno reposicionado. Favicon alinhado à mesma forma.
+- **Dados do piloto alinhados** (ajuste da mesma janela): professor principal atualizado para o usuário real — **Fabio Ege**, `fabio.ege@colegioberyon.com.br` — mantendo vínculo com a Instituição e as 5 turmas (referência derivada, sem duplicidade); texto de exemplo do login passa a citar `WORKSPACE_TEACHER.email`.
+- Validado: login (rejeição de domínio antigo/aceite do novo), Painel do Professor, Painel do Gestor (banner + professor real), Import Wizard, desktop e mobile, console limpo. `npm run lint` e `npm run build` limpos.
+
+## 19/07/2026 — M18: Arquitetura Institucional Multi-Instituição
+
+Sprint exclusivamente arquitetural (D-035): elimina o último acoplamento de nome de escola no código, sem tocar em Curriculum Engine, Knowledge Engine, Lesson Composer, Mission Flow, Mentor IA, AI Gateway ou UX. Nenhum fluxo Professor/Gestor/Aluno mudou de comportamento.
+
+- **Domínio institucional padronizado**: todo e-mail de demonstração passa a usar `@colegioberyon.com.br` (antes `@beryon.edu.br`) — `Professor Fábio`, `diretor@`, `aluno01–10@`. Nenhum e-mail retipado: todos derivados de `DEMO_INSTITUTION.domain`.
+- **`Institution` ganha `slug`/`domain`** (`modules/platform/domain/entities.ts`): a instituição real (banco, migration `0003`) já tinha essas colunas desde D-025 — o domínio de código estava atrasado em relação ao schema. `institutionId` continua sendo a única identidade do tenant; `domain` é só um atributo.
+- **`modules/workspace/seeds/beryon-seed.ts` → `institution-seed.ts`, `BERYON_*` → `WORKSPACE_*`**: os 8 símbolos (`WORKSPACE_INSTITUTION`, `WORKSPACE_TEACHER`, `WORKSPACE_STUDENTS`, `WORKSPACE_CLASSROOMS`, `WORKSPACE_ENROLLMENTS`, `WORKSPACE_SUBJECT`, `WORKSPACE_USERS`, `WORKSPACE_SCHOOL_YEAR`) e os 5 arquivos que os consumiam (`session.ts`, `session-cookie.ts`, `local-auth-provider.ts`, o barrel `workspace/index.ts`, `gestor/page.tsx`) foram atualizados — puro rename, TypeScript garantiu cobertura completa.
+- **Login local de demonstração agora valida o domínio institucional**: `local-auth-provider.ts` só aceita e-mails cujo domínio bata com `WORKSPACE_INSTITUTION.domain` — regra lida do dado, não fixa no código; preparado para quando houver mais de uma instituição seedada.
+- **`entrar/page.tsx` sem texto literal**: placeholder e texto de ajuda ("contas simuladas do Colégio Beryon...") passam a interpolar `WORKSPACE_INSTITUTION.name`/`.domain`.
+- Validado no navegador: login rejeita `@beryon.edu.br` (domínio antigo) e aceita `@colegioberyon.com.br`; Painel do Professor, Painel do Gestor (nome do diretor derivado: "Direção Colégio Beryon") e Import Wizard renderizam a instituição corretamente em desktop e mobile (375px), console limpo. `npm run lint` e `npm run build` limpos.
+
 ## 18/07/2026 — M17: Learning Lifecycle (Fluxo Completo Professor → Aluno)
 
 Conecta todos os módulos já existentes (Institutional Workspace, Curriculum Engine, Lesson Composer, Knowledge Engine, Mission Flow) num único fluxo de aprendizagem — nenhum módulo novo criado, sem IA, sem Google Classroom/NotebookLM, sem alterar autenticação.

@@ -1,9 +1,11 @@
 /**
- * SEED DE DEMONSTRAÇÃO — Colégio Beryon (M16: fonte institucional
+ * SEED DE DEMONSTRAÇÃO — Instituto Horizonte (M16: fonte institucional
  * ÚNICA da plataforma; o seed do Institutional Workspace importa
  * daqui, nunca o contrário). Dados 100% fictícios, autorizados e
- * rotulados (D-015): alunos são "Aluno(a) de demonstração NN", a
- * escola é o Colégio Beryon por pedido explícito da Sprint M15.
+ * rotulados (D-015): alunos são "Aluno(a) de demonstração NN"; a
+ * instituição é o Instituto Horizonte — nome fictício adotado a partir
+ * de D-039 para manter o ambiente de demonstração institucionalmente
+ * neutro, sem referência a um cliente real.
  *
  * REGRA (docs/PERSISTENCE.md): estes dados NUNCA entram em migration
  * nem são persistidos no banco oficial. O banco real nasce vazio; a
@@ -36,14 +38,21 @@ import type {
 import type { StudentMissionStatus } from "@/modules/classroom";
 
 export const DEMO_INSTITUTION: Institution = {
-  id: "inst-beryon",
-  name: "Colégio Beryon",
+  id: "inst-horizonte",
+  slug: "horizonte",
+  name: "Instituto Horizonte",
+  domain: "institutohorizonte.edu.br",
+  // Sem asset real de branding (instituição fictícia, D-039) — nunca
+  // fabricar logo/paleta (D-015); ficam null até existir o dado real.
+  logoUrl: null,
+  colors: null,
+  timezone: "America/Sao_Paulo",
   status: "active",
   createdAt: "2026-01-15T00:00:00-03:00",
 };
 
 export const DEMO_ACADEMIC_YEAR: AcademicYear = {
-  id: "year-beryon-2026",
+  id: "year-horizonte-2026",
   institutionId: DEMO_INSTITUTION.id,
   label: "2026",
   startsOn: "2026-02-02",
@@ -51,11 +60,12 @@ export const DEMO_ACADEMIC_YEAR: AcademicYear = {
   status: "active",
 };
 
+/** Professor principal da primeira implantação — usuário real do Instituto Horizonte. */
 export const DEMO_TEACHER: Teacher = {
   id: "teacher-fabio",
   institutionId: DEMO_INSTITUTION.id,
-  name: "Professor Fábio",
-  email: "fabio@beryon.edu.br",
+  name: "Fabio Ege",
+  email: `fabio.ege@${DEMO_INSTITUTION.domain}`,
 };
 
 const CLASSROOM_LABELS = [
@@ -106,16 +116,16 @@ const DEMO_ROSTER: Array<{
 export const DEMO_STUDENTS: Student[] = DEMO_ROSTER.map((_, i) => {
   const number = String(i + 1).padStart(2, "0");
   return {
-    id: `student-beryon-${number}`,
+    id: `student-horizonte-${number}`,
     institutionId: DEMO_INSTITUTION.id,
     name: `Aluno(a) de demonstração ${number}`,
-    email: `aluno${number}@beryon.edu.br`,
+    email: `aluno${number}@${DEMO_INSTITUTION.domain}`,
   };
 });
 
 export const DEMO_ENROLLMENTS: Enrollment[] = DEMO_STUDENTS.map(
   (student, i) => ({
-    id: `enroll-beryon-${String(i + 1).padStart(2, "0")}`,
+    id: `enroll-horizonte-${String(i + 1).padStart(2, "0")}`,
     institutionId: DEMO_INSTITUTION.id,
     classroomId: DEMO_CLASSROOMS[Math.floor(i / 2)].id,
     studentId: student.id,

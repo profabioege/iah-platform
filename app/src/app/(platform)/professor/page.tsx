@@ -132,8 +132,8 @@ export default async function ProfessorPage() {
 async function listClassroomRows(): Promise<ClassroomRow[]> {
   const repositories = getDefaultRepositories();
   // Instituição resolvida da fonte de dados, nunca fixa em código (M16) —
-  // hoje o seed tem só o Colégio Beryon; multi-instituição chega com a
-  // autenticação real amarrando o usuário ao tenant.
+  // hoje o seed tem só o Instituto Horizonte (D-039); multi-instituição
+  // chega com a autenticação real amarrando o usuário ao tenant.
   const institutionId = (await repositories.institutions.list())[0]?.id;
   if (!institutionId) return [];
   const [classrooms, academicYears, syncStates] = await Promise.all([

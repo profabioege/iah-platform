@@ -49,8 +49,8 @@
   --iah-line-dark: rgba(219, 235, 251, 0.1); /* bordas sobre fundo escuro */
 
   /* ------ Camada 1: tipografia ------ */
-  --iah-font-sans: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-  --iah-font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --iah-font-sans: Arial, Helvetica, sans-serif;
+  --iah-font-mono: ui-monospace, monospace;
 
   /* ------ Camada 1: raio de borda ------ */
   --iah-radius-sm: 7px; /* botões, inputs */
