@@ -5,6 +5,7 @@ import { isAuthConfigured } from "@/lib/auth-flags";
 import { createLearningCycleService, getDefaultRepositories } from "@/modules/platform";
 import { getWorkspaceContext } from "@/modules/workspace";
 import { emptyStudentWork } from "@/modules/classroom";
+import { isMentorIAHEnabled } from "@/modules/mentor";
 
 import { MissionFlow } from "./mission-flow/mission-flow";
 import type { StudentWorkSource } from "./mission-flow/use-student-work";
@@ -54,5 +55,11 @@ export default async function MissaoDetalhePage({
     source = { kind: "demo", scope };
   }
 
-  return <MissionFlow mission={mission} source={source} />;
+  return (
+    <MissionFlow
+      mission={mission}
+      source={source}
+      mentorEnabled={isMentorIAHEnabled() && mission.status === "published"}
+    />
+  );
 }

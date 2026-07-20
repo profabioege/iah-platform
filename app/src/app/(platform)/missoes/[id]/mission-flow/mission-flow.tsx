@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MentorIAH } from "@/components/mentor/mentor-iah";
 
 import { MissionHeader } from "./mission-header";
 import { MissionStep } from "./mission-step";
@@ -40,6 +41,17 @@ import {
 } from "./use-student-work";
 
 const TOTAL_STEPS = 9;
+const MISSION_STEP_LABELS = [
+  "Capa",
+  "Contexto",
+  "Objetivo",
+  "Investigação",
+  "Comparação",
+  "Produção",
+  "Critérios",
+  "Entrega",
+  "Reflexão final",
+] as const;
 
 /**
  * Mission Flow — a Missão como investigação guiada, não como
@@ -51,9 +63,11 @@ const TOTAL_STEPS = 9;
 export function MissionFlow({
   mission,
   source,
+  mentorEnabled,
 }: {
   mission: Mission;
   source: StudentWorkSource;
+  mentorEnabled: boolean;
 }) {
   const { work, update, flush, saveStatus, delivered, recorded, submissionStatus } =
     useStudentWork(source, mission.id);
@@ -92,7 +106,8 @@ export function MissionFlow({
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+    <>
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
       <MissionHeader
         missionNumber={mission.number}
         title={mission.title}
@@ -392,7 +407,22 @@ export function MissionFlow({
           </MissionStep>
         )}
       </StepTransition>
-    </div>
+      </div>
+      {mentorEnabled ? (
+        <MentorIAH
+          context={{
+            missionId: mission.id,
+            missionTitle: mission.title,
+            guidingQuestion: mission.guidingQuestion,
+            objective: mission.objective,
+            currentStep: {
+              number: step,
+              label: MISSION_STEP_LABELS[step - 1],
+            },
+          }}
+        />
+      ) : null}
+    </>
   );
 }
 
