@@ -67,13 +67,15 @@ export default async function EntrarPage({
       <main className="relative flex w-full max-w-sm flex-col items-center gap-9 text-center">
         <Logo variant="dark" wordmark className="h-28 w-auto" />
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           <h1 className="text-xl font-semibold tracking-tight">
-            Laboratório do Auditor
+            <span className="block">Aprender investigando.</span>
+            <span className="block">Ensinar transformando.</span>
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Investigar, produzir e auditar a realidade — com método e uso
-            crítico da Inteligência Artificial.
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Desenvolva pensamento crítico, autoria e uso responsável da
+            Inteligência Artificial em um ambiente de aprendizagem
+            investigativa.
           </p>
         </div>
 
