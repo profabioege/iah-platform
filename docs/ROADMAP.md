@@ -6,7 +6,7 @@ Fonte oficial e única de verdade sobre **o que já foi entregue e o que vem a s
 
 **Objetivo comercial:** fechar o piloto com o mantenedor da escola onde o fundador já leciona IA, em **agosto/2026**. A pergunta que decide toda priorização: *"isso melhora a demonstração/o uso real em sala de aula em agosto?"* — se não, adia (ver `VISION.md`, critérios de aceitação).
 
-Este norte **substitui** o sequenciamento original de Sprints temáticas (Missões → Biblioteca → Professor → Aluno → Diário → Integrações → Mentor IA). Módulos foram entregues fora dessa ordem, na sequência que o piloto de agosto exigia (ver "Funcionalidades concluídas"). Ver `DECISIONS.md` (D-014) para o registro desse pivô.
+Este norte **substitui** o sequenciamento original de Sprints temáticas (Missões → Biblioteca → Professor → Aluno → Diário → Integrações → Mentor IAH). Módulos foram entregues fora dessa ordem, na sequência que o piloto de agosto exigia (ver "Funcionalidades concluídas"). Ver `DECISIONS.md` (D-014) para o registro desse pivô.
 
 ## Iniciativa transversal — Governança Curricular
 
@@ -118,6 +118,6 @@ Prioridade **decrescente** — cada item exige plano de implementação explíci
 5. **Diário do Auditor — privacidade** — controle explícito de compartilhamento professor/gestor↔aluno (hoje toda reflexão salva é visível a ambos os painéis simulados).
 6. **Projetos** — produção autoral maior, individual ou em grupo.
 7. **Google Workspace real** — trocar os stubs de `modules/integrations` por implementações reais (OAuth + Classroom API), quando o projeto Google Cloud existir (ver `GOOGLE_WORKSPACE.md`); demais provedores de importação (`CSVImportProvider`, `ManualImportProvider`, `MicrosoftTeamsProvider`, `MoodleProvider`) seguem o mesmo contrato `ImportProvider` (ver `IMPORT_ARCHITECTURE.md`), sem ordem de prioridade definida ainda entre eles.
-8. **Mentor IA** — assistente de IA com registro de proveniência por uso.
+8. **Mentor IAH — apoio inteligente à aprendizagem investigativa** (nome oficial desde 20/07/2026, `DECISIONS.md` D-042) — assistente de IA com registro de proveniência por uso; apoia a investigação do Auditor da Realidade, nunca a substitui (mesmo princípio de `VISION.md`). Ainda sem nenhuma implementação — nem componente, nem rota, nem entidade.
 9. **Modo Claro funcional** — hoje só os tokens existem; falta a alternância na interface (o menu de Acessibilidade já expõe a opção sem efeito).
 10. **Virada de domínio** — `iaheducacional.com.br` migrar do WordPress temporário para a aplicação Next.js (checklist em `DEPLOY.md`).

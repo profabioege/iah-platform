@@ -523,3 +523,15 @@ variáveis (Vercel) + aplicar as migrations 0001–0005 + rodar o seed — nenhu
 tela muda. RLS por tenant entra quando existir acesso direto do navegador ao
 banco. `docs/PERSISTENCE.md` documenta o checklist e os critérios de ativação
 atualizados.
+
+## D-042 — Renomeação: "Mentor IA" passa a "Mentor IAH — apoio inteligente à aprendizagem investigativa" (20/07/2026)
+
+**Decisão:** O item de produto até aqui referido como "Mentor IA" (glossário de marca, sidebar "Em breve", pilar da Landing, backlog de `ROADMAP.md`) passa a se chamar oficialmente **"Mentor IAH — apoio inteligente à aprendizagem investigativa"**. Forma curta em uso corrente: **Mentor IAH**. Aplicado a `docs/03_BRAND_GUIDELINES.md` (glossário), `ROADMAP.md`, `STATUS.md`, `HANDOFF.md` (listas de lacunas/pendências, sempre a versão "existente hoje", nunca retroativa) e às três referências de UI/código já existentes como texto (`components/layout/app-sidebar.tsx`, item de sidebar desabilitado "Em breve"; `app/(marketing)/page.tsx`, pilar da Landing; `components/brand/BRAND_GUIDELINES.md`/`symbol.tsx`, menções de uso futuro do símbolo). **Nenhum componente, rota ou entidade foi criado** — segue sendo, como sempre foi, um contrato nomeado sem implementação (mesmo padrão do IPE em D-026, do `LessonBuilder` em D-028).
+
+**Registros históricos não foram alterados.** `DECISIONS.md` (entradas D-014, D-016, D-028 a D-033, D-037), `CHANGELOG.md` (entradas datadas M18/M19) e `05_ROADMAP.md` (documento já superado, mantido só por histórico) continuam citando "Mentor IA" — são registros cronológicos do que foi decidido/nomeado *naquele momento*; reescrevê-los romperia a própria convenção deste arquivo (entradas nunca são editadas retroativamente, só superadas por uma entrada nova — ver D-004/D-005/D-007/D-008). A renomeação vale a partir desta data para toda referência ao estado atual/futuro do produto.
+
+**Motivo:** Pedido explícito do responsável pelo produto, como preparação terminológica antes de uma futura Sprint de implementação do Mentor — nenhuma decisão de escopo, arquitetura ou funcionalidade envolvida.
+
+**Alternativas descartadas:** Retroagir a mudança aos registros históricos (rejeitado — quebra a integridade do histórico cronológico que `DECISIONS.md`/`CHANGELOG.md` existem para preservar).
+
+**Impacto futuro:** Quando o Mentor IAH ganhar a primeira implementação real, o nome oficial já está fixado — nenhuma segunda rodada de renomeação será necessária. Qualquer menção nova ao Mentor em documentação ou código usa "Mentor IAH" (forma curta) ou o nome completo na primeira menção de um documento novo.

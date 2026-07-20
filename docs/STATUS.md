@@ -205,7 +205,7 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 
 ## Funcionalidades em andamento / lacunas conhecidas
 
-- Sidebar tem 6 itens intencionalmente desabilitados ("Em breve"): Laboratório, Biblioteca, Projetos, Mentor IA, Agenda, Perfil.
+- Sidebar tem 6 itens intencionalmente desabilitados ("Em breve"): Laboratório, Biblioteca, Projetos, Mentor IAH, Agenda, Perfil.
 - Menu de Acessibilidade tem interface completa mas nenhum efeito persiste ainda.
 - Modo Claro existe como tokens, sem alternância funcional na interface.
 - Formulário de demonstração da Landing está em modo `mailto:` (Resend pronto, dormente — falta `RESEND_API_KEY`).

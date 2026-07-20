@@ -2,6 +2,34 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 20/07/2026 — Continuação operacional da M22: renomeação do Mentor + bloqueio de provisionamento
+
+Tarefa pedia ativar o modo real (M22) em infraestrutura real: criar/conectar
+um projeto Supabase, aplicar as migrations, configurar variáveis na Vercel,
+rodar o seed, criar contas reais e validar a jornada entre dispositivos.
+
+- **Decisão terminológica aplicada** (`DECISIONS.md` D-042): "Mentor IA" →
+  **"Mentor IAH — apoio inteligente à aprendizagem investigativa"** (forma
+  curta: Mentor IAH), em `03_BRAND_GUIDELINES.md`, `ROADMAP.md`, `STATUS.md`,
+  `HANDOFF.md` e nas 3 referências de texto já existentes em código
+  (sidebar "Em breve", pilar da Landing, comentários de `components/brand`).
+  Registros históricos datados (`DECISIONS.md`, `CHANGELOG.md`, `05_ROADMAP.md`)
+  não foram alterados — preservam o nome como era no momento registrado.
+  Nenhum componente, rota ou entidade do Mentor foi criado.
+- **Provisionamento de infraestrutura real bloqueado, não simulado.** Este
+  ambiente de execução não tem CLI do Supabase, CLI da Vercel, `psql` nem
+  qualquer token/credencial pré-existente — criar um projeto Supabase exige
+  login/cadastro no console (`supabase.com`), uma ação que só o responsável
+  pelo produto pode realizar (fora do que um agente pode executar por conta
+  própria: `docs/SUPABASE.md` já documentava isso como "o que só você pode
+  fazer"). Nenhuma etapa dos passos 1–13 pedidos (criar projeto, aplicar
+  migrations, configurar Vercel, seed, contas reais, validação entre
+  dispositivos, testes de acesso proibido, testes automatizados de
+  integração) foi executada nem simulada — todas dependem do projeto existir.
+  Nada foi commitado além da renomeação — 2 strings de UI (sidebar, Landing)
+  e comentários/documentação; lint, `tsc --noEmit` e build de produção
+  validados mesmo assim, por prudência.
+
 ## 20/07/2026 — M22: Fundação de Produção — Persistência e Autenticação Reais
 
 Substitui a persistência de demonstração e a autenticação local simulada por

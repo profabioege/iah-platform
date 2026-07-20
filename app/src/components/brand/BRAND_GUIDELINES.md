@@ -34,7 +34,7 @@ Nunca editar uma cópia sem atualizar o master.
 |---|---|---|---|
 | **Primary** | `<Logo variant="primary" />` (sinônimo: `"light"`) | Ink `#07101d` | Fundos claros: documentos, futura interface em Light Mode. |
 | **Reverse** | `<Logo variant="reverse" />` (sinônimo: `"dark"`) | Branco | Fundos escuros: Landing, login, sidebar, dashboards (tema Premium Dark), splash/hero, eventos. |
-| **Símbolo — Núcleo IAH** | `<BrandSymbol />` | idem variantes | Favicon, sidebar recolhida, loading, notificações, Mentor IA, certificados, ícone de app. |
+| **Símbolo — Núcleo IAH** | `<BrandSymbol />` | idem variantes | Favicon, sidebar recolhida, loading, notificações, Mentor IAH, certificados, ícone de app. |
 
 O Núcleo IAH (triângulo ciano no interior do A) é o símbolo institucional
 oficial da marca e usa **sempre** `--iah-cyan-400` (`#42e8f1`). O wordmark

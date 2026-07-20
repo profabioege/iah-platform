@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
  * redesenhá-lo ou reinterpretá-lo (ver BRAND_GUIDELINES.md ao lado).
  *
  * Usos previstos: favicon, sidebar recolhida, loading, notificações,
- * Mentor IA, certificados, ícones de aplicativo.
+ * Mentor IAH, certificados, ícones de aplicativo.
  */
 export function BrandSymbol({
   variant = "auto",

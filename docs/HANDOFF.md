@@ -135,7 +135,7 @@ Lista viva e mais detalhada: `STATUS.md` → "Funcionalidades prontas". Históri
 - **Ativação da autenticação e do banco** — o código está completo (M07); faltam os passos de console do fundador: projeto Google Cloud (OAuth), projeto Supabase (migrations 0001–0004 + linha da Instituição) e variáveis na Vercel — roteiros em `AUTHENTICATION.md`/`SUPABASE.md`. Até lá, a UI roda em `localStorage`/simulado.
 - **Google Workspace real** (OAuth + Classroom API) — arquitetura pronta em `modules/integrations`, falta o projeto no Google Cloud Console (credenciais, verificação de escopos restritos); passo a passo em `GOOGLE_WORKSPACE.md`.
 - **Biblioteca** — arquitetura pronta desde M11 (`modules/knowledge`, `KNOWLEDGE_ENGINE.md`), mas sem tela: o item da sidebar segue "Em breve" até existir uma página que consuma o módulo.
-- **Projetos**, **Mentor IA**, **Agenda**, **Perfil**, **Laboratório** — itens da sidebar marcados "Em breve" e desabilitados (honestos, não clicáveis à toa).
+- **Projetos**, **Mentor IAH**, **Agenda**, **Perfil**, **Laboratório** — itens da sidebar marcados "Em breve" e desabilitados (honestos, não clicáveis à toa).
 - **Modo Claro funcional** — tokens existem, sem alternância na interface.
 - **Efeitos do Menu de Acessibilidade** — interface pronta, nenhum efeito persiste ainda.
 - **Envio real por Resend** — falta `RESEND_API_KEY`; formulários operam em `mailto:`.

@@ -53,7 +53,7 @@ const TEACHER_MENU: MenuItem[] = [
   { title: "Biblioteca", icon: Library },
   { title: "Diário do Auditor", icon: NotebookPen, href: "/diario" },
   { title: "Projetos", icon: FolderKanban },
-  { title: "Mentor IA", icon: Sparkles },
+  { title: "Mentor IAH", icon: Sparkles },
   { title: "Agenda", icon: CalendarDays },
   { title: "Perfil", icon: CircleUser },
 ];

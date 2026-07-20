@@ -17,7 +17,7 @@ Termos cunhados pelo produto, sempre em português e sempre com a grafia abaixo 
 | Diário do Auditor | Espaço reflexivo pessoal do estudante |
 | Caso da Semana | Situação real proposta para investigação |
 | Radar IA | Sinais/notícias do mundo real trazidos à investigação |
-| Mentor IA | Assistente de IA que apoia — nunca substitui — a investigação |
+| Mentor IAH — apoio inteligente à aprendizagem investigativa | Assistente de IA que apoia — nunca substitui — a investigação (nome oficial desde 20/07/2026; nenhuma implementação existe ainda) |
 | Laboratório | Metáfora geral da plataforma (não uma tela específica) |
 
 ## Tom de voz

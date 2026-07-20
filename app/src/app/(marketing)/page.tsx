@@ -120,7 +120,7 @@ const resources = [
   },
   {
     icon: Sparkles,
-    title: "Mentor IA",
+    title: "Mentor IAH",
     description: "Apoio para formular perguntas melhores e avançar com autonomia.",
   },
   {
