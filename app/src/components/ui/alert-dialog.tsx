@@ -22,7 +22,7 @@ function AlertDialogBackdrop({ className, ...props }: AlertDialogPrimitive.Backd
     <AlertDialogPrimitive.Backdrop
       data-slot="alert-dialog-backdrop"
       className={cn(
-        "fixed inset-0 z-50 bg-black/40 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0",
+        "dark fixed inset-0 z-50 bg-black/40 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0",
         className
       )}
       {...props}
@@ -37,7 +37,7 @@ function AlertDialogPopup({ className, ...props }: AlertDialogPrimitive.Popup.Pr
       <AlertDialogPrimitive.Popup
         data-slot="alert-dialog-popup"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-popover bg-clip-padding p-5 text-popover-foreground shadow-lg outline-none transition duration-150 ease-in-out data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0",
+          "dark fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-popover bg-clip-padding p-5 text-popover-foreground shadow-lg outline-none transition duration-150 ease-in-out data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0",
           className
         )}
         {...props}
