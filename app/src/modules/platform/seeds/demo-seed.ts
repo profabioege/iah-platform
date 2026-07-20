@@ -120,7 +120,12 @@ export const DEMO_STUDENTS: Student[] = DEMO_ROSTER.map((_, i) => {
   return {
     id: `student-horizonte-${number}`,
     institutionId: DEMO_INSTITUTION.id,
-    name: `Aluno(a) de demonstração ${number}`,
+    name:
+      i === 4
+        ? "Sophia Ege"
+        : i === 5
+          ? "Nicolas Ege"
+          : `Aluno(a) de demonstração ${number}`,
     email: `aluno${number}@${DEMO_INSTITUTION.domain}`,
   };
 });

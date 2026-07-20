@@ -63,8 +63,10 @@ app/db/migrations/
 ├── 0002_classroom_sync_state.sql ← sincronização Google Classroom
 ├── 0003_identity.sql             ← users/profiles (Identidade & Acesso)
 ├── 0004_knowledge_engine.sql     ← Knowledge Engine
-└── 0005_production_foundation.sql ← M22: password_hash, Lesson, MissionAssignment,
-                                      MissionReview real, RLS deny-by-default em tudo
+├── 0005_production_foundation.sql ← M22: password_hash, Lesson, MissionAssignment,
+│                                     MissionReview real, RLS deny-by-default em tudo
+└── 0006_assessment_diagnostic.sql ← LessonAssessment, questões, prazos,
+                                      submissões e correção supervisionada
 
 app/db/seed/seed-demo.mjs         ← M22: script explícito, popula o cenário Instituto Horizonte
                                       num projeto já migrado (nunca dentro de uma migration)
@@ -87,14 +89,14 @@ app/db/seed/seed-demo.mjs         ← M22: script explícito, popula o cenário 
 
 Regra central: **dado fictício nunca é inserido por uma migration.**
 
-- **Modo demonstração**: `app/src/modules/platform/seeds/demo-seed.ts` (+ `modules/lesson/seeds/demo-seed.ts`, `modules/workspace/seeds/institution-seed.ts`) — TypeScript rotulado, em memória.
+- **Modo demonstração**: `app/src/modules/platform/seeds/demo-seed.ts` (+ `modules/lesson/seeds/demo-seed.ts`, `modules/workspace/seeds/institution-seed.ts`, `modules/assessment/seeds/demo-seed.ts`) — TypeScript rotulado, em memória. O Assessment não usa `localStorage` como fonte de verdade.
 - **Modo real**: `app/db/seed/seed-demo.mjs` — script Node explícito e separado, executado deliberadamente contra um projeto Supabase já migrado (`IAH_DEMO_PASSWORD` fora do código). Idempotente (upsert por id); não grava progresso/entregas fictícias — a jornada pedagógica nasce limpa, preenchida pelo uso real.
 - As duas fontes nunca se misturam: a factory entrega **ou** seeds **ou** banco.
 
 ## Critérios de ativação do modo real
 
 1. [ ] Projeto Supabase criado.
-2. [ ] Migrations `0001`–`0005` aplicadas, na ordem.
+2. [ ] Migrations `0001`–`0006` aplicadas, na ordem.
 3. [ ] `AUTH_SECRET`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` definidas em `app/.env.local` e na Vercel — as **três**, nunca um subconjunto (`getPlatformConfigError()` recusa configuração parcial).
 4. [ ] `node db/seed/seed-demo.mjs` executado com `IAH_DEMO_PASSWORD` definida, para o cenário de demonstração existir no banco (opcional — só necessário se o ambiente publicado deve manter contas fictícias).
 5. [ ] Login validado (Credentials, com uma conta do seed ou uma inserida manualmente).

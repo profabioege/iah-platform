@@ -535,3 +535,13 @@ atualizados.
 **Alternativas descartadas:** Retroagir a mudança aos registros históricos (rejeitado — quebra a integridade do histórico cronológico que `DECISIONS.md`/`CHANGELOG.md` existem para preservar).
 
 **Impacto futuro:** Quando o Mentor IAH ganhar a primeira implementação real, o nome oficial já está fixado — nenhuma segunda rodada de renomeação será necessária. Qualquer menção nova ao Mentor em documentação ou código usa "Mentor IAH" (forma curta) ou o nome completo na primeira menção de um documento novo.
+
+## D-043 — LessonAssessment versionada e sondagem diagnóstica supervisionada (20/07/2026)
+
+**Decisão:** O contrato conceitual `LessonAssessment` de D-028/D-031 passa a ter implementação própria em `modules/assessment`, sem reutilizar `MissionAssignment`, `Production`, `Reflection` ou `MissionReview`. O template possui versão e pode referenciar opcionalmente uma Lesson ou Mission; a publicação por turma (`AssessmentAssignment`) fixa o template e concentra início, encerramento, fuso, atrasos e política de gabarito. Respostas recebem `autoScore`/`autoFeedback` determinísticos, mas `finalScore`/`teacherFeedback` só existem após ação docente. Resultado e feedback são liberados coletivamente; o gabarito segue política independente.
+
+**Motivo:** A sondagem tem múltiplas questões, prazos individualizáveis e correção por resposta, sem equivalência semântica com a produção textual única de uma Mission. Separar template, instância e submissão preserva o histórico publicado, o isolamento institucional e a rastreabilidade de competências exigida por D-031.
+
+**Alternativas descartadas:** armazenar respostas em `Production.content`; tornar `mission_assignments` polimórfica; usar IA externa para a dissertativa; liberar nota automática sem validação humana.
+
+**Impacto futuro:** Novos tipos de Assessment podem reutilizar o agregado sem criar outra entidade. A rubrica determinística pode evoluir desde que `finalScore` continue sob responsabilidade docente. O banco real requer a migration 0006 e validação contra um projeto Supabase provisionado.

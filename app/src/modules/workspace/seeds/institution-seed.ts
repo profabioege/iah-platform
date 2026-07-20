@@ -60,7 +60,7 @@ export const WORKSPACE_USERS: WorkspaceUser[] = [
   {
     id: "user-diretor",
     institutionId: WORKSPACE_INSTITUTION.id,
-    name: `Direção ${WORKSPACE_INSTITUTION.name}`,
+    name: "Fabiana Ege",
     email: `diretor@${WORKSPACE_INSTITUTION.domain}`,
     role: "admin",
     teacherId: null,

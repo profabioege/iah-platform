@@ -1,5 +1,13 @@
 # Changelog — IAH Educacional
 
+## 20/07/2026 — Sondagem diagnóstica V1
+
+- Novo `modules/assessment`: `LessonAssessment` versionada, publicação por turma, prazos globais/individuais, rascunho, entrega, autocorreção determinística, revisão docente e liberação coletiva.
+- Migration `0006_assessment_diagnostic.sql` com seis tabelas operacionais multi-tenant e RLS deny-by-default.
+- Fluxos de professor, aluno e gestor; cinco questões no formato 2 múltipla escolha + 2 verdadeiro/falso + 1 dissertativa.
+- Seed explícito da Sondagem Inicial para os modos em memória e Supabase, sem senha versionada e sem entregas inventadas.
+- Testes automatizados para correção, separação de pontuações, papel e acesso cruzado entre turmas.
+
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
 ## 20/07/2026 — Continuação operacional da M22: renomeação do Mentor + bloqueio de provisionamento

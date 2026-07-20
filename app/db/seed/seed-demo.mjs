@@ -2,7 +2,7 @@
  * IAH Educacional — Seed de demonstração do banco real (M22).
  *
  * Popula o cenário institucional fictício e neutro (Instituto Horizonte,
- * D-039) num projeto Supabase JÁ migrado (0001–0005). É um script
+ * D-039) num projeto Supabase JÁ migrado (0001–0006). É um script
  * EXPLÍCITO, separado das migrations (que nunca inserem dados —
  * docs/PERSISTENCE.md): executá-lo é uma decisão deliberada do ambiente
  * de demonstração, nunca um efeito colateral.
@@ -59,6 +59,12 @@ const CLASSROOMS = [
   ["class-3em-a", "3º EM A", "3º ano E.M."],
 ];
 
+function studentName(index, number) {
+  if (index === 4) return "Sophia Ege";
+  if (index === 5) return "Nicolas Ege";
+  return `Aluno(a) de demonstração ${number}`;
+}
+
 async function upsert(table, rows, onConflict = "id") {
   const { error } = await db.from(table).upsert(rows, { onConflict });
   if (error) {
@@ -96,7 +102,7 @@ async function main() {
     {
       id: "user-diretor",
       institution_id: INSTITUTION_ID,
-      name: "Direção Instituto Horizonte",
+      name: "Fabiana Ege",
       email: `diretor@${DOMAIN}`,
       password_hash: passwordHash,
       status: "active",
@@ -114,7 +120,7 @@ async function main() {
       return {
         id: `user-student-horizonte-${nn}`,
         institution_id: INSTITUTION_ID,
-        name: `Aluno(a) de demonstração ${nn}`,
+        name: studentName(i, nn),
         email: `aluno${nn}@${DOMAIN}`,
         password_hash: passwordHash,
         status: "active",
@@ -186,7 +192,7 @@ async function main() {
     return {
       id: `student-horizonte-${nn}`,
       institution_id: INSTITUTION_ID,
-      name: `Aluno(a) de demonstração ${nn}`,
+      name: studentName(i, nn),
       email: `aluno${nn}@${DOMAIN}`,
       user_id: `user-student-horizonte-${nn}`,
     };
@@ -254,6 +260,100 @@ async function main() {
       created_at: "2026-07-19T09:00:00-03:00",
       updated_at: "2026-07-19T09:00:00-03:00",
       saved_at: "2026-07-19T09:00:00-03:00",
+    },
+  ]);
+
+  const assessmentId = "assessment-sondagem-inicial-ia";
+  await upsert("lesson_assessments", [
+    {
+      id: assessmentId,
+      institution_id: INSTITUTION_ID,
+      author_id: "user-fabio",
+      title: "Sondagem Inicial — Como você entende a Inteligência Artificial?",
+      instructions:
+        "Responda às cinco questões com atenção. A sondagem identifica conhecimentos prévios e não substitui sua autoria.",
+      kind: "diagnostic",
+      lesson_id: null,
+      mission_id: null,
+      competency_ids: ["pensamento-critico", "cultura-digital"],
+      version: 1,
+      status: "published",
+      created_at: "2026-07-20T08:00:00-03:00",
+      updated_at: "2026-07-20T08:00:00-03:00",
+    },
+  ]);
+
+  await upsert("assessment_questions", [
+    {
+      id: "assessment-q1", institution_id: INSTITUTION_ID, assessment_id: assessmentId,
+      position: 1, question_type: "multiple_choice",
+      prompt: "Qual alternativa define melhor uma Inteligência Artificial?", points: 2,
+      options: [
+        { id: "A", label: "Uma máquina que pensa e sente exatamente como um ser humano." },
+        { id: "B", label: "Um sistema capaz de analisar dados, identificar padrões e executar determinadas tarefas." },
+        { id: "C", label: "Qualquer aparelho eletrônico conectado à internet." },
+        { id: "D", label: "Um robô físico que sempre possui forma humana." },
+      ], correct_answer: "B",
+      justification: "IA descreve sistemas que analisam dados e padrões para executar tarefas definidas.", rubric: [],
+    },
+    {
+      id: "assessment-q2", institution_id: INSTITUTION_ID, assessment_id: assessmentId,
+      position: 2, question_type: "multiple_choice",
+      prompt: "Qual das situações representa um uso de Inteligência Artificial?", points: 2,
+      options: [
+        { id: "A", label: "Uma calculadora realizando uma soma digitada pelo usuário." },
+        { id: "B", label: "Um interruptor acendendo uma lâmpada." },
+        { id: "C", label: "Um aplicativo recomendando músicas com base no histórico do usuário." },
+        { id: "D", label: "Um livro impresso organizando capítulos em ordem." },
+      ], correct_answer: "C", justification: "A recomendação usa padrões do histórico para estimar preferências.", rubric: [],
+    },
+    {
+      id: "assessment-q3", institution_id: INSTITUTION_ID, assessment_id: assessmentId,
+      position: 3, question_type: "true_false",
+      prompt: "Uma Inteligência Artificial pode produzir uma resposta incorreta mesmo quando escreve de maneira segura e convincente.",
+      points: 1.5, options: [], correct_answer: true,
+      justification: "Fluência e confiança textual não garantem exatidão factual.", rubric: [],
+    },
+    {
+      id: "assessment-q4", institution_id: INSTITUTION_ID, assessment_id: assessmentId,
+      position: 4, question_type: "true_false",
+      prompt: "Tudo o que uma Inteligência Artificial produz pode ser utilizado sem verificar fontes, autoria ou possíveis erros.",
+      points: 1.5, options: [], correct_answer: false,
+      justification: "Resultados de IA precisam de verificação crítica de fontes, autoria e erros.", rubric: [],
+    },
+    {
+      id: "assessment-q5", institution_id: INSTITUTION_ID, assessment_id: assessmentId,
+      position: 5, question_type: "essay",
+      prompt: "Em uma ou duas frases, explique como a Inteligência Artificial pode ajudar um estudante sem substituir o pensamento e a autoria dele.",
+      points: 3, options: [], correct_answer: null,
+      justification: "A resposta deve combinar apoio legítimo com preservação de pensamento ou autoria.",
+      rubric: [
+        { score: 3, description: "Apresenta apoio legítimo e preserva claramente pensamento ou autoria.", keywordGroups: [["ajudar", "apoiar", "explicar", "pesquisar", "organizar"], ["autoria", "pensamento", "decidir", "próprio", "autonomia"]] },
+        { score: 2, description: "Apresenta apoio, mas trata superficialmente autoria ou autonomia.", keywordGroups: [["ajudar", "apoiar", "explicar", "pesquisar", "organizar"]] },
+        { score: 1, description: "Resposta relacionada, porém incompleta.", keywordGroups: [["ia", "estudante", "aprender"]] },
+      ],
+    },
+  ]);
+
+  await upsert("assessment_assignments", [
+    {
+      id: "assessment-assignment-inicial-2ema",
+      institution_id: INSTITUTION_ID,
+      classroom_id: "class-2em-a",
+      assessment_id: assessmentId,
+      starts_at: "2026-07-20T08:00:00-03:00",
+      ends_at: "2026-12-10T23:59:00-03:00",
+      timezone: "America/Sao_Paulo",
+      allow_late_submission: false,
+      auto_correction_enabled: true,
+      answer_key_policy: "manual",
+      answer_key_release_at: null,
+      publication_status: "published",
+      published_at: "2026-07-20T08:00:00-03:00",
+      results_released_at: null,
+      results_released_by: null,
+      created_at: "2026-07-20T08:00:00-03:00",
+      updated_at: "2026-07-20T08:00:00-03:00",
     },
   ]);
 

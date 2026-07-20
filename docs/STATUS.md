@@ -1,5 +1,7 @@
 # Status — IAH Educacional
 
+> **Sondagem diagnóstica V1 (20/07/2026):** `LessonAssessment` agora existe como módulo separado de Mission/Production, com persistência em memória para demonstração e adapter Supabase/PostgreSQL para o modo real. Professor cria e publica, configura prazos/gabarito, supervisiona ou edita correções e libera resultados coletivamente; aluno salva rascunho, envia e só vê resultado/gabarito quando permitido; gestor lê indicadores calculados, sem dados inventados. A migration `0006` ainda não foi aplicada a um projeto Supabase real neste ambiente.
+
 > **M22 — Fundação de Produção: Persistência e Autenticação Reais (20/07/2026):**
 > o código de um modo REAL completo existe agora ao lado do modo demonstração —
 > uma única flag (`isAuthConfigured()`) decide qual dos dois está ativo, e

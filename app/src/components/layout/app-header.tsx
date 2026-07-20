@@ -9,6 +9,8 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 
 /** Título da seção atual, derivado da URL. */
 function sectionTitle(pathname: string): string {
+  if (pathname.startsWith("/avaliacoes")) return "Sondagens diagnósticas";
+  if (pathname.startsWith("/professor/avaliacoes")) return "Sondagens diagnósticas";
   if (pathname.startsWith("/missoes")) return "Missões";
   if (pathname.startsWith("/diario")) return "Diário do Auditor";
   if (pathname.startsWith("/professor")) return "Painel do Professor";

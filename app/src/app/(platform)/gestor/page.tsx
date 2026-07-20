@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 
 import { getWorkspaceContext } from "@/modules/workspace";
 import { getDefaultRepositories } from "@/modules/platform";
+import { getDefaultAssessmentRepositories } from "@/modules/assessment";
 
 import { ExecutiveDashboard } from "./executive-dashboard";
+import { AssessmentIndicators, type DiagnosticIndicators } from "./assessment-indicators";
 
 export const metadata: Metadata = {
   title: "Visão Executiva",
@@ -21,6 +23,7 @@ export default async function GestorPage() {
   const context = await getWorkspaceContext();
   if (!context) return null; // middleware garante sessão; guarda defensiva
   const repositories = getDefaultRepositories();
+  const assessmentRepositories = getDefaultAssessmentRepositories();
   const [teachers, missionRecords] = await Promise.all([
     repositories.teachers.listByInstitution(context.institution.id),
     repositories.missions.list(),
@@ -86,9 +89,62 @@ export default async function GestorPage() {
     (item) => item.status === "concluiu",
   ).length;
   const teacher = teachers[0];
+  const assessmentAssignments = await assessmentRepositories.assignments.listByInstitution(
+    context.institution.id,
+  );
+  const assessments = await assessmentRepositories.assessments.list(context.institution.id);
+  const assessmentSubmissions = (
+    await Promise.all(
+      assessmentAssignments.map((assignment) =>
+        assessmentRepositories.submissions.listByAssignment(
+          context.institution.id,
+          assignment.id,
+        ),
+      ),
+    )
+  ).flat();
+  const validated = assessmentSubmissions.filter((item) => item.status === "validated");
+  const releasedAssignmentIds = new Set(
+    assessmentAssignments
+      .filter((item) => item.resultsReleasedAt)
+      .map((item) => item.id),
+  );
+  const questionScores = new Map<string, { score: number; possible: number; count: number }>();
+  for (const submission of validated) {
+    const assignment = assessmentAssignments.find((item) => item.id === submission.assignmentId);
+    const assessment = assessments.find((item) => item.id === assignment?.assessmentId);
+    for (const answer of submission.answers) {
+      const question = assessment?.questions.find((item) => item.id === answer.questionId);
+      if (!question) continue;
+      const current = questionScores.get(question.id) ?? { score: 0, possible: 0, count: 0 };
+      current.score += answer.finalScore ?? answer.autoScore ?? 0;
+      current.possible += question.points;
+      current.count += 1;
+      questionScores.set(question.id, current);
+    }
+  }
+  const diagnosticIndicators: DiagnosticIndicators = {
+    publishedActivities: assessmentAssignments.filter((item) => item.publicationStatus === "published").length,
+    participants: new Set(assessmentSubmissions.filter((item) => item.status !== "draft").map((item) => item.studentId)).size,
+    received: assessmentSubmissions.filter((item) => item.status !== "draft").length,
+    awaitingValidation: assessmentSubmissions.filter((item) => item.status === "submitted").length,
+    releasedResults: validated.filter((item) => releasedAssignmentIds.has(item.assignmentId)).length,
+    averageScore: validated.length
+      ? validated.reduce((sum, item) => sum + (item.finalScore ?? 0), 0) / validated.length
+      : null,
+    questionPerformance: assessments.flatMap((assessment) =>
+      assessment.questions.flatMap((question) => {
+        const data = questionScores.get(question.id);
+        return data && data.possible > 0
+          ? [{ label: `${assessment.title} · Questão ${question.position}`, percentage: Math.round((data.score / data.possible) * 100), responses: data.count }]
+          : [];
+      }),
+    ),
+  };
 
   return (
-    <ExecutiveDashboard
+    <div>
+      <ExecutiveDashboard
       institutionId={context.institution.id}
       institutionName={context.institution.name}
       academicYear={context.schoolYear.label}
@@ -108,6 +164,8 @@ export default async function GestorPage() {
       }}
       students={studentRows}
       assignments={assignmentRows}
-    />
+      />
+      <AssessmentIndicators indicators={diagnosticIndicators} />
+    </div>
   );
 }

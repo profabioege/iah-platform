@@ -87,10 +87,11 @@ export function TeacherWorkspace({
         title="Biblioteca Oficial"
         description="Knowledge Engine — acervo curado com metadados BNCC."
       />
-      <SoonCard
+      <LinkCard
         icon={ClipboardCheck}
-        title="Avaliação Assistida"
-        description="Sugestões de correção com revisão do professor."
+        title="Sondagem Diagnóstica"
+        description="Crie atividades, acompanhe respostas e valide correções."
+        href="/professor/avaliacoes"
       />
       <SoonCard
         icon={BarChart3}

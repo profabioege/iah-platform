@@ -48,6 +48,7 @@ type MenuItem = { title: string; icon: typeof LayoutDashboard; href?: string };
 const TEACHER_MENU: MenuItem[] = [
   { title: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
   { title: "Missões", icon: Rocket, href: "/missoes" },
+  { title: "Sondagens", icon: ClipboardList, href: "/professor/avaliacoes" },
   { title: "Professor", icon: GraduationCap, href: "/professor" },
   { title: "Laboratório", icon: FlaskConical },
   { title: "Biblioteca", icon: Library },
@@ -61,6 +62,7 @@ const TEACHER_MENU: MenuItem[] = [
 const STUDENT_MENU: MenuItem[] = [
   { title: "Minha Aula", icon: LayoutDashboard, href: "/dashboard" },
   { title: "Minha Missão", icon: Rocket, href: "/missoes" },
+  { title: "Minhas Sondagens", icon: ClipboardList, href: "/avaliacoes" },
   { title: "Diário do Auditor", icon: NotebookPen, href: "/diario" },
   { title: "Meu Portfólio", icon: FolderKanban },
   { title: "Meu Histórico", icon: History },
@@ -75,6 +77,7 @@ const ADMIN_MENU: MenuItem[] = [
     href: "/gestor/implantacao",
   },
   { title: "Professor", icon: GraduationCap, href: "/professor" },
+  { title: "Sondagens", icon: ClipboardList, href: "/professor/avaliacoes" },
   { title: "Missões", icon: Rocket, href: "/missoes" },
   { title: "Agenda", icon: CalendarDays },
   { title: "Perfil", icon: CircleUser },
