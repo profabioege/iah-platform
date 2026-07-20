@@ -16,6 +16,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogClose,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogPopup,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 import {
   createAssessmentAction,
@@ -159,6 +168,7 @@ function AssignmentPanel({ assignment, assessment, classroom, students, submissi
   const [newDeadline, setNewDeadline] = useState("");
   const [extensionStudent, setExtensionStudent] = useState("");
   const [confirmRelease, setConfirmRelease] = useState(false);
+  const [confirmValidate, setConfirmValidate] = useState<"all" | "unflagged" | null>(null);
   const received = submissions.filter((item) => item.status !== "draft");
   const pendingReview = submissions.filter((item) => item.status === "submitted");
   const validated = submissions.filter((item) => item.status === "validated");
@@ -166,10 +176,22 @@ function AssignmentPanel({ assignment, assessment, classroom, students, submissi
   return <Card><CardHeader><div className="flex flex-wrap items-start justify-between gap-3"><div><CardTitle>{assessment?.title ?? "Sondagem"}</CardTitle><CardDescription>{classroom?.name} · {new Date(assignment.startsAt).toLocaleString("pt-BR")} até {new Date(assignment.endsAt).toLocaleString("pt-BR")}</CardDescription></div><Badge variant="outline">{status}</Badge></div></CardHeader><CardContent className="space-y-5">
     <div className="grid gap-3 sm:grid-cols-4"><Metric label="Alunos" value={students.length} /><Metric label="Recebidas" value={received.length} /><Metric label="Aguardando validação" value={pendingReview.length} /><Metric label="Validadas" value={validated.length} /></div>
     <div className="flex flex-wrap gap-2">
-      <Button variant="outline" disabled={pending || pendingReview.length === 0} onClick={() => { if (confirm(`Validar ${pendingReview.length} resultado(s)?`)) run(() => validateAssessmentBatchAction({ assignmentId: assignment.id, excludeFlagged: false }), "Entregas prontas validadas."); }}><CheckCheck /> Validar todas prontas</Button>
-      <Button variant="outline" disabled={pending || pendingReview.length === 0} onClick={() => { if (confirm(`Validar resultados prontos, exceto os sinalizados?`)) run(() => validateAssessmentBatchAction({ assignmentId: assignment.id, excludeFlagged: true }), "Entregas sem sinalização validadas."); }}>Validar exceto sinalizadas</Button>
+      <Button variant="outline" disabled={pending || pendingReview.length === 0} onClick={() => setConfirmValidate("all")}><CheckCheck /> Validar todas prontas</Button>
+      <Button variant="outline" disabled={pending || pendingReview.length === 0} onClick={() => setConfirmValidate("unflagged")}>Validar exceto sinalizadas</Button>
       <Button disabled={pending || validated.length === 0} onClick={() => setConfirmRelease(true)}><Send /> Enviar correções validadas</Button>
     </div>
+    <AlertDialog open={confirmValidate !== null} onOpenChange={(open) => { if (!open) setConfirmValidate(null); }}>
+      <AlertDialogPopup>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{confirmValidate === "unflagged" ? "Validar resultados prontos, exceto os sinalizados?" : `Validar ${pendingReview.length} resultado(s)?`}</AlertDialogTitle>
+          <AlertDialogDescription>{confirmValidate === "unflagged" ? "As entregas sinalizadas ficam de fora e continuam aguardando revisão manual." : "Todas as entregas prontas para validação recebem a nota final calculada."}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogClose render={<Button variant="outline" />}>Cancelar</AlertDialogClose>
+          <Button onClick={() => { const excludeFlagged = confirmValidate === "unflagged"; setConfirmValidate(null); run(() => validateAssessmentBatchAction({ assignmentId: assignment.id, excludeFlagged }), excludeFlagged ? "Entregas sem sinalização validadas." : "Entregas prontas validadas."); }}>Confirmar</Button>
+        </AlertDialogFooter>
+      </AlertDialogPopup>
+    </AlertDialog>
     {confirmRelease ? <div role="alertdialog" aria-labelledby={`release-title-${assignment.id}`} className="rounded-lg border border-primary/40 bg-primary/5 p-4"><p id={`release-title-${assignment.id}`} className="font-semibold">Confirmar envio coletivo</p><ul className="mt-2 space-y-1 text-sm text-muted-foreground"><li>Alunos na turma: {students.length}</li><li>Resultados validados: {validated.length}</li><li>Resultados que serão liberados: {validated.length}</li><li>Regra de gabarito: {POLICY_LABEL[assignment.answerKeyPolicy]}</li></ul><div className="mt-3 flex gap-2"><Button disabled={pending} onClick={() => { setConfirmRelease(false); run(() => releaseAssessmentResultsAction(assignment.id), "Resultados validados liberados coletivamente."); }}>Confirmar envio</Button><Button variant="outline" disabled={pending} onClick={() => setConfirmRelease(false)}>Cancelar</Button></div></div> : null}
     <div className="rounded-lg border border-border p-4"><p className="mb-3 flex items-center gap-2 text-sm font-semibold"><Clock className="size-4" /> Extensão de prazo</p><div className="grid gap-3 sm:grid-cols-3"><Input type="datetime-local" value={newDeadline} onChange={(event) => setNewDeadline(event.target.value)} /><select className="h-8 rounded-lg border border-input bg-background px-2 text-sm" value={extensionStudent} onChange={(event) => setExtensionStudent(event.target.value)}><option value="">Toda a turma</option>{students.map((student) => <option key={student.id} value={student.id}>{student.name}</option>)}</select><Button variant="outline" disabled={!newDeadline || pending} onClick={() => run(() => extendAssessmentDeadlineAction({ assignmentId: assignment.id, studentId: extensionStudent || null, newEndsAt: new Date(newDeadline).toISOString(), reason: "Extensão definida pelo professor" }), "Prazo estendido.")}>Aplicar extensão</Button></div>{extensions.length ? <p className="mt-2 text-xs text-muted-foreground">{extensions.length} extensão(ões) registrada(s), preservando prazo original e autoria.</p> : null}</div>
     <div className="space-y-2">{received.map((submission) => <SubmissionReview key={submission.id} assignment={assignment} assessment={assessment} submission={submission} student={students.find((item) => item.id === submission.studentId)} pending={pending} run={run} />)}{received.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma entrega recebida.</p> : null}</div>
