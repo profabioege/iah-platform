@@ -13,11 +13,14 @@ import {
   type StudentMissionSnapshot,
   type StudentMissionStatus,
 } from "@/modules/classroom";
+import { isRealModeClient } from "@/lib/auth-flags";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+
+import { reviewSubmissionAction } from "./actions";
 
 /** Rótulo e marcador visual de cada estado (conforme especificação). */
 const STATUS_META: Record<
@@ -45,12 +48,15 @@ type Filter = StudentMissionStatus | "todos";
 export function ClassPanel({
   students,
   institutionId,
+  classroomId,
   missionId,
   reviewer,
   criteria,
 }: {
   students: StudentMissionSnapshot[];
   institutionId: string;
+  /** Turma da Missão acompanhada — exigida no modo real (Server Action de avaliação). */
+  classroomId: string;
   missionId: string;
   reviewer: { id: string; name: string };
   criteria: string[];
@@ -58,8 +64,13 @@ export function ClassPanel({
   const [filter, setFilter] = React.useState<Filter>("todos");
   const [openId, setOpenId] = React.useState<string | null>(null);
   const [snapshots, setSnapshots] = React.useState(students);
+  const realMode = isRealModeClient();
 
   React.useEffect(() => {
+    setSnapshots(students);
+    // Modo real: `students` já vem do banco (fonte de verdade), atualizado
+    // a cada carregamento de página — sem espelho local para mesclar.
+    if (realMode) return;
     const refresh = () =>
       setSnapshots(
         students.map((student) =>
@@ -69,7 +80,7 @@ export function ClassPanel({
     refresh();
     window.addEventListener(STUDENT_WORK_UPDATED_EVENT, refresh);
     return () => window.removeEventListener(STUDENT_WORK_UPDATED_EVENT, refresh);
-  }, [institutionId, missionId, students]);
+  }, [institutionId, missionId, students, realMode]);
 
   const counts = React.useMemo(() => {
     const map = new Map<StudentMissionStatus, number>();
@@ -198,9 +209,11 @@ export function ClassPanel({
                           <ReviewForm
                             student={s}
                             institutionId={institutionId}
+                            classroomId={classroomId}
                             missionId={missionId}
                             reviewer={reviewer}
                             criteria={criteria}
+                            realMode={realMode}
                             onReviewed={(reviewedStudent) =>
                               setSnapshots((current) =>
                                 current.map((item) =>
@@ -278,16 +291,20 @@ function StatusTotal({
 function ReviewForm({
   student,
   institutionId,
+  classroomId,
   missionId,
   reviewer,
   criteria,
+  realMode,
   onReviewed,
 }: {
   student: StudentMissionSnapshot;
   institutionId: string;
+  classroomId: string;
   missionId: string;
   reviewer: { id: string; name: string };
   criteria: string[];
+  realMode: boolean;
   onReviewed: (student: StudentMissionSnapshot) => void;
 }) {
   const scope = { institutionId, ownerId: student.studentId };
@@ -298,11 +315,41 @@ function ReviewForm({
     existing?.observedCriteria ?? [],
   );
   const [message, setMessage] = React.useState<string | null>(null);
+  const [submitting, setSubmitting] = React.useState(false);
 
-  function submitReview(event: React.FormEvent<HTMLFormElement>) {
+  async function submitReview(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!grade.trim() || !feedback.trim()) {
       setMessage("Informe o conceito e uma devolutiva antes de confirmar.");
+      return;
+    }
+
+    if (realMode) {
+      setSubmitting(true);
+      setMessage(null);
+      try {
+        const reviewedWork = await reviewSubmissionAction({
+          classroomId,
+          studentId: student.studentId,
+          missionId,
+          grade: grade.trim(),
+          observedCriteria: observed,
+          feedback: feedback.trim(),
+        });
+        onReviewed({
+          ...student,
+          status: "avaliado",
+          lastAccessAt: reviewedWork.updatedAt,
+          production: reviewedWork.production,
+          reflection: reviewedWork.reflection,
+          review: reviewedWork.review,
+        });
+        setMessage("Avaliação registrada e devolutiva liberada para o aluno.");
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : "Não foi possível avaliar.");
+      } finally {
+        setSubmitting(false);
+      }
       return;
     }
 
@@ -402,9 +449,9 @@ function ReviewForm({
 
       {message ? <p role="status" className="text-xs text-muted-foreground">{message}</p> : null}
 
-      <Button type="submit" className="w-fit">
+      <Button type="submit" className="w-fit" disabled={submitting}>
         <CheckCircle2 className="size-4" />
-        {existing ? "Atualizar avaliação" : "Confirmar avaliação"}
+        {submitting ? "Salvando…" : existing ? "Atualizar avaliação" : "Confirmar avaliação"}
       </Button>
     </form>
   );

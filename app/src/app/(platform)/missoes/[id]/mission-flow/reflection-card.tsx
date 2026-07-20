@@ -19,6 +19,7 @@ export function ReflectionCard({
   prompt,
   value,
   onChange,
+  onBlur,
   recorded,
   delivered,
   recordedAt,
@@ -28,6 +29,7 @@ export function ReflectionCard({
   prompt: string;
   value: string;
   onChange: (value: string) => void;
+  onBlur?: () => void;
   recorded: boolean;
   delivered: boolean;
   recordedAt: string | null;
@@ -57,6 +59,7 @@ export function ReflectionCard({
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onBlur={onBlur}
           readOnly={recorded}
           rows={5}
           placeholder="Registre aqui a sua reflexão pessoal sobre esta investigação…"

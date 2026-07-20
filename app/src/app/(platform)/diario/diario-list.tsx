@@ -24,32 +24,42 @@ export interface MissionRef {
 }
 
 /**
- * Lista as reflexões registradas no dispositivo, cruzando os trabalhos do
- * aluno (localStorage) com os títulos das Missões (vindos do servidor).
- * Mais recentes primeiro.
+ * Fonte das reflexões: no modo REAL (M22), o servidor já leu do banco
+ * (fonte de verdade) e entrega prontas; no modo demonstração, seguem
+ * vindo do dispositivo (localStorage, `modules/classroom`).
+ */
+export type DiarioSource =
+  | { kind: "real"; entries: { work: StudentWork; mission: MissionRef | undefined }[] }
+  | { kind: "demo"; scope: StudentWorkScope | null };
+
+/**
+ * Lista as reflexões do aluno, mais recentes primeiro.
  */
 export function DiarioList({
   missions,
-  scope,
+  source,
 }: {
   missions: MissionRef[];
-  /** Instituição + usuário do Institutional Workspace — isola o trabalho salvo por aluno. */
-  scope: StudentWorkScope | null;
+  source: DiarioSource;
 }) {
   const [entries, setEntries] = React.useState<
     { work: StudentWork; mission: MissionRef | undefined }[] | null
-  >(null);
+  >(source.kind === "real" ? source.entries : null);
 
   React.useEffect(() => {
+    if (source.kind === "real") {
+      setEntries(source.entries);
+      return;
+    }
     const byId = new Map(missions.map((m) => [m.id, m]));
-    const recorded = (scope ? listAllStudentWork(scope) : [])
+    const recorded = (source.scope ? listAllStudentWork(source.scope) : [])
       .filter(isReflectionRecorded)
       .sort((a, b) =>
         (b.reflectionRecordedAt ?? "").localeCompare(a.reflectionRecordedAt ?? ""),
       )
       .map((work) => ({ work, mission: byId.get(work.missionId) }));
     setEntries(recorded);
-  }, [missions, scope]);
+  }, [missions, source]);
 
   if (entries === null) return <DiarioSkeleton />;
 

@@ -193,6 +193,7 @@ export const DEMO_PRODUCTIONS: Production[] = Object.entries(DEMO_PRODUCTION_TEX
       classroomId: DEMO_ENROLLMENTS[i].classroomId,
       studentId: student.id,
       missionId: DEMO_MISSION_RECORD.id,
+      startedAt: DEMO_ROSTER[i].lastAccessAt,
       content,
       status: "delivered",
       deliveredAt: DEMO_ROSTER[i].lastAccessAt,

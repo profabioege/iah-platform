@@ -24,6 +24,7 @@ export type {
   IntegrationProviderId,
   MissionProgress,
   MissionRecord,
+  MissionReview,
   Production,
   Reflection,
   Student,
@@ -49,6 +50,7 @@ export type {
   MissionAssignmentRepository,
   MissionProgressRepository,
   MissionRecordRepository,
+  MissionReviewRepository,
   PlatformRepositories,
   ProductionRepository,
   ReflectionRepository,
@@ -68,6 +70,11 @@ export {
 } from "./services/classroom-sync-service";
 export { createMissionPublishingService } from "./services/mission-publishing-service";
 export { createInstitutionalClassMonitor } from "./services/institutional-class-monitor";
+export {
+  createLearningCycleService,
+  type LearningCycleScope,
+  type LearningCycleService,
+} from "./services/learning-cycle-service";
 
 export {
   createRepositories,

@@ -12,6 +12,7 @@ import type {
   ClassroomSyncState,
   Enrollment,
   MissionProgress,
+  MissionReview,
   Production,
   Reflection,
   Student,
@@ -45,6 +46,7 @@ export function createSeedRepositories(): PlatformRepositories {
   // Nenhuma publicação pré-fabricada: a jornada demonstrativa começa com a
   // Mission ainda não publicada — quem publica é o Professor, ao vivo (M21).
   const assignments: MissionAssignment[] = [];
+  const reviews: MissionReview[] = [];
 
   return {
     institutions: {
@@ -238,6 +240,33 @@ export function createSeedRepositories(): PlatformRepositories {
         );
         if (index >= 0) assignments[index] = { ...assignment, institutionId };
         else assignments.push({ ...assignment, institutionId });
+      },
+    },
+    missionReviews: {
+      async listByClassroomMission(institutionId, classroomId, missionId) {
+        return reviews.filter(
+          (r) =>
+            r.institutionId === institutionId &&
+            r.classroomId === classroomId &&
+            r.missionId === missionId,
+        );
+      },
+      async listByStudent(institutionId, studentId) {
+        return reviews.filter(
+          (r) =>
+            r.institutionId === institutionId && r.studentId === studentId,
+        );
+      },
+      async save(institutionId, review) {
+        const index = reviews.findIndex(
+          (r) =>
+            r.institutionId === institutionId &&
+            r.classroomId === review.classroomId &&
+            r.studentId === review.studentId &&
+            r.missionId === review.missionId,
+        );
+        if (index >= 0) reviews[index] = { ...review, institutionId };
+        else reviews.push({ ...review, institutionId });
       },
     },
   };

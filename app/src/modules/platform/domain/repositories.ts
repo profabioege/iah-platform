@@ -20,6 +20,7 @@ import type {
   Institution,
   MissionProgress,
   MissionRecord,
+  MissionReview,
   Production,
   Reflection,
   Student,
@@ -124,6 +125,20 @@ export interface MissionAssignmentRepository {
   save(institutionId: string, assignment: MissionAssignment): Promise<void>;
 }
 
+/** Avaliação + devolutiva do Professor (M21/M22) — um registro por aluno×missão×turma. */
+export interface MissionReviewRepository {
+  listByClassroomMission(
+    institutionId: string,
+    classroomId: string,
+    missionId: string,
+  ): Promise<MissionReview[]>;
+  listByStudent(
+    institutionId: string,
+    studentId: string,
+  ): Promise<MissionReview[]>;
+  save(institutionId: string, review: MissionReview): Promise<void>;
+}
+
 export interface ClassroomIntegrationRepository {
   listByInstitution(institutionId: string): Promise<ClassroomIntegration[]>;
 }
@@ -152,4 +167,5 @@ export interface PlatformRepositories {
   classroomIntegrations: ClassroomIntegrationRepository;
   classroomSyncStates: ClassroomSyncStateRepository;
   missionAssignments: MissionAssignmentRepository;
+  missionReviews: MissionReviewRepository;
 }

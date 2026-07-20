@@ -2,7 +2,63 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
-## 20/07/2026 — M21: Ciclo Institucional de Aprendizagem
+## 20/07/2026 — M22: Fundação de Produção — Persistência e Autenticação Reais
+
+Substitui a persistência de demonstração e a autenticação local simulada por
+uma fundação real de produção (Auth.js Credentials + Supabase/PostgreSQL),
+preservando integralmente os fluxos do M17/M21. Decisão completa em
+`DECISIONS.md` D-041.
+
+- **Autenticação real**: novo provider `Credentials` (`auth.ts`) — e-mail e
+  senha verificados contra `users.password_hash` (scrypt, `src/lib/
+  password.ts`, zero dependência nova); papel/instituição vêm sempre de
+  `profiles`, nunca do cliente. Login com Google (D-025) preservado como
+  opção adicional, não concorrente. Gate por papel (`/gestor` exclusivo de
+  administrador, `/professor` vedado a aluno) passa a existir também no modo
+  real (`auth.config.ts`, callback `authorized`), igualando a proteção que já
+  existia no modo demonstração.
+- **Persistência real**: migration `0005_production_foundation.sql` —
+  `password_hash`/`status` em `users`, tabelas `lessons`, `mission_
+  assignments`, `mission_reviews`, colunas que faltavam (`started_at` em
+  productions, `recorded_at` nullable em reflections). `database-
+  repositories.ts` (stub desde D-023) ganha implementação completa contra o
+  schema real. RLS habilitada em **todas** as tabelas, sem nenhuma política
+  permissiva — acesso exclusivamente pelo servidor via service role (D-041).
+- **Ponto único de sessão**: `modules/workspace/infrastructure/session.ts`
+  resolve usuário/papel/instituição/permissões/turmas tanto do banco quanto
+  do seed local — nenhuma tela decide sozinha. Corrigido um guard obsoleto
+  (`isAuthConfigured() ? null : await getWorkspaceContext()`) presente em 6
+  páginas, que no modo real nunca chamava a função.
+- **Ciclo de aprendizagem sobre o banco**: novo `learning-cycle-service`
+  (`modules/platform`) grava Produção/Reflexão/Avaliação nas tabelas reais,
+  devolvendo o mesmo formato `StudentWork` que a UI já consumia — nenhuma
+  tela redesenhada. Server Actions (`missoes/[id]/mission-flow/actions.ts`,
+  `professor/actions.ts`) derivam a identidade da sessão, nunca do cliente.
+  Autosave de texto com debounce (800 ms) e flush síncrono no blur e antes de
+  qualquer transição discreta, sequenciado para nunca sobrescrever o
+  rascunho mais recente com uma gravação atrasada.
+- **Lesson real**: `lesson-actions.ts` (Server Actions) atrás do mesmo
+  contrato `LessonRepository` — `getLessonRepository()` decide sozinho entre
+  remoto e local usando `NEXT_PUBLIC_IAH_REAL_MODE` (espelho público, só
+  booleano, de `isAuthConfigured()`, calculado em build time). Os 6 pontos de
+  consumo (LessonWizard, TurmasExplorer, MyLessonCard etc.) não mudaram.
+- **Espelhos locais do M21 desativados no modo real**: `local-mission-
+  assignment-store`, o merge otimista do `ExecutiveDashboard` e do
+  `ClassPanel` só rodam no modo demonstração — no modo real, o banco é a
+  única fonte e `revalidatePath` já atualiza as rotas.
+- **Seed de demonstração do banco real**: `app/db/seed/seed-demo.mjs`, script
+  explícito e separado das migrations, popula o cenário Instituto Horizonte
+  (D-039) num projeto já migrado; idempotente; senha das contas vem de
+  `IAH_DEMO_PASSWORD` (nunca em código); nenhum progresso/entrega fictícia
+  pré-gravada.
+- **Validações**: ESLint, `tsc --noEmit` e build de produção (25 páginas)
+  limpos. **Modo demonstração revalidado no navegador** (login como aluno,
+  professor e gestor; publicação de Mission; gate por papel — aluno
+  redirecionado de `/gestor` e `/professor`; isolamento de `localStorage`
+  por instituição/aluno intacto; console e stderr sem erros; sem overflow em
+  375 px) — nenhuma regressão da reestruturação. **O modo real não foi
+  exercitado contra um banco real** — não há projeto Supabase neste
+  ambiente; é o próximo bloqueador real, documentado em `PERSISTENCE.md`.
 
 Primeira jornada institucional completa e demonstrável, integrando os módulos
 existentes sem criar engines, integrações, banco ou autenticação nova.

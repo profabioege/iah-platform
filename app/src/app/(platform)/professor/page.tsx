@@ -5,7 +5,6 @@ import { localMissionRepository } from "@/modules/library";
 import { isGoogleWorkspaceConfigured } from "@/modules/integrations";
 import { createInstitutionalClassMonitor, getDefaultRepositories } from "@/modules/platform";
 import { getWorkspaceContext } from "@/modules/workspace";
-import { isAuthConfigured } from "@/lib/auth-flags";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -41,7 +40,7 @@ export default async function ProfessorPage() {
   const mission = missions[0];
   const googleConfigured = isGoogleWorkspaceConfigured();
   const classrooms = await listClassroomRows();
-  const workspace = isAuthConfigured() ? null : await getWorkspaceContext();
+  const workspace = await getWorkspaceContext();
 
   // Acompanhamento institucional (M17) — substitui definitivamente o
   // simulated-class-monitor; mostra a primeira Turma do Professor
@@ -90,6 +89,7 @@ export default async function ProfessorPage() {
         <ClassPanel
           students={students}
           institutionId={workspace?.institution.id ?? ""}
+          classroomId={activeClassroom?.id ?? ""}
           missionId={mission?.id ?? ""}
           reviewer={{
             id: workspace?.user.id ?? "professor",

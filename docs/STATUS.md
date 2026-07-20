@@ -1,22 +1,23 @@
 # Status — IAH Educacional
 
-> **M21 — Ciclo Institucional de Aprendizagem (20/07/2026):** a Plataforma
-> executa e demonstra a primeira jornada institucional completa: Gestor vê a
-> Mission não publicada → Professor (2º EM A) abre a Lesson e publica → Aluno
-> vê, inicia, produz, entrega e reflete → Professor abre a entrega e registra
-> conceito, critérios e devolutiva → Aluno recebe a devolutiva → Gestor vê os
-> indicadores refletindo cada transição (Missions ativas, entregas, avaliações,
-> engajamento por turma). Cenário oficial: Instituto Horizonte · Fabio Ege ·
-> 2º EM A · Lesson "Desinformação e verificação de fontes" · Mission 01.
-> Estados explícitos com transições validadas (Mission: draft→published→closed;
-> entrega: not_started→in_progress→submitted→reviewed). Fonte única: os três
-> perfis leem os mesmos repositórios institucionais + o trabalho do aluno em
-> `localStorage` isolado por instituição/aluno; adapters locais espelham as
-> transições no navegador demonstrativo. Persistência segue local e por sessão
-> — a jornada entre perfis pressupõe o mesmo navegador; banco real continua
-> sendo o bloqueador para uso com alunos reais. Lint, tipagem, build de
-> produção e jornada na build iniciada validados; console limpo; sem overflow
-> em desktop, 768 px e 375 px.
+> **M22 — Fundação de Produção: Persistência e Autenticação Reais (20/07/2026):**
+> o código de um modo REAL completo existe agora ao lado do modo demonstração —
+> uma única flag (`isAuthConfigured()`) decide qual dos dois está ativo, e
+> configuração parcial das credenciais nunca é aceita silenciosamente. No modo
+> real: login por e-mail/senha (Auth.js Credentials, hash scrypt, contra o
+> banco) ou Google; toda a jornada do M21 (publicar Lesson/Mission, produzir,
+> entregar, refletir, avaliar, devolutiva, indicadores do Gestor) passa a
+> gravar em Supabase/PostgreSQL via Server Actions, nunca mais em `localStorage`
+> como fonte de verdade; RLS habilitada em **todas** as tabelas, sem nenhuma
+> política permissiva — o banco só é acessado pelo servidor (service role),
+> autorização por tenant/papel aplicada na camada de serviço (D-041). **Este
+> ambiente de desenvolvimento não tem projeto Supabase** — o modo real está
+> implementado, tipado e compilado, mas **nunca foi exercitado contra um banco
+> real**; a validação entre navegadores/dispositivos diferentes é o próximo
+> bloqueador real para uso com alunos reais (checklist em `PERSISTENCE.md`). O
+> modo demonstração (M15–M21) foi revalidado no navegador nesta Sprint — login,
+> publicação, gate por papel, isolamento por aluno — sem regressão, console
+> limpo. Lint, tipagem e build de produção limpos.
 
 > **Correção de marca (19/07/2026):** o vetor da plataforma foi confrontado
 > novamente com o arquivo oficial `logoIAH1.png` fornecido pelo fundador. A
@@ -35,7 +36,7 @@ Fotografia do estado atual do projeto. **Este é o primeiro documento a consulta
 
 ## Estado atual
 
-Projeto em **fase de preparação da primeira implantação comercial**, com um funil comercial completo: Landing (pitch) → `/demonstracao` (conversão) → confirmação. A Plataforma executa o **fluxo completo de aprendizagem** (M17): Professor seleciona uma Turma real do Instituto Horizonte (instituição fictícia do ambiente de demonstração, D-039 — o Cliente Fundador real é tratado à parte, fora do produto), monta uma Lesson, publica a Mission, o Aluno investiga e entrega, e o Professor acompanha — tudo sobre a arquitetura institucional (`modules/platform`), sem depender mais de dados simulados soltos fora dela. Desde a M15, **toda a Plataforma exige login** (autenticação local simulada do Institutional Workspace — contas do Instituto Horizonte, senha de demonstração exibida na tela de login); autenticação real (Auth.js + Google) segue pronta e dormente. Nenhum banco de dados — persistência do aluno em localStorage; turmas e acompanhamento vêm do seed institucional do Instituto Horizonte (fictício, rotulado).
+Projeto em **fase de preparação da primeira implantação comercial**, com um funil comercial completo: Landing (pitch) → `/demonstracao` (conversão) → confirmação. A Plataforma executa o **fluxo completo de aprendizagem** (M17/M21): Gestor acompanha, Professor seleciona uma Turma real do Instituto Horizonte (instituição fictícia do ambiente de demonstração, D-039), monta uma Lesson, publica a Mission, o Aluno investiga, entrega e reflete, o Professor avalia com devolutiva, e o Gestor vê os indicadores atualizados. Desde a M22, **existe um modo REAL completo** (Auth.js Credentials + Supabase/PostgreSQL, RLS deny-by-default, D-041) ao lado do modo demonstração — uma única flag decide qual está ativo; **este ambiente não tem projeto Supabase**, então o modo real segue implementado e compilado, mas não exercitado contra um banco de verdade. Sem credenciais reais (estado padrão), toda a Plataforma opera no modo demonstração de sempre: autenticação local simulada do Institutional Workspace (contas do Instituto Horizonte, senha exibida na tela de login), persistência do aluno em `localStorage`, turmas e acompanhamento do seed institucional (fictício, rotulado).
 
 ## Product Experience — Epic 01: Executive Experience (19/07/2026)
 
@@ -211,15 +212,16 @@ Domínio definitivo `iaheducacional.com.br` **ainda serve o WordPress temporári
 
 ## Próxima tarefa
 
-**Atenção: a interface mudou de novo desde `ROTEIRO-DEMONSTRACAO.md`** — `/entrar` exige login (contas Beryon, senha na tela) e agora existe um fluxo completo Professor→Aluno→Professor via `/professor/turmas`; **reensaiar o tempo e o roteiro da demonstração segue sendo a tarefa mais urgente** (M08, M09, M15, M16 e agora M17 mudaram a experiência). Em paralelo: **do fundador** (fora do código, ~15 min) — executar os passos de console de `AUTHENTICATION.md`/`SUPABASE.md` e fazer o primeiro login real. **Da próxima Sprint de código**: implementar o `google-classroom-repository` (hoje stub) para sincronizar turmas reais, ou dar ao Estúdio de Missões/Currículo uma tela de autoria (Unidades/Temas ainda só existem em seed). Painel do Gestor MVP Comercial segue planejado no `ROADMAP.md` — o `/gestor` é o esqueleto institucional dele, não os indicadores agregados. Pendências herdadas de M12–M14 seguem as mesmas (retomada inteligente de etapa, `KnowledgeReference` formal, catálogo BNCC).
+**Ativar o modo real é a tarefa mais urgente e o único bloqueador restante para uso com alunos reais.** O código está pronto (M22) — falta só a execução: criar o projeto Supabase, aplicar as migrations `0001`–`0005`, definir as três variáveis (`AUTH_SECRET`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`) e validar a jornada completa entre navegadores diferentes (checklist em `PERSISTENCE.md`). Em paralelo, **reensaiar o tempo e o roteiro da demonstração** segue pendente (a interface mudou muito desde `ROTEIRO-DEMONSTRACAO.md` — M08, M09, M15–M17, M21 e M22 mudaram a experiência). Depois de validado o modo real: implementar o `google-classroom-repository` (hoje stub) para sincronizar turmas reais, ou dar ao Estúdio de Missões/Currículo uma tela de autoria (Unidades/Temas ainda só existem em seed). Pendências herdadas de M12–M14 seguem as mesmas (retomada inteligente de etapa, `KnowledgeReference` formal, catálogo BNCC).
 
 ## Riscos conhecidos
 
 - **Meta de tempo da demonstração ainda não validada por um ensaio humano:** a validação técnica confirmou que o fluxo funciona sem erro e sem quebra visual em 5 larguras, mas não mede tempo de fala humana — a meta de 15 (ou 20?) minutos segue não confirmada na prática.
-- **Dados do aluno vivem só no dispositivo** (localStorage): trocar de navegador/computador perde o progresso. Aceitável para demonstração pontual; inviável para uso continuado em turma real sem banco. Isso também limita "Minha Lesson" (M17): só aparece se a mesma Lesson foi criada neste dispositivo.
-- **Turmas do Painel do Professor são o seed institucional Beryon** (M16/M17): reais no formato/estrutura, mas os alunos continuam fictícios e rotulados — qualquer demonstração precisa deixar isso claro.
-- **Seed institucional em memória por processo**: `MissionAssignment`/`Production`/`Reflection` escritos via `/professor/turmas` vivem só enquanto o servidor não reinicia (mesma regra de nunca persistir dado fictício em banco) — um redeploy limpa o estado publicado.
-- **Autenticação é local e simulada (M15):** o login exige credenciais, mas a senha é única, pública (exibida na tela) e a sessão é um cookie com o id do usuário — barreira de demonstração, não segurança real; uso público continua dependendo da ativação do Auth.js (M07).
+- **Modo real (M22) não foi exercitado contra um banco de verdade** — este ambiente de desenvolvimento não tem projeto Supabase. O código compila e foi revisado, mas login por senha, gravação em banco e a jornada entre dispositivos diferentes ainda não têm validação de execução real — ver `PERSISTENCE.md`.
+- **Sem as credenciais do modo real, dados do aluno vivem só no dispositivo** (localStorage): trocar de navegador/computador perde o progresso. Aceitável para demonstração pontual; inviável para uso continuado em turma real. Isso também limita "Minha Lesson": só aparece se a mesma Lesson foi criada neste dispositivo.
+- **Turmas do Painel do Professor são o seed institucional do Instituto Horizonte** (fictício, D-039): reais no formato/estrutura, mas os alunos continuam fictícios e rotulados — qualquer demonstração precisa deixar isso claro.
+- **Seed institucional em memória por processo (modo demonstração)**: `MissionAssignment`/`Production`/`Reflection`/`MissionReview` escritos via `/professor/turmas` vivem só enquanto o servidor não reinicia — um redeploy limpa o estado publicado. No modo real, isso não se aplica (grava no banco).
+- **Autenticação local simulada (M15) segue sendo o padrão sem credenciais do modo real:** a senha é única, pública (exibida na tela) e a sessão é um cookie com o id do usuário — barreira de demonstração, não segurança real. O modo real (M22, Auth.js Credentials com senha por hash) resolve isso quando ativado.
 - **Roteiro da demonstração desatualizado:** `ROTEIRO-DEMONSTRACAO.md` descreve o acesso direto sem login; o fluxo real agora começa pela tela de login institucional.
 - **Google Workspace segue sem credenciais reais:** a arquitetura está pronta (`modules/integrations`), mas login e Classroom reais dependem de um projeto no Google Cloud Console que ainda não existe — ver `GOOGLE_WORKSPACE.md`.
 - **`LessonAccessibility` (D-028) toca em dado sensível de menor se avançar para implementação**: adaptações para neurodivergentes com rótulo clínico/diagnóstico exigem revisão pedagógica e jurídica (LGPD) antes de qualquer campo ser implementado — hoje é só um contrato nomeado, sem modelagem de dado real.

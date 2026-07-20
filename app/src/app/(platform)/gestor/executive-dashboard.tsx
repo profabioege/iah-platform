@@ -28,6 +28,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { isRealModeClient } from "@/lib/auth-flags";
 import {
   getStudentSubmissionStatus,
   loadStudentWork,
@@ -132,6 +133,10 @@ export function ExecutiveDashboard({
   } | null>(null);
 
   useEffect(() => {
+    // Espelho local "ao vivo" (M21) — só no modo demonstração; no modo
+    // real, os totais vêm prontos do servidor (props), sempre do banco
+    // (fonte de verdade), atualizados a cada carregamento da página.
+    if (isRealModeClient()) return;
     const refreshCycle = () => {
       const studentStates = students.map((student) => {
         const localWork = loadStudentWork(

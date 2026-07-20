@@ -1,13 +1,24 @@
 /**
  * Factory de repositórios — o único lugar que decide qual fonte de dados
- * a plataforma usa. A troca futura de seed → banco real acontece aqui,
- * sem alterar nenhuma página (docs/PERSISTENCE.md).
+ * a plataforma usa (docs/PERSISTENCE.md).
+ *
+ * M22 — critérios de ativação do banco:
+ *  * modo REAL exige a configuração COMPLETA (AUTH_SECRET +
+ *    NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY) — o acesso é
+ *    exclusivamente server-side via service role (D-041);
+ *  * configuração PARCIAL nunca seleciona o banco nem cai em seed
+ *    silenciosamente: lança erro de prontidão explícito;
+ *  * sem nenhuma variável, vale o modo demonstração (seeds em memória).
  */
+
+import {
+  getPlatformConfigError,
+  isAuthConfigured,
+} from "@/lib/auth-flags";
 
 import type { PlatformRepositories } from "../domain/repositories";
 import { createSeedRepositories } from "./seed/seed-repositories";
 import { createDatabaseRepositories } from "./database/database-repositories";
-import { isDatabaseConfigured } from "./database/supabase-client";
 
 export type RepositorySource = "seed" | "database";
 
@@ -31,9 +42,12 @@ export function createRepositories(
 }
 
 /**
- * Fonte padrão da instância: banco real quando configurado, seeds de
- * demonstração caso contrário. Nenhum consumidor decide isso sozinho.
+ * Fonte padrão da instância: banco real quando o modo real está
+ * completamente configurado; seeds de demonstração quando nada está
+ * configurado. Nenhum consumidor decide isso sozinho.
  */
 export function getDefaultRepositories(): PlatformRepositories {
-  return createRepositories(isDatabaseConfigured() ? "database" : "seed");
+  const configError = getPlatformConfigError();
+  if (configError) throw new Error(configError);
+  return createRepositories(isAuthConfigured() ? "database" : "seed");
 }

@@ -14,6 +14,7 @@ import type { Mission } from "@/modules/library";
 import type { KnowledgeDocument } from "@/modules/knowledge";
 import { getLessonRepository, type Lesson } from "@/modules/lesson";
 import type { StudentMissionSnapshot } from "@/modules/classroom";
+import { isRealModeClient } from "@/lib/auth-flags";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -54,6 +55,7 @@ export function TurmasExplorer({
   knowledgeDocuments: KnowledgeDocument[];
 }) {
   const router = useRouter();
+  const realMode = isRealModeClient();
   const [selectedClassroomId, setSelectedClassroomId] = React.useState(
     classroomLifecycles.find((item) => item.activeAssignment)?.classroom.id ??
       classroomLifecycles[0]?.classroom.id ??
@@ -66,8 +68,10 @@ export function TurmasExplorer({
 
   React.useEffect(() => {
     getLessonRepository().list().then(setLessons);
-    setLocalAssignments(listLocalMissionAssignments(institutionId));
-  }, [institutionId]);
+    // Espelho local de publicações (M21) — só no modo demonstração; no
+    // modo real, mission_assignments é a única fonte (D-041).
+    if (!realMode) setLocalAssignments(listLocalMissionAssignments(institutionId));
+  }, [institutionId, realMode]);
 
   const currentBase = classroomLifecycles.find(
     (c) => c.classroom.id === selectedClassroomId,
@@ -98,10 +102,12 @@ export function TurmasExplorer({
       missionId: lesson.missionId,
       lessonId: lesson.id,
     });
-    saveLocalMissionAssignment(assignment);
-    setLocalAssignments((currentAssignments) =>
-      mergeAssignments(currentAssignments, [assignment]),
-    );
+    if (!realMode) {
+      saveLocalMissionAssignment(assignment);
+      setLocalAssignments((currentAssignments) =>
+        mergeAssignments(currentAssignments, [assignment]),
+      );
+    }
     setPublishing(false);
     router.refresh();
   }
@@ -220,6 +226,7 @@ export function TurmasExplorer({
                 <ClassPanel
                   students={current.snapshot}
                   institutionId={institutionId}
+                  classroomId={current.classroom.id}
                   missionId={current.activeAssignment.missionId}
                   reviewer={reviewer}
                   criteria={missionCriteria(

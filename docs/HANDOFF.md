@@ -1,17 +1,19 @@
 # HANDOFF — IAH Educacional
 
-> **Retomada após a M21 — Ciclo Institucional de Aprendizagem (20/07/2026):**
-> a jornada Gestor → Professor publica → Aluno realiza e entrega → Professor
-> avalia → Aluno recebe devolutiva → Gestor vê indicadores está completa e
-> demonstrável no cenário oficial (Instituto Horizonte, 2º EM A, Lesson
-> "Desinformação e verificação de fontes", Mission 01). Estados: Mission
-> draft→published→closed; entrega not_started→in_progress→submitted→reviewed
-> (derivada dos dados, `getStudentSubmissionStatus`). A demonstração pressupõe
-> um único navegador (o trabalho do aluno vive em `localStorage` isolado por
-> instituição/aluno; adapters locais espelham publicações e avaliações da
-> sessão). O bloqueador para uso com alunos reais segue sendo banco +
-> autenticação real (checklist em `PERSISTENCE.md`). Validação completa na
-> build de produção; ver `CHANGELOG.md` (M21) para o detalhe.
+> **Retomada após a M22 — Fundação de Produção (20/07/2026):** o bloqueador
+> registrado ao final da M21 (banco + autenticação real) tem código completo
+> agora — Auth.js Credentials (senha com hash scrypt, papel/instituição do
+> vínculo persistido, nunca do cliente) + Supabase/PostgreSQL (RLS habilitada
+> em todas as tabelas, sem política permissiva; acesso só pelo servidor via
+> service role, D-041). Uma única flag (`isAuthConfigured()`,
+> `src/lib/auth-flags.ts`) decide entre modo real e modo demonstração;
+> configuração parcial das 3 credenciais nunca é aceita silenciosamente.
+> **Este ambiente de desenvolvimento não tem projeto Supabase** — o modo real
+> compila e foi revisado, mas nunca rodou contra um banco de verdade; validar
+> a jornada completa entre navegadores diferentes é o próximo bloqueador real
+> (checklist de ativação em `PERSISTENCE.md`). O modo demonstração (M15–M21)
+> foi revalidado no navegador nesta Sprint, sem regressão. Ver `CHANGELOG.md`
+> (M22) e `DECISIONS.md` D-041 para o detalhe completo.
 
 Documento único de transição de contexto. Escrito para que uma nova conversa (ou uma nova pessoa) retome o projeto sem precisar reconstruir nada do histórico. Se este documento divergir do código, o código manda — mas a divergência deve ser corrigida aqui.
 
@@ -203,7 +205,7 @@ Nenhuma é obrigatória para o site subir — cada ausência apenas desliga a fu
 | `CONTACT_TO_EMAIL` / `CONTACT_FROM_EMAIL` | Destino/remetente via Resend | usa `contato@iaheducacional.com.br` / remetente de teste |
 | `NEXT_PUBLIC_WHATSAPP_NUMBER` | Botão de WhatsApp (componente pronto, não usado no fluxo atual) | botão não aparece |
 
-Já usadas pela autenticação/persistência quando definidas (M07 — ver `AUTHENTICATION.md`/`SUPABASE.md` e `app/.env.example`): `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_SECRET`, `AUTH_ALLOWED_EMAILS`, `AUTH_DEFAULT_INSTITUTION_SLUG`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`. Reservadas para o futuro, ainda não usadas: `OPENAI_API_KEY`, credenciais de Canva.
+**Modo real (M22 — ver `PERSISTENCE.md`):** `AUTH_SECRET` + `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` — as **três** precisam estar definidas juntas; um subconjunto lança erro explícito em vez de ativar parcialmente. `IAH_DEMO_PASSWORD` só é lida pelo script `app/db/seed/seed-demo.mjs` (nunca pela aplicação). Login com Google é opcional, somado ao login por senha: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_ALLOWED_EMAILS`, `AUTH_DEFAULT_INSTITUTION_SLUG` (M07 — ver `AUTHENTICATION.md`/`SUPABASE.md`). `NEXT_PUBLIC_SUPABASE_ANON_KEY` não é usada pelo núcleo institucional (acesso é sempre via service role, server-side) — mantida só para os stubs de Knowledge/Curriculum. Reservadas para o futuro, ainda não usadas: `OPENAI_API_KEY`, credenciais de Canva.
 
 Segredos existem **só** em `app/.env.local` (gitignored) e no painel da Vercel — nunca em código ou commit.
 

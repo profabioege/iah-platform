@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 
 import type { Mission } from "@/modules/library";
-import type { StudentWorkScope } from "@/modules/classroom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,7 +33,11 @@ import {
   splitQuestions,
 } from "./parse-mission-content";
 import { minutesRemainingFrom, TOTAL_MISSION_MINUTES } from "./mission-timing";
-import { useStudentWork } from "./use-student-work";
+import {
+  useStudentWork,
+  type StudentWorkSource,
+  type WorkSaveStatus,
+} from "./use-student-work";
 
 const TOTAL_STEPS = 9;
 
@@ -47,16 +50,13 @@ const TOTAL_STEPS = 9;
  */
 export function MissionFlow({
   mission,
-  scope,
+  source,
 }: {
   mission: Mission;
-  /** Instituição + usuário do Institutional Workspace — isola o trabalho salvo por aluno. */
-  scope: StudentWorkScope | null;
+  source: StudentWorkSource;
 }) {
-  const { work, update, delivered, recorded, submissionStatus } = useStudentWork(
-    scope,
-    mission.id,
-  );
+  const { work, update, flush, saveStatus, delivered, recorded, submissionStatus } =
+    useStudentWork(source, mission.id);
   const reviewed = submissionStatus === "reviewed";
   const parsed = React.useMemo(
     () => parseMissionContent(mission.didacticMaterials),
@@ -184,6 +184,7 @@ export function MissionFlow({
                 <textarea
                   value={work.production}
                   onChange={(e) => update({ production: e.target.value })}
+                  onBlur={flush}
                   readOnly={delivered}
                   autoFocus={!delivered}
                   rows={12}
@@ -198,7 +199,7 @@ export function MissionFlow({
                 <p className="mt-2 text-xs text-muted-foreground">
                   {delivered
                     ? "Já entregue — reabra na etapa Entrega para editar."
-                    : "Salvo automaticamente enquanto você escreve."}
+                    : saveStatusLabel(saveStatus, "Salvo automaticamente enquanto você escreve.")}
                 </p>
               </CardContent>
             </Card>
@@ -304,6 +305,7 @@ export function MissionFlow({
               prompt="Responda livremente, considerando as perguntas acima."
               value={work.reflection}
               onChange={(value) => update({ reflection: value })}
+              onBlur={flush}
               recorded={recorded}
               delivered={delivered}
               recordedAt={work.reflectionRecordedAt}
@@ -511,6 +513,13 @@ function InvestigationStep({
 function formatDate(iso: string | null): string {
   if (!iso) return "";
   return new Date(iso).toLocaleDateString("pt-BR");
+}
+
+/** Nunca anuncia sucesso antes da confirmação do servidor (modo real, M22). */
+function saveStatusLabel(status: WorkSaveStatus, idleLabel: string): string {
+  if (status === "saving") return "Salvando…";
+  if (status === "error") return "Não foi possível salvar agora — sua última alteração pode não ter sido salva.";
+  return idleLabel;
 }
 
 function FlowSkeleton() {

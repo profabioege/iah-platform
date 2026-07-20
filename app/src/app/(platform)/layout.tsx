@@ -2,7 +2,6 @@ import { AppHeader } from "@/components/layout/app-header";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { SessionControls } from "@/components/layout/session-controls";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { isAuthConfigured } from "@/lib/auth-flags";
 import { getWorkspaceContext, ROLE_LABEL } from "@/modules/workspace";
 
 /**
@@ -20,7 +19,7 @@ export default async function PlatformLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const context = isAuthConfigured() ? null : await getWorkspaceContext();
+  const context = await getWorkspaceContext();
 
   return (
     <div className="dark bg-background text-foreground font-sans">

@@ -117,6 +117,8 @@ export interface Production {
   classroomId: string;
   studentId: string;
   missionId: string;
+  /** Primeiro início explícito da investigação (ISO); null até o aluno começar. */
+  startedAt: string | null;
   content: string;
   status: "draft" | "delivered";
   deliveredAt: string | null;
@@ -131,8 +133,29 @@ export interface Reflection {
   studentId: string;
   missionId: string;
   text: string;
-  recordedAt: string;
+  /** null enquanto rascunho — só preenchido quando o Aluno registra (M22). */
+  recordedAt: string | null;
   visibility: "private" | "shared_with_teacher";
+}
+
+/**
+ * Avaliação humana do Professor sobre a entrega de um Aluno numa Missão
+ * (M21/M22) — conceito, critérios observados e devolutiva, num registro
+ * por aluno×missão×turma. Espelha `StudentWorkReview` (`modules/
+ * classroom`) com o envelope institucional multi-tenant.
+ */
+export interface MissionReview {
+  id: string;
+  institutionId: string;
+  classroomId: string;
+  studentId: string;
+  missionId: string;
+  grade: string;
+  observedCriteria: string[];
+  feedback: string;
+  reviewerId: string;
+  reviewerName: string;
+  reviewedAt: string;
 }
 
 /** Provedores de integração/importação reconhecidos pela plataforma. */

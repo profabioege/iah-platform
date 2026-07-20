@@ -55,6 +55,15 @@ interface Loaded {
 }
 
 /**
+ * Fonte do progresso: no modo REAL (M22), o servidor já leu do banco
+ * (fonte de verdade) e entrega pronto; no modo demonstração, segue vindo
+ * do dispositivo (localStorage, `modules/classroom`).
+ */
+export type DashboardSource =
+  | { kind: "real"; works: Record<string, StudentWork>; lastReflection?: StudentWork }
+  | { kind: "demo"; scope: StudentWorkScope | null };
+
+/**
  * Home da Plataforma: mostra a Missão ativa e o progresso real do aluno.
  *
  * A Missão ativa é a primeira ainda não concluída da lista (o repositório já
@@ -65,38 +74,49 @@ interface Loaded {
 export function DashboardHome({
   missions,
   classroomId,
-  scope,
+  source,
   initialAssignments,
 }: {
   missions: DashboardMission[];
   /** Turma do aluno (Institutional Workspace, M17) — habilita o card "Minha Lesson". */
   classroomId?: string;
-  /** Instituição + usuário do Institutional Workspace — isola o trabalho salvo por aluno. */
-  scope: StudentWorkScope | null;
+  source: DashboardSource;
   initialAssignments: MissionAssignment[];
 }) {
-  const [loaded, setLoaded] = React.useState<Loaded | null>(null);
+  const [loaded, setLoaded] = React.useState<Loaded | null>(
+    source.kind === "real"
+      ? { works: source.works, lastReflection: source.lastReflection }
+      : null,
+  );
   const [assignments, setAssignments] = React.useState(initialAssignments);
 
   React.useEffect(() => {
+    if (source.kind === "real") {
+      setLoaded({ works: source.works, lastReflection: source.lastReflection });
+      return;
+    }
     const works: Record<string, StudentWork> = {};
     for (const mission of missions) {
-      works[mission.id] = scope
-        ? loadStudentWork(scope, mission.id)
+      works[mission.id] = source.scope
+        ? loadStudentWork(source.scope, mission.id)
         : emptyStudentWork(mission.id);
     }
 
-    const lastReflection = (scope ? listAllStudentWork(scope) : [])
+    const lastReflection = (source.scope ? listAllStudentWork(source.scope) : [])
       .filter(isReflectionRecorded)
       .sort((a, b) =>
         (b.reflectionRecordedAt ?? "").localeCompare(a.reflectionRecordedAt ?? ""),
       )[0];
 
     setLoaded({ works, lastReflection });
-  }, [missions, scope]);
+  }, [missions, source]);
 
+  // Espelho local de publicações (M21) — só existe no modo demonstração;
+  // no modo real, o banco é a única fonte e `revalidatePath` já atualiza
+  // esta rota quando o Professor publica (professor/turmas/actions.ts).
   React.useEffect(() => {
-    if (!scope || !classroomId) return;
+    if (source.kind !== "demo" || !source.scope || !classroomId) return;
+    const scope = source.scope;
     const refresh = () => {
       const local = listLocalMissionAssignments(scope.institutionId, classroomId);
       const merged = new Map(initialAssignments.map((item) => [item.id, item]));
@@ -106,7 +126,7 @@ export function DashboardHome({
     refresh();
     window.addEventListener(MISSION_ASSIGNMENTS_UPDATED_EVENT, refresh);
     return () => window.removeEventListener(MISSION_ASSIGNMENTS_UPDATED_EVENT, refresh);
-  }, [classroomId, initialAssignments, scope]);
+  }, [classroomId, initialAssignments, source]);
 
   // O progresso vive no dispositivo e só é lido após a hidratação; até lá,
   // mostramos o esqueleto para não piscar uma tela vazia.

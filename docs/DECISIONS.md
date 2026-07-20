@@ -440,3 +440,86 @@ como estão professor e alunos e qual é o estágio da disciplina. A arquitetura
 as mesmas superfícies passam a consumir indicadores persistidos por tenant. A
 hierarquia visual e a fronteira de privacidade não mudam; troca-se a fonte, não
 a experiência.
+
+## D-041 — Fundação de Produção: Auth.js Credentials + Supabase real, RLS deny-by-default (20/07/2026)
+
+**Decisão:** Persistência e autenticação reais substituem localStorage/seed em
+memória como fonte de verdade do ciclo pedagógico, preservando integralmente a
+arquitetura existente (D-001, D-023, D-025). Uma única flag decide o modo da
+instância — `isAuthConfigured()` (`src/lib/auth-flags.ts`), verdadeira apenas
+com `AUTH_SECRET` + `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`
+**todas** definidas; qualquer subconjunto lança erro explícito de configuração
+(`getPlatformConfigError()`), nunca cai em seed silenciosamente (regra já
+registrada em D-023, agora aplicada à ativação do modo real inteira).
+
+**Autenticação — Auth.js Credentials, somado ao Google (D-025), nunca dois
+sistemas concorrentes.** `auth.ts` ganha um provider `Credentials`: e-mail e
+senha verificados contra `users.password_hash` (scrypt, `src/lib/password.ts`,
+zero dependência nova) e o papel/instituição vêm de `profiles` — nunca do
+cliente. O papel nunca é escolhido na tela de login (D-de-sempre do
+Institutional Workspace, M15): é sempre o vínculo persistido. O gate por papel
+(`/gestor` exclusivo de administrador, `/professor` vedado a aluno) que antes
+só existia no branch de demonstração do middleware passa a existir também no
+branch real (`auth.config.ts`, callback `authorized`, lendo o papel do JWT).
+
+**Postura de segurança — acesso ao banco exclusivamente server-side, RLS
+deny-by-default.** Todas as tabelas (0001–0004 incluídas) ganham RLS habilitada
+sem nenhuma política permissiva: as chaves anon/authenticated não leem nem
+escrevem nada; o servidor da aplicação usa a service role (que ignora RLS por
+desenho do Postgres) e aplica a autorização por tenant/papel na camada de
+serviço — todo contrato de repositório já exige `institutionId` como primeiro
+parâmetro (D-023), e cada Server Action deriva esse `institutionId` da sessão,
+nunca do cliente. Políticas RLS por tenant para acesso direto do navegador
+ficam para quando (e se) existir esse acesso — política não exercida não é
+criada (mesmo princípio de D-023 para queries especulativas).
+
+**Ponto único de sessão.** `modules/workspace/infrastructure/session.ts`
+(`getWorkspaceContext()`/`getWorkspaceUser()`) passa a resolver usuário, papel,
+instituição, permissões e turmas tanto do banco (sessão Auth.js) quanto do seed
+local (cookie do Workspace) — nenhuma tela decide isso sozinha; as páginas que
+antes faziam `isAuthConfigured() ? null : await getWorkspaceContext()` (um
+guard que, no modo real, nunca chamava a função — bug latente que este
+levantamento encontrou) passam a chamar `getWorkspaceContext()` incondicionalmente.
+
+**Substituição do localStorage como fonte de verdade pedagógica.** Novo
+`createLearningCycleService` (`modules/platform`) grava Produção, Reflexão e
+Avaliação nas tabelas reais (`productions`/`reflections`/`mission_reviews`,
+migration `0005_production_foundation.sql`) devolvendo o mesmo formato
+`StudentWork` que a UI já consumia — nenhuma tela redesenhada (D-001). Server
+Actions (`missoes/[id]/mission-flow/actions.ts`, `professor/actions.ts`)
+derivam `institutionId`/`classroomId`/`studentId` da sessão, nunca do cliente.
+Autosave de texto usa debounce (800 ms) com flush síncrono no blur e antes de
+qualquer transição discreta (entregar/registrar), sequenciado (não paralelo)
+para nunca sobrescrever o rascunho mais recente com uma gravação atrasada — o
+risco concreto de "perder o trabalho do aluno" que a Sprint pediu para evitar.
+`Lesson` (`modules/lesson`) segue o mesmo princípio via Server Actions
+(`lesson-actions.ts`) expostas atrás do MESMO contrato `LessonRepository` —
+`getLessonRepository()` decide sozinho entre remoto e local usando
+`NEXT_PUBLIC_IAH_REAL_MODE`, um espelho público (só booleano, calculado em
+build time no `next.config.ts`) de `isAuthConfigured()`, necessário porque
+componentes "use client" não enxergam variáveis de servidor não prefixadas.
+Os espelhos locais do M21 (`local-mission-assignment-store`, merge otimista no
+`ExecutiveDashboard`/`ClassPanel`) são desativados no modo real — o banco é a
+única fonte; `revalidatePath` já atualiza as rotas quando algo é publicado ou
+avaliado.
+
+**Seed de demonstração como script explícito, nunca em migration.**
+`app/db/seed/seed-demo.mjs` popula o cenário Instituto Horizonte (D-039) num
+projeto Supabase já migrado — idempotente (upsert por id), senha das contas
+lida de `IAH_DEMO_PASSWORD` (nunca em código), sem progresso/entregas
+fictícias pré-gravadas (a jornada nasce limpa; dados pedagógicos vêm do uso
+real, mesmo princípio do ambiente de produção).
+
+**Alternativas descartadas:** Manter duas fontes de verdade (localStorage +
+banco) com sincronização — rejeitado, é exatamente o problema que a Sprint
+pediu para eliminar. RLS com políticas por tenant desde já — rejeitado sem
+usuário autenticado client-side contra o banco para exercitá-las (nenhuma
+política não testada, D-023). Um segundo sistema de autenticação para
+Lesson/StudentWork — rejeitado; tudo passa pelo mesmo `getWorkspaceContext()`
+e pelas mesmas Server Actions.
+
+**Impacto futuro:** Ativar o modo real em produção é só definir as três
+variáveis (Vercel) + aplicar as migrations 0001–0005 + rodar o seed — nenhuma
+tela muda. RLS por tenant entra quando existir acesso direto do navegador ao
+banco. `docs/PERSISTENCE.md` documenta o checklist e os critérios de ativação
+atualizados.

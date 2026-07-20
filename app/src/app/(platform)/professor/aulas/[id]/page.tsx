@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 
-import { auth } from "@/auth";
-import { isAuthConfigured } from "@/lib/auth-flags";
 import { localMissionRepository } from "@/modules/library";
 import { getDefaultKnowledgeRepositories } from "@/modules/knowledge";
 import { getWorkspaceContext, getWorkspaceUser } from "@/modules/workspace";
@@ -28,9 +26,9 @@ export default async function LessonBuilderPage({
   const author = await resolveAuthor();
   const missions = await localMissionRepository.list();
   const knowledgeDocuments = await getDefaultKnowledgeRepositories().documents.list();
-  // Turmas reais do Instituto Horizonte (M17/D-039) — sem autenticação
-  // real configurada, o Workspace ainda resolve todas as turmas do professor.
-  const workspace = isAuthConfigured() ? null : await getWorkspaceContext();
+  // Turmas reais da Instituição (M17/D-039), resolvidas pelo Workspace —
+  // no modo real, filtradas às turmas do próprio professor (M22).
+  const workspace = await getWorkspaceContext();
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
@@ -46,13 +44,6 @@ export default async function LessonBuilderPage({
 }
 
 async function resolveAuthor(): Promise<string> {
-  if (isAuthConfigured()) {
-    const session = await auth();
-    if (session?.user?.name) return session.user.name;
-    if (session?.user?.email) return session.user.email;
-  } else {
-    const user = await getWorkspaceUser();
-    if (user) return user.name;
-  }
-  return "Professor(a) de demonstração";
+  const user = await getWorkspaceUser();
+  return user?.name ?? "Professor(a) de demonstração";
 }
