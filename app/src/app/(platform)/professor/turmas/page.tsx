@@ -75,6 +75,7 @@ export default async function TurmasPage() {
 
       <TurmasExplorer
         institutionId={workspace.institution.id}
+        reviewer={{ id: workspace.user.id, name: workspace.user.name }}
         classroomLifecycles={classroomLifecycles}
         missions={missions}
         knowledgeDocuments={knowledgeDocuments}

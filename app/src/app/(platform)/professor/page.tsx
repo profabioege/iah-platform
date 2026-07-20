@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { ClassPanel } from "./class-panel";
 import { ClassroomsSection, type ClassroomRow } from "./classrooms-section";
 import { TeacherWorkspace } from "./teacher-workspace";
+import { parseMissionContent } from "../missoes/[id]/mission-flow/parse-mission-content";
 
 
 export const metadata: Metadata = {
@@ -86,7 +87,23 @@ export default async function ProfessorPage() {
       <ClassroomsSection classrooms={classrooms} />
 
       <section id="acompanhamento" className="scroll-mt-20">
-        <ClassPanel students={students} />
+        <ClassPanel
+          students={students}
+          institutionId={workspace?.institution.id ?? ""}
+          missionId={mission?.id ?? ""}
+          reviewer={{
+            id: workspace?.user.id ?? "professor",
+            name: workspace?.user.name ?? "Professor(a) responsável",
+          }}
+          criteria={
+            mission
+              ? parseMissionContent(mission.didacticMaterials).auditCriteria.map(
+                  (criterion) =>
+                    `${criterion.label}: ${criterion.description}`,
+                )
+              : []
+          }
+        />
       </section>
 
       <Card>

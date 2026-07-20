@@ -1,6 +1,7 @@
 import { localMissionRepository } from "@/modules/library";
 import { isAuthConfigured } from "@/lib/auth-flags";
 import { getWorkspaceContext } from "@/modules/workspace";
+import { getDefaultRepositories } from "@/modules/platform";
 
 import { DashboardHome, type DashboardMission } from "./dashboard-home";
 
@@ -33,5 +34,20 @@ export default async function DashboardPage() {
       }
     : null;
 
-  return <DashboardHome missions={items} classroomId={classroomId} scope={scope} />;
+  const initialAssignments =
+    workspace?.role === "student" && classroomId
+      ? await getDefaultRepositories().missionAssignments.listByClassroom(
+          workspace.institution.id,
+          classroomId,
+        )
+      : [];
+
+  return (
+    <DashboardHome
+      missions={items}
+      classroomId={classroomId}
+      scope={scope}
+      initialAssignments={initialAssignments}
+    />
+  );
 }

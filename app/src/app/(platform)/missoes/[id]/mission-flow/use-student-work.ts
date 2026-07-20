@@ -4,6 +4,7 @@ import * as React from "react";
 
 import {
   emptyStudentWork,
+  getStudentSubmissionStatus,
   isMissionCompleted,
   isProductionDelivered,
   isReflectionRecorded,
@@ -48,5 +49,6 @@ export function useStudentWork(scope: StudentWorkScope | null, missionId: string
     delivered: work ? isProductionDelivered(work) : false,
     recorded: work ? isReflectionRecorded(work) : false,
     completed: work ? isMissionCompleted(work) : false,
+    submissionStatus: work ? getStudentSubmissionStatus(work) : "not_started",
   };
 }

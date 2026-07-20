@@ -97,6 +97,8 @@ export const DEMO_MISSION_RECORD: MissionRecord = {
 };
 
 /** 10 alunos fictícios (2 por turma) — as mesmas contas de login do Workspace (M15). */
+// Índices 4–5 (2º EM A, turma da jornada demonstrativa M21) começam sem
+// acesso: a jornada Gestor → Professor → Aluno parte do zero nessa turma.
 const DEMO_ROSTER: Array<{
   status: StudentMissionStatus;
   lastAccessAt: string | null;
@@ -105,12 +107,12 @@ const DEMO_ROSTER: Array<{
   { status: "reflexao", lastAccessAt: "2026-07-16T10:41:00-03:00" },
   { status: "entregue", lastAccessAt: "2026-07-16T10:35:00-03:00" },
   { status: "entregue", lastAccessAt: "2026-07-16T10:33:00-03:00" },
-  { status: "rascunho", lastAccessAt: "2026-07-16T10:40:00-03:00" },
-  { status: "produzindo", lastAccessAt: "2026-07-16T10:43:00-03:00" },
+  { status: "nao_acessou", lastAccessAt: null },
+  { status: "nao_acessou", lastAccessAt: null },
   { status: "investigando", lastAccessAt: "2026-07-16T10:39:00-03:00" },
   { status: "visualizou", lastAccessAt: "2026-07-16T10:29:00-03:00" },
-  { status: "nao_acessou", lastAccessAt: null },
-  { status: "nao_acessou", lastAccessAt: null },
+  { status: "rascunho", lastAccessAt: "2026-07-16T10:40:00-03:00" },
+  { status: "produzindo", lastAccessAt: "2026-07-16T10:43:00-03:00" },
 ];
 
 export const DEMO_STUDENTS: Student[] = DEMO_ROSTER.map((_, i) => {

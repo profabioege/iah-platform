@@ -12,14 +12,30 @@ import { revalidatePath } from "next/cache";
 import {
   createMissionPublishingService,
   getDefaultRepositories,
+  type MissionAssignment,
 } from "@/modules/platform";
+import { getWorkspaceContext } from "@/modules/workspace";
 
 export async function publishLessonMission(params: {
   institutionId: string;
   classroomId: string;
   missionId: string;
-}): Promise<void> {
+  lessonId: string;
+}): Promise<MissionAssignment> {
+  const workspace = await getWorkspaceContext();
+  if (!workspace || workspace.role === "student") {
+    throw new Error("Apenas a equipe pedagógica pode publicar Missions.");
+  }
+  if (
+    workspace.institution.id !== params.institutionId ||
+    !workspace.classrooms.some((classroom) => classroom.id === params.classroomId)
+  ) {
+    throw new Error("Turma fora do contexto institucional atual.");
+  }
   const service = createMissionPublishingService(getDefaultRepositories());
-  await service.publish(params);
+  const assignment = await service.publish(params);
   revalidatePath("/professor/turmas");
+  revalidatePath("/dashboard");
+  revalidatePath("/gestor");
+  return assignment;
 }

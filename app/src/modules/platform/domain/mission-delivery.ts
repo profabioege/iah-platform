@@ -25,12 +25,26 @@ export interface MissionAssignment {
   institutionId: string;
   classroomId: string;
   missionId: string;
+  /** Lesson que contextualiza esta publicação para Professor e Aluno. */
+  lessonId: string | null;
   /** Versão do MissionTemplate vigente na publicação (docs/AUTHORING_MODEL.md). */
   missionVersion: number;
   publishedAt: string;
   dueAt: string | null;
+  status: MissionAssignmentStatus;
+  closedAt: string | null;
   /** Espelho no provedor externo, quando publicada também lá (ex.: courseWork do Google). */
   externalAssignmentId: string | null;
+}
+
+export type MissionAssignmentStatus = "draft" | "published" | "closed";
+
+export function canTransitionMissionAssignment(
+  from: MissionAssignmentStatus,
+  to: MissionAssignmentStatus,
+): boolean {
+  return from === to || (from === "draft" && to === "published") ||
+    (from === "published" && to === "closed");
 }
 
 /** Publica Missões em Turmas e acompanha as entregas resultantes. */
@@ -39,6 +53,7 @@ export interface MissionPublishingService {
     institutionId: string;
     classroomId: string;
     missionId: string;
+    lessonId?: string | null;
     dueAt?: string | null;
   }): Promise<MissionAssignment>;
 

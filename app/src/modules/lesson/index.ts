@@ -25,6 +25,7 @@ export {
 export type { LessonRepository } from "./domain/lesson-repository";
 
 export { localLessonRepository } from "./infrastructure/local-lesson-repository";
+export { DEMO_LESSON } from "./seeds/demo-seed";
 
 import { localLessonRepository } from "./infrastructure/local-lesson-repository";
 import type { LessonRepository } from "./domain/lesson-repository";

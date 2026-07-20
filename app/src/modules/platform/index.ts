@@ -34,8 +34,10 @@ export type {
   AssistedEvaluationService,
   AssistedEvaluationSuggestion,
   MissionAssignment,
+  MissionAssignmentStatus,
   MissionPublishingService,
 } from "./domain/mission-delivery";
+export { canTransitionMissionAssignment } from "./domain/mission-delivery";
 
 export type {
   AcademicYearRepository,
@@ -73,6 +75,11 @@ export {
   type RepositorySource,
 } from "./infrastructure/repository-factory";
 export { isDatabaseConfigured } from "./infrastructure/database/supabase-client";
+export {
+  listLocalMissionAssignments,
+  saveLocalMissionAssignment,
+  MISSION_ASSIGNMENTS_UPDATED_EVENT,
+} from "./infrastructure/local/local-mission-assignment-store";
 export {
   getSupabaseAdminClient,
   isAdminDatabaseConfigured,

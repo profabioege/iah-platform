@@ -19,15 +19,18 @@ export function createMissionPublishingService(
   repositories: PlatformRepositories,
 ): MissionPublishingService {
   return {
-    async publish({ institutionId, classroomId, missionId, dueAt }) {
+    async publish({ institutionId, classroomId, missionId, lessonId, dueAt }) {
       const assignment = {
         id: crypto.randomUUID(),
         institutionId,
         classroomId,
         missionId,
+        lessonId: lessonId ?? null,
         missionVersion: 1,
         publishedAt: new Date().toISOString(),
         dueAt: dueAt ?? null,
+        status: "published" as const,
+        closedAt: null,
         externalAssignmentId: null,
       };
       await repositories.missionAssignments.save(institutionId, assignment);

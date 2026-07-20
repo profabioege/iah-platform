@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
-import { getWorkspaceContext, WORKSPACE_ENROLLMENTS, WORKSPACE_TEACHER } from "@/modules/workspace";
-import { DEMO_MISSION_PROGRESS } from "@/modules/platform/seeds/demo-seed";
+import { getWorkspaceContext } from "@/modules/workspace";
+import { getDefaultRepositories } from "@/modules/platform";
 
 import { ExecutiveDashboard } from "./executive-dashboard";
 
@@ -13,61 +13,90 @@ export const metadata: Metadata = {
 /**
  * Executive Experience — principal leitura institucional do Gestor.
  *
- * Nesta fase, os números vêm exclusivamente do Workspace e do seed
- * institucional já usado por toda a demonstração. Não existe analytics
- * fabricado nem integração nova: a UI organiza os dados atuais para responder
- * rapidamente como estão implantação, professor, alunos e disciplina.
+ * Os números são projeções dos mesmos repositórios institucionais consumidos
+ * pelos fluxos Professor e Aluno; o adapter local da M21 sobrepõe apenas as
+ * transições realizadas no navegador demonstrativo.
  */
 export default async function GestorPage() {
   const context = await getWorkspaceContext();
   if (!context) return null; // middleware garante sessão; guarda defensiva
+  const repositories = getDefaultRepositories();
+  const [teachers, missionRecords] = await Promise.all([
+    repositories.teachers.listByInstitution(context.institution.id),
+    repositories.missions.list(),
+  ]);
+  // Mission ativa lida do repositório institucional — nunca fixa em código.
+  const activeMissionId = missionRecords[0]?.id ?? "";
 
-  const classroomRows = context.classrooms.map((classroom) => {
-    const enrollments = WORKSPACE_ENROLLMENTS.filter(
-      (enrollment) => enrollment.classroomId === classroom.id,
-    );
-    const progress = DEMO_MISSION_PROGRESS.filter(
-      (item) => item.classroomId === classroom.id,
-    );
+  const classroomData = await Promise.all(context.classrooms.map(async (classroom) => {
+    const [students, progress, assignments] = await Promise.all([
+      repositories.students.listByClassroom(context.institution.id, classroom.id),
+      activeMissionId
+        ? repositories.missionProgress.listByClassroomMission(
+            context.institution.id,
+            classroom.id,
+            activeMissionId,
+          )
+        : Promise.resolve([]),
+      repositories.missionAssignments.listByClassroom(
+        context.institution.id,
+        classroom.id,
+      ),
+    ]);
     const activeCount = progress.filter(
       (item) => item.status !== "nao_acessou",
     ).length;
 
     return {
-      id: classroom.id,
-      name: classroom.name,
-      studentCount: enrollments.length,
-      activeCount,
-      engagement:
-        enrollments.length > 0
-          ? Math.round((activeCount / enrollments.length) * 100)
-          : 0,
+      classroom: {
+        id: classroom.id,
+        name: classroom.name,
+        studentCount: students.length,
+        activeCount,
+        engagement:
+          students.length > 0
+            ? Math.round((activeCount / students.length) * 100)
+            : 0,
+      },
+      students: students.map((student) => ({
+        id: student.id,
+        classroomId: classroom.id,
+        missionId: activeMissionId,
+        status: progress.find((item) => item.studentId === student.id)?.status ?? "nao_acessou",
+      })),
+      assignments,
     };
-  });
+  }));
+
+  const classroomRows = classroomData.map((item) => item.classroom);
+  const studentRows = classroomData.flatMap((item) => item.students);
+  const assignmentRows = classroomData.flatMap((item) => item.assignments);
 
   const totalStudents = classroomRows.reduce(
     (total, classroom) => total + classroom.studentCount,
     0,
   );
-  const activeStudents = DEMO_MISSION_PROGRESS.filter(
+  const activeStudents = studentRows.filter(
     (item) => item.status !== "nao_acessou",
   ).length;
-  const deliveredStudents = DEMO_MISSION_PROGRESS.filter((item) =>
+  const deliveredStudents = studentRows.filter((item) =>
     ["entregue", "reflexao", "concluiu"].includes(item.status),
   ).length;
-  const completedStudents = DEMO_MISSION_PROGRESS.filter(
+  const completedStudents = studentRows.filter(
     (item) => item.status === "concluiu",
   ).length;
+  const teacher = teachers[0];
 
   return (
     <ExecutiveDashboard
+      institutionId={context.institution.id}
       institutionName={context.institution.name}
       academicYear={context.schoolYear.label}
       managerName={context.user.name}
       subjectName={context.subjects[0]?.name ?? "Inteligência Artificial & Humanidades"}
       teacher={{
-        name: WORKSPACE_TEACHER.name,
-        email: WORKSPACE_TEACHER.email,
+        name: teacher?.name ?? "Professor(a) responsável",
+        email: teacher?.email ?? "",
         classroomCount: context.classrooms.length,
       }}
       classrooms={classroomRows}
@@ -77,6 +106,8 @@ export default async function GestorPage() {
         deliveredStudents,
         completedStudents,
       }}
+      students={studentRows}
+      assignments={assignmentRows}
     />
   );
 }

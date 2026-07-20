@@ -9,6 +9,7 @@
 
 import type { Lesson } from "../domain/lesson";
 import type { LessonRepository } from "../domain/lesson-repository";
+import { DEMO_LESSON } from "../seeds/demo-seed";
 
 // v3 (Sprint M17): `classroomLabel` (texto livre) virou `classroomId`
 // real (-> Classroom, modules/platform) — chave nova para não tentar
@@ -19,9 +20,16 @@ function readAll(): Lesson[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Lesson[]) : [];
+    if (!raw) return [DEMO_LESSON];
+    const lessons = JSON.parse(raw) as Lesson[];
+    // Migração do ambiente M17: navegadores já usados podiam ter uma lista
+    // vazia ou Lessons de outras turmas, mas não a fatia institucional M21.
+    // Preserva todo conteúdo autoral e inclui o seed somente pelo id canônico.
+    return lessons.some((lesson) => lesson.id === DEMO_LESSON.id)
+      ? lessons
+      : [...lessons, DEMO_LESSON];
   } catch {
-    return [];
+    return [DEMO_LESSON];
   }
 }
 

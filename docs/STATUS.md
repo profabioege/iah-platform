@@ -1,5 +1,23 @@
 # Status — IAH Educacional
 
+> **M21 — Ciclo Institucional de Aprendizagem (20/07/2026):** a Plataforma
+> executa e demonstra a primeira jornada institucional completa: Gestor vê a
+> Mission não publicada → Professor (2º EM A) abre a Lesson e publica → Aluno
+> vê, inicia, produz, entrega e reflete → Professor abre a entrega e registra
+> conceito, critérios e devolutiva → Aluno recebe a devolutiva → Gestor vê os
+> indicadores refletindo cada transição (Missions ativas, entregas, avaliações,
+> engajamento por turma). Cenário oficial: Instituto Horizonte · Fabio Ege ·
+> 2º EM A · Lesson "Desinformação e verificação de fontes" · Mission 01.
+> Estados explícitos com transições validadas (Mission: draft→published→closed;
+> entrega: not_started→in_progress→submitted→reviewed). Fonte única: os três
+> perfis leem os mesmos repositórios institucionais + o trabalho do aluno em
+> `localStorage` isolado por instituição/aluno; adapters locais espelham as
+> transições no navegador demonstrativo. Persistência segue local e por sessão
+> — a jornada entre perfis pressupõe o mesmo navegador; banco real continua
+> sendo o bloqueador para uso com alunos reais. Lint, tipagem, build de
+> produção e jornada na build iniciada validados; console limpo; sem overflow
+> em desktop, 768 px e 375 px.
+
 > **Correção de marca (19/07/2026):** o vetor da plataforma foi confrontado
 > novamente com o arquivo oficial `logoIAH1.png` fornecido pelo fundador. A
 > divergência introduzida em M18.1/M18.3 foi corrigida no master, símbolo,

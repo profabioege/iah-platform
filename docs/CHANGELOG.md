@@ -2,6 +2,44 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 20/07/2026 — M21: Ciclo Institucional de Aprendizagem
+
+Primeira jornada institucional completa e demonstrável, integrando os módulos
+existentes sem criar engines, integrações, banco ou autenticação nova.
+
+- **Jornada validada de ponta a ponta na build de produção**, em 12 passos:
+  Gestor vê a Mission ainda não publicada (0 Missions) → Professor seleciona o
+  2º EM A, abre a Lesson (objetivo, competências, duração, materiais, Mission,
+  critérios) e publica → Gestor passa a ver 1 Mission ativa e 1 Lesson
+  publicada → Aluno vê "Minha Lesson" e a Missão pronta → inicia → Professor vê
+  "Em andamento" → Aluno produz, entrega e reflete → Professor vê a entrega
+  pendente, abre produção e reflexão, registra conceito, critérios observados e
+  devolutiva → Aluno vê "avaliada · Devolutiva disponível" com a devolutiva
+  completa na Etapa 9 → Gestor vê entregas 40%→50%, participação 80%→100%,
+  1 devolutiva registrada e os movimentos do ciclo.
+- **Cenário oficial**: Instituto Horizonte · IA & Humanidades · Fabio Ege ·
+  turma 2º EM A · Lesson "Desinformação e verificação de fontes" · Mission 01.
+  A Lesson demonstrativa (`modules/lesson/seeds`) migrou do 3º EM A para o
+  2º EM A; os dois alunos da turma partem de "não acessou"; a publicação
+  pré-fabricada foi removida do seed — quem publica é o Professor, ao vivo.
+- **Estados e transições**: `MissionAssignment` draft→published→closed
+  (`canTransitionMissionAssignment`) e `StudentWork`
+  not_started→in_progress→submitted→reviewed (`getStudentSubmissionStatus`,
+  derivado dos dados — nunca armazenado à parte; `reviewStudentWork` recusa
+  avaliar entrega não concluída; entrega avaliada não reabre).
+- **Fonte única**: os três perfis leem os mesmos repositórios institucionais
+  (`modules/platform`, seeds em memória) + o trabalho do aluno em
+  `localStorage` isolado por instituição/aluno; adapters locais
+  (`local-mission-assignment-store`, eventos `iah:*-updated`) espelham no
+  navegador as transições da sessão demonstrativa. Nenhum número fixo em
+  código: `/gestor` deriva a Mission ativa do repositório.
+- **Validações**: ESLint, `tsc --noEmit` e build de produção (25 páginas)
+  limpos; jornada percorrida com `next start`; console e stderr sem erros;
+  sem overflow em desktop, 768 px e 375 px (o header responsivo foi ajustado
+  para `lg` durante o fechamento); persistência da jornada confirmada após
+  reload. Limitação de automação: o Enter sintético não disparou o submit do
+  login (o clique confirma o fluxo) — inspeção manual de teclado recomendada.
+
 ## 19/07/2026 — Estabilização do build Next.js
 
 Correção estritamente técnica, sem alteração funcional, arquitetural ou de UX.

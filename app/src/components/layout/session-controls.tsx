@@ -30,7 +30,7 @@ export async function SessionControls() {
           await signOut({ redirectTo: "/entrar" });
         }}
       >
-        <span className="hidden max-w-40 truncate text-xs text-muted-foreground md:inline">
+        <span className="hidden max-w-40 truncate text-xs text-muted-foreground lg:inline">
           {session.user.name ?? session.user.email}
         </span>
         <Button type="submit" variant="ghost" size="sm" title="Sair da plataforma">
@@ -54,7 +54,7 @@ export async function SessionControls() {
         redirect("/entrar");
       }}
     >
-      <span className="hidden max-w-40 truncate text-xs text-muted-foreground md:inline">
+      <span className="hidden max-w-40 truncate text-xs text-muted-foreground lg:inline">
         {user.name}
       </span>
       <Button type="submit" variant="ghost" size="sm" title="Sair da plataforma">

@@ -5,16 +5,22 @@
 
 export {
   emptyStudentWork,
+  canTransitionSubmission,
+  getStudentSubmissionStatus,
   isMissionCompleted,
   isProductionDelivered,
   isReflectionRecorded,
   type StudentWork,
+  type StudentWorkReview,
+  type StudentSubmissionStatus,
 } from "./domain/student-work";
 
 export {
   listAllStudentWork,
   loadStudentWork,
+  reviewStudentWork,
   saveStudentWork,
+  STUDENT_WORK_UPDATED_EVENT,
   type StudentWorkScope,
 } from "./infrastructure/local-student-work-store";
 

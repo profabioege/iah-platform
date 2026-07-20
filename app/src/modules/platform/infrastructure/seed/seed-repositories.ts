@@ -42,6 +42,8 @@ export function createSeedRepositories(): PlatformRepositories {
   const reflections: Reflection[] = [...DEMO_REFLECTIONS];
   const integrations: ClassroomIntegration[] = [];
   const syncStates: ClassroomSyncState[] = [];
+  // Nenhuma publicação pré-fabricada: a jornada demonstrativa começa com a
+  // Mission ainda não publicada — quem publica é o Professor, ao vivo (M21).
   const assignments: MissionAssignment[] = [];
 
   return {

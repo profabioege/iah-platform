@@ -12,6 +12,7 @@ import {
 
 import {
   emptyStudentWork,
+  getStudentSubmissionStatus,
   isMissionCompleted,
   isProductionDelivered,
   isReflectionRecorded,
@@ -20,6 +21,11 @@ import {
   type StudentWork,
   type StudentWorkScope,
 } from "@/modules/classroom";
+import {
+  listLocalMissionAssignments,
+  MISSION_ASSIGNMENTS_UPDATED_EVENT,
+  type MissionAssignment,
+} from "@/modules/platform";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -60,14 +66,17 @@ export function DashboardHome({
   missions,
   classroomId,
   scope,
+  initialAssignments,
 }: {
   missions: DashboardMission[];
   /** Turma do aluno (Institutional Workspace, M17) — habilita o card "Minha Lesson". */
   classroomId?: string;
   /** Instituição + usuário do Institutional Workspace — isola o trabalho salvo por aluno. */
   scope: StudentWorkScope | null;
+  initialAssignments: MissionAssignment[];
 }) {
   const [loaded, setLoaded] = React.useState<Loaded | null>(null);
+  const [assignments, setAssignments] = React.useState(initialAssignments);
 
   React.useEffect(() => {
     const works: Record<string, StudentWork> = {};
@@ -86,28 +95,71 @@ export function DashboardHome({
     setLoaded({ works, lastReflection });
   }, [missions, scope]);
 
+  React.useEffect(() => {
+    if (!scope || !classroomId) return;
+    const refresh = () => {
+      const local = listLocalMissionAssignments(scope.institutionId, classroomId);
+      const merged = new Map(initialAssignments.map((item) => [item.id, item]));
+      for (const item of local) merged.set(item.id, item);
+      setAssignments([...merged.values()]);
+    };
+    refresh();
+    window.addEventListener(MISSION_ASSIGNMENTS_UPDATED_EVENT, refresh);
+    return () => window.removeEventListener(MISSION_ASSIGNMENTS_UPDATED_EVENT, refresh);
+  }, [classroomId, initialAssignments, scope]);
+
   // O progresso vive no dispositivo e só é lido após a hidratação; até lá,
   // mostramos o esqueleto para não piscar uma tela vazia.
   if (!loaded) return <DashboardSkeleton />;
-  if (missions.length === 0) return null;
+  const visibleMissionIds = new Set(
+    assignments
+      .filter((assignment) => assignment.status !== "draft")
+      .map((assignment) => assignment.missionId),
+  );
+  const availableMissions = classroomId
+    ? missions.filter((mission) => visibleMissionIds.has(mission.id))
+    : missions;
+
+  if (availableMissions.length === 0) {
+    return (
+      <Card className="mx-auto w-full max-w-3xl">
+        <CardHeader>
+          <CardTitle>Nenhuma Mission publicada</CardTitle>
+          <CardDescription>
+            Sua próxima Mission aparecerá aqui quando o Professor publicar a Lesson da turma.
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
 
   const workOf = (id: string) => loaded.works[id] ?? emptyStudentWork(id);
 
   const active =
-    missions.find((m) => !isMissionCompleted(workOf(m.id))) ??
-    missions[missions.length - 1];
+    availableMissions.find(
+      (mission) => getStudentSubmissionStatus(workOf(mission.id)) !== "reviewed",
+    ) ?? availableMissions[availableMissions.length - 1];
   const work = workOf(active.id);
 
   const delivered = isProductionDelivered(work);
   const recorded = isReflectionRecorded(work);
   const completed = isMissionCompleted(work);
-  const started = delivered || recorded || work.production.trim().length > 0;
+  const submissionStatus = getStudentSubmissionStatus(work);
+  const reviewed = submissionStatus === "reviewed";
+  const submitted = submissionStatus === "submitted";
+  const started = submissionStatus !== "not_started";
 
-  const doneCount = (delivered ? 1 : 0) + (recorded ? 1 : 0);
-  const allCompleted = missions.every((m) => isMissionCompleted(workOf(m.id)));
+  const doneCount = (delivered ? 1 : 0) + (recorded ? 1 : 0) + (reviewed ? 1 : 0);
+  const allCompleted = availableMissions.every(
+    (mission) => getStudentSubmissionStatus(workOf(mission.id)) === "reviewed",
+  );
 
-  const cta = completed
-    ? "Rever missão"
+  const cta = reviewed
+    ? "Ver devolutiva"
+    : submitted
+      ? "Acompanhar avaliação"
+      : completed
+        ? "Rever entrega"
     : started
       ? "Continuar missão"
       : "Iniciar missão";
@@ -128,16 +180,20 @@ export function DashboardHome({
         <div className="flex flex-wrap items-center gap-2">
           <Badge className="bg-primary/15 text-primary">
             Missão {String(active.number).padStart(2, "0")} ·{" "}
-            {completed
-              ? "concluída"
+            {reviewed
+              ? "avaliada"
+              : submitted
+                ? "em avaliação"
+              : completed
+                ? "entregue"
               : started
                 ? "investigação em andamento"
                 : "pronta para começar"}
           </Badge>
-          {completed ? (
+          {reviewed ? (
             <Badge className="bg-chart-2/15 text-chart-2">
               <PartyPopper className="size-3" />
-              Missão concluída
+              Devolutiva disponível
             </Badge>
           ) : null}
         </div>
@@ -149,8 +205,12 @@ export function DashboardHome({
           &ldquo;{active.guidingQuestion}&rdquo;
         </p>
         <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
-          {completed
-            ? "Você entregou sua produção e registrou sua reflexão. Sua auditoria está completa."
+          {reviewed
+            ? `Avaliação concluída · ${work.review?.grade ?? "devolutiva disponível"}.`
+            : submitted
+              ? "Sua entrega está com o Professor para avaliação."
+            : completed
+              ? "Você entregou sua produção e registrou sua reflexão."
             : started
               ? "Sua investigação está em andamento. Retome de onde parou."
               : "Uma nova investigação aguarda o seu veredito."}
@@ -169,16 +229,17 @@ export function DashboardHome({
             <div className="h-1.5 w-28 overflow-hidden rounded-full bg-muted">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-primary to-chart-2 transition-all"
-                style={{ width: `${(doneCount / 2) * 100}%` }}
+                style={{ width: `${(doneCount / 3) * 100}%` }}
               />
             </div>
-            <span>{doneCount} de 2 etapas</span>
+            <span>{doneCount} de 3 etapas</span>
           </div>
         </div>
 
         <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
           <Milestone done={delivered} label="Produção entregue" />
           <Milestone done={recorded} label="Reflexão registrada" />
+          <Milestone done={reviewed} label="Devolutiva recebida" />
         </ul>
       </section>
 
@@ -233,14 +294,14 @@ export function DashboardHome({
             <CardTitle className="text-base">Seu percurso</CardTitle>
             <CardDescription>
               {allCompleted
-                ? "Você concluiu todas as missões disponíveis."
-                : `${missions.filter((m) => isMissionCompleted(workOf(m.id))).length} de ${missions.length} missões concluídas`}
+                ? "Você recebeu devolutiva em todas as missões disponíveis."
+                : `${availableMissions.filter((m) => getStudentSubmissionStatus(workOf(m.id)) === "reviewed").length} de ${availableMissions.length} missões avaliadas`}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <ul className="flex flex-col gap-2">
-              {missions.map((m) => {
-                const done = isMissionCompleted(workOf(m.id));
+              {availableMissions.map((m) => {
+                const done = getStudentSubmissionStatus(workOf(m.id)) === "reviewed";
                 return (
                   <li key={m.id} className="flex items-center gap-2 text-sm">
                     {done ? (

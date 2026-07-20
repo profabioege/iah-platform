@@ -18,7 +18,8 @@ export type StudentMissionStatus =
   | "rascunho"
   | "entregue"
   | "reflexao"
-  | "concluiu";
+  | "concluiu"
+  | "avaliado";
 
 /** Ordem pedagógica dos estados (usada em contadores e filtros). */
 export const STUDENT_MISSION_STATUSES: StudentMissionStatus[] = [
@@ -30,6 +31,7 @@ export const STUDENT_MISSION_STATUSES: StudentMissionStatus[] = [
   "entregue",
   "reflexao",
   "concluiu",
+  "avaliado",
 ];
 
 /** Fotografia do trabalho de um aluno em uma Missão. */
@@ -43,6 +45,8 @@ export interface StudentMissionSnapshot {
   production: string | null;
   /** Texto da reflexão, quando registrada. */
   reflection: string | null;
+  /** Avaliação humana, quando concluída pelo Professor. */
+  review?: import("./student-work").StudentWorkReview | null;
 }
 
 /** Contrato de leitura do acompanhamento de turma (porta do domínio). */

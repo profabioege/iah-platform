@@ -9,6 +9,7 @@ import {
   ClipboardList,
   Compass,
   PartyPopper,
+  MessageSquareText,
   Target,
   Undo2,
 } from "lucide-react";
@@ -52,7 +53,11 @@ export function MissionFlow({
   /** Instituição + usuário do Institutional Workspace — isola o trabalho salvo por aluno. */
   scope: StudentWorkScope | null;
 }) {
-  const { work, update, delivered, recorded } = useStudentWork(scope, mission.id);
+  const { work, update, delivered, recorded, submissionStatus } = useStudentWork(
+    scope,
+    mission.id,
+  );
+  const reviewed = submissionStatus === "reviewed";
   const parsed = React.useMemo(
     () => parseMissionContent(mission.didacticMaterials),
     [mission.didacticMaterials],
@@ -101,7 +106,12 @@ export function MissionFlow({
           <CoverStep
             mission={mission}
             totalMinutes={TOTAL_MISSION_MINUTES}
-            onStart={() => goTo(2)}
+            onStart={() => {
+              if (work && !work.startedAt) {
+                update({ startedAt: new Date().toISOString() });
+              }
+              goTo(2);
+            }}
           />
         )}
 
@@ -230,14 +240,20 @@ export function MissionFlow({
                       <p className="text-sm font-semibold text-foreground">
                         Entregue em {formatDate(work.productionDeliveredAt)}
                       </p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => update({ productionDeliveredAt: null })}
-                      >
-                        <Undo2 className="size-4" />
-                        Reabrir para editar
-                      </Button>
+                      {reviewed ? (
+                        <span className="text-xs text-muted-foreground">
+                          Avaliação concluída — entrega preservada.
+                        </span>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => update({ productionDeliveredAt: null })}
+                        >
+                          <Undo2 className="size-4" />
+                          Reabrir para editar
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -304,11 +320,12 @@ export function MissionFlow({
                 </span>
                 <div>
                   <p className="text-sm font-semibold text-foreground">
-                    Investigação concluída
+                    {reviewed ? "Missão avaliada" : "Entrega em avaliação"}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Você entregou sua produção e registrou sua reflexão. Missão
-                    auditada.
+                    {reviewed
+                      ? "A devolutiva do Professor já está disponível abaixo."
+                      : "Você entregou sua produção e reflexão. Agora o Professor fará a devolutiva."}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
                     <Link
@@ -328,6 +345,45 @@ export function MissionFlow({
                   </div>
                 </div>
               </div>
+            ) : null}
+
+            {work.review ? (
+              <Card className="border-primary/30 bg-primary/5">
+                <CardContent className="flex flex-col gap-4 py-4">
+                  <div className="flex items-start gap-3">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                      <MessageSquareText className="size-5" />
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold">Devolutiva do Professor</p>
+                      <p className="text-xs text-muted-foreground">
+                        {work.review.reviewerName} · {formatDate(work.review.reviewedAt)}
+                      </p>
+                    </div>
+                    <Badge className="ml-auto bg-chart-2/15 text-chart-2">
+                      {work.review.grade}
+                    </Badge>
+                  </div>
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
+                    {work.review.feedback}
+                  </p>
+                  {work.review.observedCriteria.length > 0 ? (
+                    <div>
+                      <p className="mb-2 text-xs font-medium text-muted-foreground">
+                        Critérios observados
+                      </p>
+                      <ul className="flex flex-col gap-1.5">
+                        {work.review.observedCriteria.map((criterion) => (
+                          <li key={criterion} className="flex items-start gap-2 text-xs text-muted-foreground">
+                            <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-chart-2" />
+                            {criterion}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                </CardContent>
+              </Card>
             ) : null}
 
             <MissionNavigation onBack={() => goTo(8)} hideNext />

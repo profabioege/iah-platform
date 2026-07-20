@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   BookOpenCheck,
@@ -28,12 +28,25 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import {
+  getStudentSubmissionStatus,
+  loadStudentWork,
+  STUDENT_WORK_UPDATED_EVENT,
+  type StudentMissionStatus,
+  type StudentSubmissionStatus,
+} from "@/modules/classroom";
+import {
+  listLocalMissionAssignments,
+  MISSION_ASSIGNMENTS_UPDATED_EVENT,
+  type MissionAssignment,
+} from "@/modules/platform";
 
 type ExecutiveView =
   | "overview"
   | "implementation"
   | "teachers"
   | "students"
+  | "classes"
   | "discipline";
 
 interface ClassroomRow {
@@ -45,6 +58,7 @@ interface ClassroomRow {
 }
 
 interface ExecutiveDashboardProps {
+  institutionId: string;
   institutionName: string;
   academicYear: string;
   managerName: string;
@@ -61,6 +75,21 @@ interface ExecutiveDashboardProps {
     deliveredStudents: number;
     completedStudents: number;
   };
+  students: Array<{
+    id: string;
+    classroomId: string;
+    missionId: string;
+    status: StudentMissionStatus;
+  }>;
+  assignments: MissionAssignment[];
+}
+
+interface LearningCycleStats {
+  pendingReviews: number;
+  reviewedStudents: number;
+  publishedLessons: number;
+  missionsInProgress: number;
+  recentEvents: string[];
 }
 
 const IMPLEMENTATION_PROGRESS = 75;
@@ -70,6 +99,7 @@ const VIEW_LABEL: Record<ExecutiveView, string> = {
   implementation: "Implantação",
   teachers: "Professores",
   students: "Alunos",
+  classes: "Turmas",
   discipline: "Disciplina",
 };
 
@@ -78,19 +108,154 @@ const VIEW_ICON: Record<ExecutiveView, typeof LayoutDashboard> = {
   implementation: Route,
   teachers: GraduationCap,
   students: Users,
+  classes: School,
   discipline: BookOpenCheck,
 };
 
 export function ExecutiveDashboard({
+  institutionId,
   institutionName,
   academicYear,
   managerName,
   subjectName,
   teacher,
   classrooms,
-  totals,
+  totals: initialTotals,
+  students,
+  assignments,
 }: ExecutiveDashboardProps) {
   const [view, setView] = useState<ExecutiveView>("overview");
+  const [liveCycle, setLiveCycle] = useState<{
+    totals: ExecutiveDashboardProps["totals"];
+    classrooms: ClassroomRow[];
+    stats: LearningCycleStats;
+  } | null>(null);
+
+  useEffect(() => {
+    const refreshCycle = () => {
+      const studentStates = students.map((student) => {
+        const localWork = loadStudentWork(
+          { institutionId, ownerId: student.id },
+          student.missionId,
+        );
+        const localStatus = localWork
+          ? getStudentSubmissionStatus(localWork)
+          : "not_started";
+
+        return {
+          ...student,
+          status:
+            localStatus === "not_started"
+              ? submissionStatusFromSnapshot(student.status)
+              : localStatus,
+          work: localWork,
+        };
+      });
+      const mergedAssignments = mergeAssignments(
+        assignments,
+        listLocalMissionAssignments(institutionId),
+      );
+      const activeStudents = studentStates.filter(
+        (student) => student.status !== "not_started",
+      ).length;
+      const deliveredStudents = studentStates.filter((student) =>
+        ["submitted", "reviewed"].includes(student.status),
+      ).length;
+      const reviewedStudents = studentStates.filter(
+        (student) => student.status === "reviewed",
+      ).length;
+      const classroomRows = classrooms.map((classroom) => {
+        const classroomStudents = studentStates.filter(
+          (student) => student.classroomId === classroom.id,
+        );
+        const activeCount = classroomStudents.filter(
+          (student) => student.status !== "not_started",
+        ).length;
+        return {
+          ...classroom,
+          activeCount,
+          engagement: percentage(activeCount, classroomStudents.length),
+        };
+      });
+      const recentEvents = studentStates
+        .flatMap(({ work }) => {
+          if (!work) return [];
+          const events: Array<{ at: string; label: string }> = [];
+          if (work.review) {
+            events.push({
+              at: work.review.reviewedAt,
+              label: "Avaliação registrada pelo professor",
+            });
+          }
+          if (work.reflectionRecordedAt) {
+            events.push({
+              at: work.reflectionRecordedAt,
+              label: "Ciclo de aprendizagem concluído por aluno",
+            });
+          }
+          if (work.productionDeliveredAt) {
+            events.push({
+              at: work.productionDeliveredAt,
+              label: "Nova produção entregue",
+            });
+          }
+          return events;
+        })
+        .sort((a, b) => b.at.localeCompare(a.at))
+        .slice(0, 3)
+        .map((event) => event.label);
+
+      setLiveCycle({
+        totals: {
+          students: studentStates.length,
+          activeStudents,
+          deliveredStudents,
+          completedStudents: deliveredStudents,
+        },
+        classrooms: classroomRows,
+        stats: {
+          pendingReviews: studentStates.filter(
+            (student) => student.status === "submitted",
+          ).length,
+          reviewedStudents,
+          publishedLessons: new Set(
+            mergedAssignments
+              .filter((assignment) => assignment.status !== "draft")
+              .map((assignment) => assignment.lessonId)
+              .filter(Boolean),
+          ).size,
+          missionsInProgress: mergedAssignments.filter(
+            (assignment) => assignment.status === "published",
+          ).length,
+          recentEvents,
+        },
+      });
+    };
+
+    refreshCycle();
+    window.addEventListener(STUDENT_WORK_UPDATED_EVENT, refreshCycle);
+    window.addEventListener(MISSION_ASSIGNMENTS_UPDATED_EVENT, refreshCycle);
+    window.addEventListener("storage", refreshCycle);
+    return () => {
+      window.removeEventListener(STUDENT_WORK_UPDATED_EVENT, refreshCycle);
+      window.removeEventListener(MISSION_ASSIGNMENTS_UPDATED_EVENT, refreshCycle);
+      window.removeEventListener("storage", refreshCycle);
+    };
+  }, [assignments, classrooms, institutionId, students]);
+
+  const totals = liveCycle?.totals ?? initialTotals;
+  const classroomRows = liveCycle?.classrooms ?? classrooms;
+  const cycleStats = liveCycle?.stats ?? {
+    pendingReviews: initialTotals.completedStudents,
+    reviewedStudents: 0,
+    publishedLessons: new Set(
+      assignments.map((item) => item.lessonId).filter(Boolean),
+    ).size,
+    missionsInProgress: assignments.filter(
+      (item) => item.status === "published",
+    ).length,
+    recentEvents: [],
+  };
   const firstName = managerName.split(/\s+/).filter(Boolean)[0] ?? "Gestor";
   const greetingName = firstName.toLocaleLowerCase("pt-BR") === "direção" ? null : firstName;
   const inactiveStudents = Math.max(0, totals.students - totals.activeStudents);
@@ -108,13 +273,16 @@ export function ExecutiveDashboard({
     if (view === "students") {
       return `${totals.activeStudents} de ${totals.students} alunos já participaram da Mission ativa.`;
     }
+    if (view === "classes") {
+      return `${classroomRows.length} turmas estão configuradas e acompanhadas no ciclo institucional.`;
+    }
     if (view === "discipline") {
       return "A disciplina está configurada, com currículo, Lessons e Mission Flow conectados.";
     }
     return inactiveStudents > 0
       ? `A implantação avança bem; ${inactiveStudents} alunos ainda precisam iniciar a Mission.`
       : "A implantação está saudável e todas as turmas já iniciaram a operação.";
-  }, [inactiveStudents, totals.activeStudents, totals.students, view]);
+  }, [classroomRows.length, inactiveStudents, totals.activeStudents, totals.students, view]);
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
@@ -181,8 +349,9 @@ export function ExecutiveDashboard({
           institutionName={institutionName}
           subjectName={subjectName}
           teacher={teacher}
-          classrooms={classrooms}
+          classrooms={classroomRows}
           totals={totals}
+          cycleStats={cycleStats}
           activeRate={activeRate}
           deliveryRate={deliveryRate}
           completionRate={completionRate}
@@ -194,8 +363,9 @@ export function ExecutiveDashboard({
           institutionName={institutionName}
           subjectName={subjectName}
           teacher={teacher}
-          classrooms={classrooms}
+          classrooms={classroomRows}
           totals={totals}
+          cycleStats={cycleStats}
           activeRate={activeRate}
           deliveryRate={deliveryRate}
           completionRate={completionRate}
@@ -215,11 +385,16 @@ function Overview({
   deliveryRate,
   completionRate,
   inactiveStudents,
-}: Omit<ExecutiveDashboardProps, "academicYear" | "managerName"> & {
+  cycleStats,
+}: Omit<
+  ExecutiveDashboardProps,
+  "academicYear" | "managerName" | "institutionId" | "students" | "assignments"
+> & {
   activeRate: number;
   deliveryRate: number;
   completionRate: number;
   inactiveStudents: number;
+  cycleStats: LearningCycleStats;
 }) {
   return (
     <div className="flex flex-col gap-5">
@@ -285,6 +460,16 @@ function Overview({
               title="Professor em operação"
               description={`${teacher.classroomCount} turmas vinculadas ao responsável.`}
             />
+            <AttentionItem
+              icon={cycleStats.pendingReviews > 0 ? CircleAlert : CheckCircle2}
+              title={
+                cycleStats.pendingReviews > 0
+                  ? `${cycleStats.pendingReviews} entregas aguardam avaliação`
+                  : "Entregas avaliadas"
+              }
+              description="Pendências pedagógicas do ciclo de aprendizagem atual."
+              emphasis={cycleStats.pendingReviews > 0}
+            />
             <Link
               href="/gestor/implantacao"
               className={cn(buttonVariants({ variant: "outline" }), "mt-1 w-full")}
@@ -300,7 +485,12 @@ function Overview({
         <MetricCard icon={Route} label="Implantação" value={`${IMPLEMENTATION_PROGRESS}%`} detail="Operação acompanhada" />
         <MetricCard icon={GraduationCap} label="Professor vinculado" value="1" detail={`${teacher.classroomCount} turmas sob condução`} />
         <MetricCard icon={Users} label="Alunos ativos" value={`${totals.activeStudents}`} detail={`${activeRate}% de ${totals.students} matriculados`} />
-        <MetricCard icon={BookOpenCheck} label="Disciplina" value="1 Mission" detail="Currículo e Lesson conectados" />
+        <MetricCard
+          icon={BookOpenCheck}
+          label="Disciplina"
+          value={`${cycleStats.missionsInProgress} Mission${cycleStats.missionsInProgress === 1 ? "" : "s"}`}
+          detail={`${cycleStats.publishedLessons} Lesson${cycleStats.publishedLessons === 1 ? "" : "s"} publicada${cycleStats.publishedLessons === 1 ? "" : "s"}`}
+        />
       </section>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(20rem,0.8fr)]">
@@ -363,10 +553,15 @@ function Overview({
               Abrir acompanhamento <ArrowRight className="size-4" />
             </Link>
           </CardHeader>
-          <CardContent className="grid gap-5 sm:grid-cols-3">
+          <CardContent className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
             <LearningIndicator value={`${deliveryRate}%`} label="entregaram" detail={`${totals.deliveredStudents} de ${totals.students} alunos`} />
             <LearningIndicator value={`${activeRate}%`} label="participaram" detail={`${totals.activeStudents} alunos ativos`} />
             <LearningIndicator value={`${completionRate}%`} label="concluíram" detail={`${totals.completedStudents} ciclo completo`} />
+            <LearningIndicator
+              value={`${percentage(cycleStats.reviewedStudents, totals.students)}%`}
+              label="foram avaliados"
+              detail={`${cycleStats.reviewedStudents} devolutivas registradas`}
+            />
           </CardContent>
         </Card>
 
@@ -385,8 +580,46 @@ function Overview({
         </Card>
       </div>
 
+      <div className="grid gap-4 xl:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+              Avaliação docente
+            </p>
+            <CardTitle className="mt-1">
+              {cycleStats.pendingReviews} entregas pendentes
+            </CardTitle>
+            <CardDescription>
+              Produções concluídas que ainda aguardam devolutiva humana.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+        <Card>
+          <CardHeader>
+            <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+              Evolução recente
+            </p>
+            <CardTitle className="mt-1">Movimentos do ciclo</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3 text-sm">
+            {cycleStats.recentEvents.length > 0 ? (
+              cycleStats.recentEvents.map((event, index) => (
+                <div key={`${event}-${index}`} className="flex items-center gap-3">
+                  <span className="size-2 shrink-0 rounded-full bg-chart-2" />
+                  <span>{event}</span>
+                </div>
+              ))
+            ) : (
+              <p className="text-muted-foreground">
+                Novas entregas e avaliações aparecerão aqui.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
       <footer className="flex flex-col gap-3 border-t border-border pt-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-        <p>Indicadores demonstrativos calculados sobre o seed institucional atual.</p>
+        <p>Indicadores demonstrativos derivados do ciclo institucional compartilhado.</p>
         <button type="button" disabled className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "opacity-50")}>
           <Download className="size-4" /> Exportar resumo executivo · Em breve
         </button>
@@ -405,11 +638,16 @@ function FocusedView({
   activeRate,
   deliveryRate,
   completionRate,
-}: Omit<ExecutiveDashboardProps, "academicYear" | "managerName"> & {
+  cycleStats,
+}: Omit<
+  ExecutiveDashboardProps,
+  "academicYear" | "managerName" | "institutionId" | "students" | "assignments"
+> & {
   view: Exclude<ExecutiveView, "overview">;
   activeRate: number;
   deliveryRate: number;
   completionRate: number;
+  cycleStats: LearningCycleStats;
 }) {
   const content = {
     implementation: {
@@ -447,10 +685,24 @@ function FocusedView({
         ["Matriculados", String(totals.students)],
         ["Participação ativa", `${activeRate}%`],
         ["Entregas registradas", `${deliveryRate}%`],
+        ["Entregas pendentes", String(cycleStats.pendingReviews)],
+        ["Avaliações registradas", String(cycleStats.reviewedStudents)],
         ["Ciclo completo", `${completionRate}%`],
       ],
       href: "/professor/turmas",
       action: "Abrir acompanhamento pedagógico",
+    },
+    classes: {
+      badge: `Turmas · ${classrooms.length} configuradas`,
+      title: "Operação por turma",
+      description:
+        "Acesso direto às turmas e uma leitura comparável do engajamento no ciclo atual.",
+      rows: classrooms.map((classroom) => [
+        classroom.name,
+        `${classroom.engagement}% · ${classroom.activeCount} de ${classroom.studentCount} ativos`,
+      ]),
+      href: "/professor/turmas",
+      action: "Abrir turmas",
     },
     discipline: {
       badge: "Disciplina · Em operação",
@@ -459,7 +711,8 @@ function FocusedView({
       rows: [
         ["Disciplina", subjectName],
         ["Currículo", "Configurado"],
-        ["Mission Flow", "1 ativa"],
+        ["Lessons publicadas", String(cycleStats.publishedLessons)],
+        ["Missions em andamento", String(cycleStats.missionsInProgress)],
         ["Turmas alcançadas", String(classrooms.length)],
       ],
       href: "/professor/curriculo",
@@ -539,6 +792,30 @@ function StructureItem({ icon: Icon, label }: { icon: typeof School; label: stri
 
 function percentage(value: number, total: number): number {
   return total > 0 ? Math.round((value / total) * 100) : 0;
+}
+
+function submissionStatusFromSnapshot(
+  status: StudentMissionStatus,
+): StudentSubmissionStatus {
+  if (status === "avaliado") return "reviewed";
+  if (["entregue", "reflexao", "concluiu"].includes(status)) {
+    return "submitted";
+  }
+  if (status === "nao_acessou") return "not_started";
+  return "in_progress";
+}
+
+function mergeAssignments(
+  serverAssignments: MissionAssignment[],
+  localAssignments: MissionAssignment[],
+): MissionAssignment[] {
+  const merged = new Map(
+    serverAssignments.map((assignment) => [assignment.id, assignment]),
+  );
+  for (const assignment of localAssignments) {
+    merged.set(assignment.id, assignment);
+  }
+  return [...merged.values()];
 }
 
 function initials(name: string): string {

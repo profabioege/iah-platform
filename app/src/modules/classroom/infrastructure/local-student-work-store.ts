@@ -1,4 +1,9 @@
-import { emptyStudentWork, type StudentWork } from "../domain/student-work";
+import {
+  emptyStudentWork,
+  getStudentSubmissionStatus,
+  type StudentWork,
+  type StudentWorkReview,
+} from "../domain/student-work";
 
 /**
  * Persistência local do trabalho do aluno (Fase 1 do MVP — localStorage).
@@ -8,6 +13,7 @@ import { emptyStudentWork, type StudentWork } from "../domain/student-work";
  * (SSR), as funções degradam com segurança.
  */
 const KEY_PREFIX = "iah:student-work:";
+export const STUDENT_WORK_UPDATED_EVENT = "iah:student-work-updated";
 
 /** Identifica o dono do trabalho: instituição + usuário (Institutional Workspace). */
 export interface StudentWorkScope {
@@ -71,8 +77,30 @@ export function saveStudentWork(
       storageKey(scope, work.missionId),
       JSON.stringify(updated),
     );
+    window.dispatchEvent(
+      new CustomEvent(STUDENT_WORK_UPDATED_EVENT, {
+        detail: { ...scope, missionId: work.missionId },
+      }),
+    );
   }
   return updated;
+}
+
+/** Registra a decisão humana do Professor sobre uma entrega concluída. */
+export function reviewStudentWork(
+  scope: StudentWorkScope,
+  missionId: string,
+  review: Omit<StudentWorkReview, "reviewedAt">,
+): StudentWork {
+  const current = loadStudentWork(scope, missionId);
+  const status = getStudentSubmissionStatus(current);
+  if (status !== "submitted" && status !== "reviewed") {
+    throw new Error("A entrega precisa estar concluída antes da avaliação.");
+  }
+  return saveStudentWork(scope, {
+    ...current,
+    review: { ...review, reviewedAt: new Date().toISOString() },
+  });
 }
 
 /** Lista todos os trabalhos salvos neste dispositivo para o dono do escopo (todas as Missões). */

@@ -2,9 +2,14 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, PlayCircle, Send, Users } from "lucide-react";
+import { Send } from "lucide-react";
 
-import type { Classroom, MissionAssignment } from "@/modules/platform";
+import {
+  listLocalMissionAssignments,
+  saveLocalMissionAssignment,
+  type Classroom,
+  type MissionAssignment,
+} from "@/modules/platform";
 import type { Mission } from "@/modules/library";
 import type { KnowledgeDocument } from "@/modules/knowledge";
 import { getLessonRepository, type Lesson } from "@/modules/lesson";
@@ -18,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { ClassPanel } from "../class-panel";
 import { LessonPreview } from "../aulas/[id]/lesson-preview";
 import { publishLessonMission } from "./actions";
+import { parseMissionContent } from "../../missoes/[id]/mission-flow/parse-mission-content";
 
 export interface ClassroomLifecycle {
   classroom: Classroom;
@@ -36,30 +42,49 @@ export interface ClassroomLifecycle {
  */
 export function TurmasExplorer({
   institutionId,
+  reviewer,
   classroomLifecycles,
   missions,
   knowledgeDocuments,
 }: {
   institutionId: string;
+  reviewer: { id: string; name: string };
   classroomLifecycles: ClassroomLifecycle[];
   missions: Mission[];
   knowledgeDocuments: KnowledgeDocument[];
 }) {
   const router = useRouter();
   const [selectedClassroomId, setSelectedClassroomId] = React.useState(
-    classroomLifecycles[0]?.classroom.id ?? "",
+    classroomLifecycles.find((item) => item.activeAssignment)?.classroom.id ??
+      classroomLifecycles[0]?.classroom.id ??
+      "",
   );
   const [lessons, setLessons] = React.useState<Lesson[] | null>(null);
   const [expandedLessonId, setExpandedLessonId] = React.useState<string | null>(null);
   const [publishing, setPublishing] = React.useState(false);
+  const [localAssignments, setLocalAssignments] = React.useState<MissionAssignment[]>([]);
 
   React.useEffect(() => {
     getLessonRepository().list().then(setLessons);
-  }, []);
+    setLocalAssignments(listLocalMissionAssignments(institutionId));
+  }, [institutionId]);
 
-  const current = classroomLifecycles.find(
+  const currentBase = classroomLifecycles.find(
     (c) => c.classroom.id === selectedClassroomId,
   );
+  const current = React.useMemo(() => {
+    if (!currentBase) return undefined;
+    const assignments = mergeAssignments(
+      currentBase.assignments,
+      localAssignments.filter(
+        (assignment) => assignment.classroomId === selectedClassroomId,
+      ),
+    );
+    const activeAssignment = assignments
+      .filter((assignment) => assignment.status === "published")
+      .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))[0] ?? null;
+    return { ...currentBase, assignments, activeAssignment };
+  }, [currentBase, localAssignments, selectedClassroomId]);
   const classroomLessons = (lessons ?? []).filter(
     (lesson) => lesson.classroomId === selectedClassroomId,
   );
@@ -67,11 +92,16 @@ export function TurmasExplorer({
   async function handlePublish(lesson: Lesson) {
     if (!lesson.missionId) return;
     setPublishing(true);
-    await publishLessonMission({
+    const assignment = await publishLessonMission({
       institutionId,
       classroomId: lesson.classroomId!,
       missionId: lesson.missionId,
+      lessonId: lesson.id,
     });
+    saveLocalMissionAssignment(assignment);
+    setLocalAssignments((currentAssignments) =>
+      mergeAssignments(currentAssignments, [assignment]),
+    );
     setPublishing(false);
     router.refresh();
   }
@@ -187,8 +217,17 @@ export function TurmasExplorer({
               </p>
             ) : (
               <>
-                <ClassroomSummary snapshot={current.snapshot} />
-                <ClassPanel students={current.snapshot} />
+                <ClassPanel
+                  students={current.snapshot}
+                  institutionId={institutionId}
+                  missionId={current.activeAssignment.missionId}
+                  reviewer={reviewer}
+                  criteria={missionCriteria(
+                    missions.find(
+                      (mission) => mission.id === current.activeAssignment?.missionId,
+                    ),
+                  )}
+                />
               </>
             )}
           </div>
@@ -198,35 +237,18 @@ export function TurmasExplorer({
   );
 }
 
-function ClassroomSummary({ snapshot }: { snapshot: StudentMissionSnapshot[] }) {
-  const total = snapshot.length;
-  const started = snapshot.filter((s) => s.status !== "nao_acessou").length;
-  const completed = snapshot.filter((s) => s.status === "concluiu").length;
-  const pending = total - completed;
-  const percentComplete = total > 0 ? Math.round((completed / total) * 100) : 0;
+function mergeAssignments(
+  serverAssignments: MissionAssignment[],
+  localAssignments: MissionAssignment[],
+): MissionAssignment[] {
+  const merged = new Map(serverAssignments.map((assignment) => [assignment.id, assignment]));
+  for (const assignment of localAssignments) merged.set(assignment.id, assignment);
+  return [...merged.values()];
+}
 
-  return (
-    <Card>
-      <CardContent className="flex flex-wrap gap-x-6 gap-y-2 py-2 text-sm">
-        <span className="inline-flex items-center gap-1.5">
-          <Users className="size-4 text-muted-foreground" />
-          {total} aluno{total === 1 ? "" : "s"}
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <PlayCircle className="size-4 text-primary" />
-          {started} iniciaram
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <CheckCircle2 className="size-4 text-chart-2" />
-          {completed} concluíram
-        </span>
-        <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-          {pending} pendente{pending === 1 ? "" : "s"}
-        </span>
-        <span className="ml-auto font-semibold text-foreground">
-          {percentComplete}% da turma
-        </span>
-      </CardContent>
-    </Card>
+function missionCriteria(mission: Mission | undefined): string[] {
+  if (!mission) return [];
+  return parseMissionContent(mission.didacticMaterials).auditCriteria.map(
+    (criterion) => `${criterion.label}: ${criterion.description}`,
   );
 }

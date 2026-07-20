@@ -34,7 +34,7 @@ export function AppHeader({
       <div className="ml-auto flex items-center gap-3">
         <Badge
           variant="outline"
-          className="hidden border-primary/40 bg-primary/10 text-primary sm:inline-flex"
+          className="hidden border-primary/40 bg-primary/10 text-primary lg:inline-flex"
         >
           {badgeLabel ?? "Ensino Médio · 2026"}
         </Badge>

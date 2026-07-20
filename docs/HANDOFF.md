@@ -1,5 +1,18 @@
 # HANDOFF — IAH Educacional
 
+> **Retomada após a M21 — Ciclo Institucional de Aprendizagem (20/07/2026):**
+> a jornada Gestor → Professor publica → Aluno realiza e entrega → Professor
+> avalia → Aluno recebe devolutiva → Gestor vê indicadores está completa e
+> demonstrável no cenário oficial (Instituto Horizonte, 2º EM A, Lesson
+> "Desinformação e verificação de fontes", Mission 01). Estados: Mission
+> draft→published→closed; entrega not_started→in_progress→submitted→reviewed
+> (derivada dos dados, `getStudentSubmissionStatus`). A demonstração pressupõe
+> um único navegador (o trabalho do aluno vive em `localStorage` isolado por
+> instituição/aluno; adapters locais espelham publicações e avaliações da
+> sessão). O bloqueador para uso com alunos reais segue sendo banco +
+> autenticação real (checklist em `PERSISTENCE.md`). Validação completa na
+> build de produção; ver `CHANGELOG.md` (M21) para o detalhe.
+
 Documento único de transição de contexto. Escrito para que uma nova conversa (ou uma nova pessoa) retome o projeto sem precisar reconstruir nada do histórico. Se este documento divergir do código, o código manda — mas a divergência deve ser corrigida aqui.
 
 Para o dia a dia, os documentos vivos continuam sendo `VISION.md`, `PRODUCT.md`, `ROADMAP.md`, `STATUS.md` e `DECISIONS.md` (`CHANGELOG.md` para o histórico entrega-a-entrega). Este HANDOFF é o resumo de entrada única; aqueles são a fonte de verdade contínua. Referências técnicas complementares: `DOMAIN_MODEL.md` (modelo institucional completo), `IMPORT_ARCHITECTURE.md` (importação de Turma/Aluno de origens externas), `AUTHORING_MODEL.md` (motor de autoria de Missões), `PERSISTENCE.md` (arquitetura de persistência multi-tenant, seeds, checklist Mock → Banco Real) e `KNOWLEDGE_ENGINE.md` (Biblioteca Inteligente — entidades, metadados, busca, integrações futuras) — consultar antes de qualquer Sprint que envolva Instituição/Turma/Aluno/Professor/integração/autoria/banco/Biblioteca além do que já existe hoje.
