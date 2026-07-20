@@ -14,6 +14,16 @@ import type {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogClose,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogPopup,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 import { saveAssessmentDraftAction, submitAssessmentAction } from "./actions";
 
@@ -34,6 +44,7 @@ export function AssessmentRunner({ assignment, title, instructions, questions, s
   const [answers, setAnswers] = useState<Record<string, string | boolean | null>>(Object.fromEntries(questions.map((question) => [question.id, submission?.answers.find((answer) => answer.questionId === question.id)?.value ?? null])));
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const locked = Boolean(submission && submission.status !== "draft");
   const now = Date.now();
   const withinWindow =
@@ -51,7 +62,7 @@ export function AssessmentRunner({ assignment, title, instructions, questions, s
   return <div className="mx-auto flex w-full max-w-3xl flex-col gap-5"><header className="space-y-2"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-widest text-primary">Sondagem diagnóstica</p><h1 className="text-2xl font-semibold">{title}</h1></div><Badge variant="outline">{status}</Badge></div><p className="text-sm text-muted-foreground">{instructions}</p><div className="flex flex-wrap gap-4 text-xs text-muted-foreground"><span className="flex items-center gap-1"><Clock3 className="size-3.5" /> Início: {new Date(assignment.startsAt).toLocaleString("pt-BR")}</span><span>Encerramento efetivo: {new Date(effectiveEndsAt).toLocaleString("pt-BR")}</span><span>{assignment.allowLateSubmission ? "Atrasos aceitos" : "Atrasos bloqueados"}</span></div></header>
     {message ? <p role="status" className="rounded-lg border border-border bg-muted/40 p-3 text-sm">{message}</p> : null}
     {questions.map((question) => <QuestionCard key={question.id} question={question} value={answers[question.id]} disabled={!canAnswer} onChange={(value) => setAnswers((current) => ({ ...current, [question.id]: value }))} answer={submission?.answers.find((item) => item.questionId === question.id)} visibility={visibility} />)}
-    {canAnswer ? <div className="sticky bottom-4 flex flex-col gap-2 rounded-xl border border-border bg-background/95 p-3 shadow-lg backdrop-blur sm:flex-row sm:items-center"><p className="mr-auto text-sm text-muted-foreground">{answered} de {questions.length} respondidas</p><Button variant="outline" disabled={pending} onClick={() => run(() => saveAssessmentDraftAction(assignment.id, answers), "Rascunho salvo.")}><Save /> Salvar rascunho</Button><Button disabled={pending || answered < questions.length} onClick={() => { if (confirm("Após o envio, as respostas ficarão bloqueadas até eventual reabertura pelo professor. Confirmar envio?")) run(() => submitAssessmentAction(assignment.id, answers), "Sondagem enviada. A correção aguarda validação docente."); }}><Send /> Enviar respostas</Button></div> : null}
+    {canAnswer ? <div className="sticky bottom-4 flex flex-col gap-2 rounded-xl border border-border bg-background/95 p-3 shadow-lg backdrop-blur sm:flex-row sm:items-center"><p className="mr-auto text-sm text-muted-foreground">{answered} de {questions.length} respondidas</p><Button variant="outline" disabled={pending} onClick={() => run(() => saveAssessmentDraftAction(assignment.id, answers), "Rascunho salvo.")}><Save /> Salvar rascunho</Button><AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}><AlertDialogTrigger render={<Button disabled={pending || answered < questions.length}><Send /> Enviar respostas</Button>} /><AlertDialogPopup><AlertDialogHeader><AlertDialogTitle>Finalizar e enviar a sondagem?</AlertDialogTitle><AlertDialogDescription>A entrega será finalizada e enviada para correção. Depois de enviada, você não poderá editar suas respostas.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogClose render={<Button variant="outline" />}>Cancelar</AlertDialogClose><Button onClick={() => { setConfirmOpen(false); run(() => submitAssessmentAction(assignment.id, answers), "Sondagem enviada. A correção aguarda validação docente."); }}>Confirmar envio</Button></AlertDialogFooter></AlertDialogPopup></AlertDialog></div> : null}
     {locked && !visibility.result ? <Card><CardContent className="flex items-center gap-3 py-5"><CheckCircle2 className="size-5 text-primary" /><div><p className="font-medium">Entrega recebida</p><p className="text-sm text-muted-foreground">O resultado será exibido somente após a liberação docente.</p></div></CardContent></Card> : null}
     {visibility.result && submission ? <Card><CardHeader><CardTitle>Resultado individual</CardTitle><CardDescription>Resultado e feedback liberados pelo professor.</CardDescription></CardHeader><CardContent className="space-y-3"><p className="text-3xl font-semibold">{submission.finalScore?.toLocaleString("pt-BR") ?? "—"} <span className="text-base font-normal text-muted-foreground">de {total.toLocaleString("pt-BR")}</span></p>{visibility.feedback ? <div><p className="text-sm font-medium">Feedback individual</p><p className="text-sm text-muted-foreground">{submission.teacherFeedback ?? "Sem feedback adicional."}</p></div> : null}</CardContent></Card> : null}
     {visibility.answerKey ? <Card><CardHeader><CardTitle>Gabarito completo</CardTitle><CardDescription>Disponível conforme a política definida pelo professor.</CardDescription></CardHeader><CardContent className="space-y-3">{questions.map((question) => <div key={question.id} className="rounded-lg border border-border p-3 text-sm"><p className="font-medium">Questão {question.position}: {question.type === "essay" ? "rubrica docente" : `resposta ${String(question.correctAnswer)}`}</p><p className="text-muted-foreground">{question.justification}</p></div>)}</CardContent></Card> : null}
