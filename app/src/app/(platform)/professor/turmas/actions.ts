@@ -36,6 +36,6 @@ export async function publishLessonMission(params: {
   const assignment = await service.publish(params);
   revalidatePath("/professor/turmas");
   revalidatePath("/dashboard");
-  revalidatePath("/gestor");
+  revalidatePath("/direcao");
   return assignment;
 }

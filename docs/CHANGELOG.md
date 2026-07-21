@@ -1,5 +1,14 @@
 # Changelog — IAH Educacional
 
+## 21/07/2026 — Divisão do papel "Gestor" em Mantenedor / Direção / Coordenação Pedagógica
+
+- Papel único `admin` dividido em três papéis reais — `maintainer` (Mantenedor), `director` (Direção), `pedagogical_coordinator` (Coordenação Pedagógica) — cada um com rota própria (`/mantenedor`, `/direcao`, `/coordenacao`), menu lateral enxuto e Início com no máximo 4 indicadores reais + 2 blocos de atenção.
+- `/gestor` removido; `gestor/implantacao/*` movido para `direcao/implantacao/` (agora alcançável a partir do Início de Direção, não mais item de menu de topo); `assessment-indicators.tsx` movido para `coordenacao/` (desempenho por questão é escopo pedagógico).
+- Cada papel ganha um hub de relatórios navegável (`/[papel]/relatorios/[relatorio]`) com as entradas pedidas — placeholders estruturais, sem geração de PDF nesta etapa.
+- Migration `20260720000800_split_admin_role.sql` (aditiva) e extensão de `db/seed/seed-demo.mjs` (mantenedor/coordenador_pedagogico) criadas mas **não aplicadas/executadas** — instrução explícita de não alterar Supabase sem autorização.
+- `toWorkspaceRole()` mapeia `"administrador"`/`"admin_iah"` → `director` — a conta real existente (Fabiana Ege) já vê o Painel de Direção, sem nenhuma escrita no banco.
+- Decisão registrada em `DECISIONS.md` D-046.
+
 ## 21/07/2026 — DocentIAH: 4 cards principais + wizard de Avaliação com adaptação pedagógica
 
 - DocentIAH passa de 8 para 4 cards principais: Apresentação de slides, Avaliação, Plano de aula (sucede "Criar uma aula"), Adaptar material (sucede "Adaptar uma atividade"). Missões e Devolutivas continuam alcançáveis pelo Painel do Professor; "Organizar uma sequência didática" vira link secundário de "Plano de aula", preservando o acesso à hierarquia Planejar.

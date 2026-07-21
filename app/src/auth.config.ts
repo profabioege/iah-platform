@@ -3,6 +3,16 @@ import Google from "next-auth/providers/google";
 
 import { isAuthConfigured, isGoogleAuthConfigured } from "@/lib/auth-flags";
 
+/** Rota inicial pelo papel cru do banco (D-046) — espelha `roleHome()` do Workspace, mas em cima da string do banco, não do `Role` do app (evita importar `modules/workspace/infrastructure/session.ts`, que puxa `next/headers`, fora do edge). */
+function dbRoleHome(role: string): string {
+  if (role === "professor") return "/professor";
+  if (role === "aluno") return "/dashboard";
+  if (role === "mantenedor") return "/mantenedor";
+  if (role === "coordenador_pedagogico") return "/coordenacao";
+  if (["administrador", "admin_iah", "diretor"].includes(role)) return "/direcao";
+  return "/dashboard";
+}
+
 /**
  * Configuração EDGE-SAFE do Auth.js — usada pelo middleware.
  *
@@ -54,9 +64,13 @@ export const authConfig = {
     /**
      * Porta das rotas privadas. Sem o modo real configurado, a barreira
      * do Institutional Workspace (middleware) cuida do acesso; com ele,
-     * exige sessão E aplica o gate por papel — /gestor é exclusivo do
-     * administrador, /professor é vedado ao aluno. O papel vem do vínculo
-     * persistido (token), nunca do cliente.
+     * exige sessão E aplica o gate por papel — /mantenedor, /direcao e
+     * /coordenacao são cada um exclusivo do seu papel (D-046: sucessores
+     * do antigo "/gestor" único; "administrador"/"admin_iah" continuam
+     * valendo como Direção até a migration `split_admin_role` introduzir
+     * "diretor"/"mantenedor"/"coordenador_pedagogico" no banco), /professor
+     * é vedado ao aluno. O papel vem do vínculo persistido (token), nunca
+     * do cliente.
      */
     authorized({ auth, request }) {
       if (!isAuthConfigured()) return true;
@@ -67,14 +81,17 @@ export const authConfig = {
 
       const role = user.role ?? "";
       const { pathname } = request.nextUrl;
+      const isDirector = ["administrador", "admin_iah", "diretor"].includes(role);
+      const home = dbRoleHome(role);
 
-      if (
-        pathname.startsWith("/gestor") &&
-        !["administrador", "admin_iah"].includes(role)
-      ) {
-        return Response.redirect(
-          new URL(role === "professor" ? "/professor" : "/dashboard", request.nextUrl),
-        );
+      if (pathname.startsWith("/mantenedor") && role !== "mantenedor") {
+        return Response.redirect(new URL(home, request.nextUrl));
+      }
+      if (pathname.startsWith("/direcao") && !isDirector) {
+        return Response.redirect(new URL(home, request.nextUrl));
+      }
+      if (pathname.startsWith("/coordenacao") && role !== "coordenador_pedagogico") {
+        return Response.redirect(new URL(home, request.nextUrl));
       }
       if (pathname.startsWith("/professor") && role === "aluno") {
         return Response.redirect(new URL("/dashboard", request.nextUrl));

@@ -52,6 +52,6 @@ export async function reviewSubmissionAction(params: {
   revalidatePath("/professor");
   revalidatePath("/professor/turmas");
   revalidatePath("/dashboard");
-  revalidatePath("/gestor");
+  revalidatePath("/direcao");
   return work;
 }

@@ -4,7 +4,21 @@
  * `Profile` é o papel que ela assume numa Instituição.
  */
 
-export type ProfileRole = "aluno" | "professor" | "administrador" | "admin_iah";
+/**
+ * D-046: "diretor"/"mantenedor"/"coordenador_pedagogico" são os novos
+ * papéis que sucedem "administrador" — só existem de fato no banco
+ * depois que a migration `split_admin_role` for aplicada (não aplicada
+ * nesta etapa); "administrador" continua válido e mapeia para Direção
+ * em `modules/workspace/infrastructure/session.ts`.
+ */
+export type ProfileRole =
+  | "aluno"
+  | "professor"
+  | "administrador"
+  | "admin_iah"
+  | "diretor"
+  | "mantenedor"
+  | "coordenador_pedagogico";
 
 export interface PlatformUser {
   id: string;

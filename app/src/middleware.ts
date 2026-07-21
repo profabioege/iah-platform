@@ -9,6 +9,7 @@ import {
   resolveSessionRole,
   WORKSPACE_SESSION_COOKIE,
 } from "@/modules/workspace/infrastructure/session-cookie";
+import { roleHome } from "@/modules/workspace/domain/workspace-context";
 
 /**
  * Middleware de rotas privadas da Plataforma.
@@ -18,8 +19,10 @@ import {
  * (sem AUTH_SECRET ele lança MissingSecret na entrada). Sem ela, vale o
  * Institutional Workspace (M15): toda rota da Plataforma exige a sessão
  * local simulada, e o papel do usuário limita o alcance — aluno não
- * acessa /professor nem /gestor; /gestor é exclusivo do Administrador
- * Institucional. Landing, /demonstracao e /entrar seguem públicas.
+ * acessa /professor nem as áreas institucionais; /mantenedor, /direcao
+ * e /coordenacao são cada um exclusivo do seu próprio papel (D-046:
+ * sucessores do antigo "/gestor" único). Landing, /demonstracao e
+ * /entrar seguem públicas.
  */
 const nextAuthMiddleware = NextAuth(authConfig).auth as unknown as (
   request: NextRequest,
@@ -37,10 +40,16 @@ export default function middleware(request: NextRequest) {
     return NextResponse.redirect(login);
   }
 
-  if (pathname.startsWith("/gestor") && role !== "admin") {
-    return NextResponse.redirect(
-      new URL(role === "teacher" ? "/professor" : "/dashboard", request.url),
-    );
+  if (pathname.startsWith("/mantenedor") && role !== "maintainer") {
+    return NextResponse.redirect(new URL(roleHome(role), request.url));
+  }
+
+  if (pathname.startsWith("/direcao") && role !== "director") {
+    return NextResponse.redirect(new URL(roleHome(role), request.url));
+  }
+
+  if (pathname.startsWith("/coordenacao") && role !== "pedagogical_coordinator") {
+    return NextResponse.redirect(new URL(roleHome(role), request.url));
   }
 
   if (pathname.startsWith("/professor") && role === "student") {
@@ -57,6 +66,8 @@ export const config = {
     "/diario/:path*",
     "/avaliacoes/:path*",
     "/professor/:path*",
-    "/gestor/:path*",
+    "/mantenedor/:path*",
+    "/direcao/:path*",
+    "/coordenacao/:path*",
   ],
 };

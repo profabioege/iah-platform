@@ -1,7 +1,6 @@
-export function assertRole(
-  role: "admin" | "teacher" | "student",
-  allowed: Array<"admin" | "teacher" | "student">,
-): void {
+import type { Role } from "@/modules/workspace";
+
+export function assertRole(role: Role, allowed: Role[]): void {
   if (!allowed.includes(role)) throw new Error("Ação não autorizada para este papel.");
 }
 

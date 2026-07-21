@@ -14,7 +14,9 @@ function sectionTitle(pathname: string): string {
   if (pathname.startsWith("/missoes")) return "Missões";
   if (pathname.startsWith("/diario")) return "Diário do Auditor";
   if (pathname.startsWith("/professor")) return "Painel do Professor";
-  if (pathname.startsWith("/gestor")) return "Painel do Gestor";
+  if (pathname.startsWith("/mantenedor")) return "Mantenedor";
+  if (pathname.startsWith("/direcao")) return "Direção";
+  if (pathname.startsWith("/coordenacao")) return "Coordenação Pedagógica";
   return "Painel de controle";
 }
 

@@ -10,11 +10,13 @@ export const metadata: Metadata = {
 };
 
 /**
- * Implantação Institucional (Sprint M19) — experiência de confiança do
- * Gestor Escolar, guiada sobre os dados REAIS já existentes no ambiente
- * de demonstração (D-038). Rota aninhada em `/gestor`: herda a proteção
- * de papel já existente no middleware (exclusiva do Administrador), sem
- * nenhuma mudança de autenticação.
+ * Implantação Institucional (Sprint M19) — experiência de confiança da
+ * Direção da unidade, guiada sobre os dados REAIS já existentes no
+ * ambiente de demonstração (D-038). Rota aninhada em `/direcao` (D-046):
+ * herda a proteção de papel já existente no middleware (exclusiva da
+ * Direção), sem nenhuma mudança de autenticação. Não é mais item de
+ * menu de topo — alcançável a partir do bloco "Resumo institucional" do
+ * Início de Direção, para manter o menu enxuto.
  */
 export default async function ImplantacaoPage() {
   const context = await getWorkspaceContext();

@@ -115,6 +115,26 @@ async function main() {
       password_hash: passwordHash,
       status: "active",
     },
+    // D-046: sucessores do papel único "administrador" — mantenedor e
+    // coordenação pedagógica, além da direção já semeada acima. Só
+    // funcionam de fato após a migration `split_admin_role` (não
+    // aplicada) adicionar os valores ao CHECK de `profiles.role`.
+    {
+      id: "user-mantenedor",
+      institution_id: INSTITUTION_ID,
+      name: "Mantenedor(a) — Rede IAH",
+      email: `mantenedor@${DOMAIN}`,
+      password_hash: passwordHash,
+      status: "active",
+    },
+    {
+      id: "user-coordenacao",
+      institution_id: INSTITUTION_ID,
+      name: "Coordenação Pedagógica",
+      email: `coordenacao@${DOMAIN}`,
+      password_hash: passwordHash,
+      status: "active",
+    },
     ...Array.from({ length: 10 }, (_, i) => {
       const nn = String(i + 1).padStart(2, "0");
       return {
@@ -142,6 +162,20 @@ async function main() {
       user_id: "user-fabio",
       institution_id: INSTITUTION_ID,
       role: "professor",
+      status: "active",
+    },
+    {
+      id: "profile-mantenedor",
+      user_id: "user-mantenedor",
+      institution_id: INSTITUTION_ID,
+      role: "mantenedor",
+      status: "active",
+    },
+    {
+      id: "profile-coordenacao",
+      user_id: "user-coordenacao",
+      institution_id: INSTITUTION_ID,
+      role: "coordenador_pedagogico",
       status: "active",
     },
     ...Array.from({ length: 10 }, (_, i) => {

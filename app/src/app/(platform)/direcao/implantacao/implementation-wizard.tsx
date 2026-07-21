@@ -284,7 +284,7 @@ export function ImplementationWizard({ data }: { data: WizardData }) {
                 <span className="font-medium">Tudo pronto.</span>
               </div>
               <Link
-                href="/gestor"
+                href="/direcao"
                 className={cn(buttonVariants({ size: "default" }), "w-fit")}
               >
                 Iniciar utilização da Plataforma

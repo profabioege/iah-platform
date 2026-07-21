@@ -51,6 +51,6 @@ export async function submitAssessmentAction(
   revalidatePath(`/avaliacoes/${assignmentId}`);
   revalidatePath("/avaliacoes");
   revalidatePath("/professor/avaliacoes");
-  revalidatePath("/gestor");
+  revalidatePath("/direcao");
   return submission;
 }

@@ -29,9 +29,22 @@ import {
 } from "../seeds/institution-seed";
 import { WORKSPACE_SESSION_COOKIE } from "./session-cookie";
 
-/** Papel persistido (profiles, migration 0003) → papel do Workspace. */
+/**
+ * Papel persistido (profiles, migration 0003) → papel do Workspace.
+ *
+ * D-046: o papel único "administrador" foi dividido em três papéis reais
+ * (Mantenedor/Direção/Coordenação Pedagógica). "administrador" continua
+ * mapeando para "director" — o mais próximo do que esse papel sempre
+ * fez (gestão operacional de uma unidade) — para não quebrar nenhuma
+ * conta já provisionada antes da migration que introduz "diretor",
+ * "mantenedor" e "coordenador_pedagogico" ser aplicada. "admin_iah"
+ * (administrador global da IAH, fora do escopo desta divisão) segue
+ * mapeando para "director" também, mesmo comportamento de hoje.
+ */
 function toWorkspaceRole(dbRole: string): Role | null {
-  if (dbRole === "administrador" || dbRole === "admin_iah") return "admin";
+  if (dbRole === "administrador" || dbRole === "admin_iah" || dbRole === "diretor") return "director";
+  if (dbRole === "mantenedor") return "maintainer";
+  if (dbRole === "coordenador_pedagogico") return "pedagogical_coordinator";
   if (dbRole === "professor") return "teacher";
   if (dbRole === "aluno") return "student";
   return null;

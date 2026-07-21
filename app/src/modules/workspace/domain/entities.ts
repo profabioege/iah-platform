@@ -25,11 +25,19 @@ export type {
 /** Ano Letivo — mesmo dado de `AcademicYear` (`modules/platform`), nome da Sprint M15. */
 export type SchoolYear = AcademicYear;
 
-/** Papéis do Workspace. O sistema identifica o papel — nunca é escolhido na tela de login. */
-export type Role = "admin" | "teacher" | "student";
+/**
+ * Papéis do Workspace. O sistema identifica o papel — nunca é escolhido
+ * na tela de login. O antigo papel único "admin" (D-046) foi dividido
+ * em três papéis institucionais reais — Mantenedor (rede/grupo de
+ * unidades), Direção (uma unidade escolar) e Coordenação Pedagógica
+ * (pedagogia da unidade) — nunca mais "Gestor" genérico na interface.
+ */
+export type Role = "maintainer" | "director" | "pedagogical_coordinator" | "teacher" | "student";
 
 export const ROLE_LABEL: Record<Role, string> = {
-  admin: "Administrador(a) Institucional",
+  maintainer: "Mantenedor(a)",
+  director: "Direção",
+  pedagogical_coordinator: "Coordenação Pedagógica",
   teacher: "Professor(a)",
   student: "Aluno(a)",
 };

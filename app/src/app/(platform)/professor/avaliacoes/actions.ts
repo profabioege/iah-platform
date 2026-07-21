@@ -28,7 +28,7 @@ export interface AssessmentDraftInput {
 async function teacherContext() {
   const workspace = await getWorkspaceContext();
   if (!workspace) throw new Error("Sessão inválida.");
-  assertRole(workspace.role, ["teacher", "admin"]);
+  assertRole(workspace.role, ["teacher", "director"]);
   return workspace;
 }
 
@@ -36,7 +36,7 @@ function refreshAssessmentPaths() {
   revalidatePath("/professor/avaliacoes");
   revalidatePath("/avaliacoes");
   revalidatePath("/dashboard");
-  revalidatePath("/gestor");
+  revalidatePath("/direcao");
 }
 
 export async function createAssessmentAction(input: AssessmentDraftInput) {

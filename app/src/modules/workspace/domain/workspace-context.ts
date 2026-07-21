@@ -18,19 +18,26 @@ import type {
 
 /** Autorização por papel — capacidade, não rota (ver `Permission`). */
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
-  admin: [
+  // Rede/grupo de unidades — visão agregada, sem gestão operacional de uma unidade específica.
+  maintainer: ["institution:view"],
+  // Uma unidade escolar — o mesmo alcance do antigo "admin" (D-046).
+  director: [
     "institution:view",
     "institution:manage-users",
     "institution:settings",
     "teaching:monitor",
   ],
+  // Pedagogia da unidade — acompanha, não administra usuários/configurações.
+  pedagogical_coordinator: ["institution:view", "teaching:monitor"],
   teacher: ["teaching:plan", "teaching:monitor"],
   student: ["learning:participate"],
 };
 
 /** Rota inicial de cada papel após o login. */
 export function roleHome(role: Role): string {
-  if (role === "admin") return "/gestor";
+  if (role === "maintainer") return "/mantenedor";
+  if (role === "director") return "/direcao";
+  if (role === "pedagogical_coordinator") return "/coordenacao";
   if (role === "teacher") return "/professor";
   return "/dashboard";
 }
