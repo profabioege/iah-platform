@@ -11,7 +11,7 @@ export function TaskGrid() {
           icon={task.icon}
           title={task.title}
           description={task.description}
-          href={`/professor/docente-iah/tarefa/${task.slug}`}
+          href={task.href ?? `/professor/docente-iah/tarefa/${task.slug}`}
         />
       ))}
     </section>

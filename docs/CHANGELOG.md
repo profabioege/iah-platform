@@ -1,5 +1,14 @@
 # Changelog — IAH Educacional
 
+## 21/07/2026 — DocentIAH: 4 cards principais + wizard de Avaliação com adaptação pedagógica
+
+- DocentIAH passa de 8 para 4 cards principais: Apresentação de slides, Avaliação, Plano de aula (sucede "Criar uma aula"), Adaptar material (sucede "Adaptar uma atividade"). Missões e Devolutivas continuam alcançáveis pelo Painel do Professor; "Organizar uma sequência didática" vira link secundário de "Plano de aula", preservando o acesso à hierarquia Planejar.
+- Terminologia de produto padronizada em "Avaliação"/"Avaliações" — nunca "Prova"/"Provas" (grep confirmou que o termo nunca foi usado no código como vocabulário de produto).
+- Novo wizard de Avaliação (`/professor/docente-iah/avaliacao`, 5 etapas): campos obrigatórios (disciplina, ano/série, tema, quantidade de questões, tipos de questão, dificuldade, valor total) e opcionais (objetivos, duração, contexto da turma, instruções, competências, materiais de referência).
+- Seção "Adaptações pedagógicas": checkbox "Criar versão adaptada para alunos neurodivergentes" revela 11 opções configuráveis + campo livre, sempre com as 5 regras pedagógicas fixas e o aviso obrigatório sobre necessidades individuais e orientações da instituição.
+- Etapa final de pré-visualização estrutural + "Saída prevista" (avaliação original, gabarito, critérios de correção, versão adaptada quando selecionada, versão pronta para impressão) — botão "Gerar avaliação" desabilitado, nenhuma geração real nesta etapa.
+- Decisão registrada em `DECISIONS.md` D-045.
+
 ## 21/07/2026 — Redesenho do Painel do Professor + DocentIAH (interface/arquitetura)
 
 - Painel do Professor (`/professor`) reestruturado em quatro blocos: Card de identidade, seis Atalhos rápidos (Turmas, Aulas, Missões, Sondagens, Devolutivas, DocentIAH), "Hoje no IAH" e "Precisa da sua atenção" — os dois últimos com dados reais de `modules/assessment` (sondagens do dia, entregas aguardando devolutiva, sondagens sem publicação, prazos próximos), sem número inventado.

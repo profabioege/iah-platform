@@ -64,13 +64,21 @@ export default async function DocentTaskPage({
           </CardDescription>
         </CardHeader>
         {task.bridgeHref ? (
-          <CardContent>
+          <CardContent className="flex flex-wrap gap-3">
             <Link
               href={task.bridgeHref}
               className={cn(buttonVariants({ variant: "outline" }), "w-fit")}
             >
               {task.bridgeLabel}
             </Link>
+            {task.secondaryHref ? (
+              <Link
+                href={task.secondaryHref}
+                className={cn(buttonVariants({ variant: "ghost" }), "w-fit")}
+              >
+                {task.secondaryLabel}
+              </Link>
+            ) : null}
           </CardContent>
         ) : null}
       </Card>

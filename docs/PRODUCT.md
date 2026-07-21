@@ -36,9 +36,10 @@ src/app/
 │   ├── diario/page.tsx             ← Diário do Auditor (reflexões) → /diario
 │   └── professor/page.tsx          ← Painel do Professor → /professor
 │       ├── devolutivas/page.tsx    ← placeholder honesto (D-044) → /professor/devolutivas
-│       └── docente-iah/            ← DocentIAH (D-044) — interface/arquitetura, sem IA conectada
+│       └── docente-iah/            ← DocentIAH (D-044/D-045) — interface/arquitetura, sem IA conectada
 │           ├── page.tsx                  ← → /professor/docente-iah
-│           ├── tarefa/[slug]/page.tsx    ← 8 tarefas → /professor/docente-iah/tarefa/[slug]
+│           ├── tarefa/[slug]/page.tsx    ← placeholders (Apresentação de slides, Plano de aula, Adaptar material) → /professor/docente-iah/tarefa/[slug]
+│           ├── avaliacao/page.tsx        ← wizard de Avaliação, 5 etapas (D-045) → /professor/docente-iah/avaliacao
 │           └── planejar/                 ← Aula → Sequência didática → Unidade → Bimestre → Planejamento anual
 │               ├── page.tsx              ← → /professor/docente-iah/planejar
 │               └── [nivel]/page.tsx      ← → /professor/docente-iah/planejar/[nivel]
