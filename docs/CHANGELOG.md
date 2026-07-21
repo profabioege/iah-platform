@@ -1,5 +1,14 @@
 # Changelog — IAH Educacional
 
+## 21/07/2026 — Redesenho do Painel do Professor + DocentIAH (interface/arquitetura)
+
+- Painel do Professor (`/professor`) reestruturado em quatro blocos: Card de identidade, seis Atalhos rápidos (Turmas, Aulas, Missões, Sondagens, Devolutivas, DocentIAH), "Hoje no IAH" e "Precisa da sua atenção" — os dois últimos com dados reais de `modules/assessment` (sondagens do dia, entregas aguardando devolutiva, sondagens sem publicação, prazos próximos), sem número inventado.
+- Removidos do Painel: "Biblioteca Oficial" e "Indicadores da Turma" (Analytics) — indicadores avançados seguem exclusivos da área da Gestão.
+- Novo **DocentIAH** (`/professor/docente-iah`) — núcleo futuro da experiência docente: oito tarefas nomeadas (Criar aula, Criar missão, Criar sondagem, Adaptar atividade, Criar rubrica, Preparar devolutiva, Relacionar competências, Organizar sequência didática), "Continuar de onde parei"/"Rascunhos recentes" (lidos de `modules/lesson`/`modules/authoring`), Turmas relacionadas e espaço reservado para sugestões futuras. Nesta etapa é só interface e arquitetura de navegação — sem provedor de IA, sem chamada externa, AI Gateway intocado.
+- Planejamento Anual sai do Painel como atalho isolado e passa a viver em `DocentIAH → Planejar → Aula/Sequência didática/Unidade/Bimestre/Planejamento anual`; o nível "Planejamento anual" aponta para o Currículo Vivo real (`/professor/curriculo`).
+- Nova rota placeholder `/professor/devolutivas`, honesta sobre o que ainda não existe e com ponte para os dois lugares reais onde a devolutiva já acontece hoje (Acompanhamento da turma e Correção de Sondagens).
+- Decisão registrada em `DECISIONS.md` D-044.
+
 ## 20/07/2026 — Sondagem diagnóstica V1
 
 - Novo `modules/assessment`: `LessonAssessment` versionada, publicação por turma, prazos globais/individuais, rascunho, entrega, autocorreção determinística, revisão docente e liberação coletiva.

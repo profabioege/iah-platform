@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { getDefaultAssessmentRepositories } from "@/modules/assessment";
 import { localMissionRepository } from "@/modules/library";
 import { isGoogleWorkspaceConfigured } from "@/modules/integrations";
 import { createInstitutionalClassMonitor, getDefaultRepositories } from "@/modules/platform";
@@ -16,9 +17,13 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
+import { AttentionPanel } from "./attention-panel";
+import { buildAssignmentViews } from "./assignment-view";
 import { ClassPanel } from "./class-panel";
 import { ClassroomsSection, type ClassroomRow } from "./classrooms-section";
-import { TeacherWorkspace } from "./teacher-workspace";
+import { IdentityCard } from "./identity-card";
+import { QuickShortcuts } from "./quick-shortcuts";
+import { TodayPanel } from "./today-panel";
 import { parseMissionContent } from "../missoes/[id]/mission-flow/parse-mission-content";
 
 
@@ -56,6 +61,9 @@ export default async function ProfessorPage() {
         ).listByMission(mission.id)
       : [];
 
+  const assignmentViews = workspace ? await loadAssignmentViews(workspace) : [];
+  const totalStudents = classrooms.reduce((total, classroom) => total + classroom.studentCount, 0);
+
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       <header className="flex flex-col gap-2">
@@ -78,10 +86,26 @@ export default async function ProfessorPage() {
         ) : null}
       </header>
 
-      <TeacherWorkspace
-        subjectName={workspace?.subjects[0]?.name ?? null}
-        classrooms={workspace?.classrooms ?? []}
-      />
+      {workspace ? (
+        <IdentityCard
+          identity={{
+            name: workspace.user.name,
+            role: workspace.role,
+            subjectName: workspace.subjects[0]?.name ?? null,
+            institutionName: workspace.institution.name,
+            schoolYearLabel: workspace.schoolYear.label,
+            classroomCount: workspace.classrooms.length,
+            studentCount: totalStudents,
+          }}
+        />
+      ) : null}
+
+      <QuickShortcuts />
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <TodayPanel assignmentViews={assignmentViews} />
+        <AttentionPanel assignmentViews={assignmentViews} />
+      </div>
 
       <ClassroomsSection classrooms={classrooms} />
 
@@ -139,6 +163,36 @@ export default async function ProfessorPage() {
       </Card>
     </div>
   );
+}
+
+/**
+ * Junta Sondagens + Aplicações + Entregas do `modules/assessment` (mesmo
+ * padrão de `professor/avaliacoes/page.tsx`) para alimentar "Hoje no IAH"
+ * e "Precisa da sua atenção" com dados reais — nada inventado (D-016).
+ */
+async function loadAssignmentViews(
+  workspace: NonNullable<Awaited<ReturnType<typeof getWorkspaceContext>>>,
+) {
+  const repositories = getDefaultAssessmentRepositories();
+  const [assessments, assignments] = await Promise.all([
+    repositories.assessments.list(workspace.institution.id),
+    repositories.assignments.listByInstitution(workspace.institution.id),
+  ]);
+  const submissionsByAssignment = Object.fromEntries(
+    await Promise.all(
+      assignments.map(async (assignment) => [
+        assignment.id,
+        await repositories.submissions.listByAssignment(workspace.institution.id, assignment.id),
+      ]),
+    ),
+  );
+
+  return buildAssignmentViews({
+    assignments,
+    assessments,
+    classrooms: workspace.classrooms,
+    submissionsByAssignment,
+  });
 }
 
 /**

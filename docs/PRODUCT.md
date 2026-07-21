@@ -35,6 +35,13 @@ src/app/
 │   ├── missoes/[id]/page.tsx       ← detalhe da Missão + workspace do aluno
 │   ├── diario/page.tsx             ← Diário do Auditor (reflexões) → /diario
 │   └── professor/page.tsx          ← Painel do Professor → /professor
+│       ├── devolutivas/page.tsx    ← placeholder honesto (D-044) → /professor/devolutivas
+│       └── docente-iah/            ← DocentIAH (D-044) — interface/arquitetura, sem IA conectada
+│           ├── page.tsx                  ← → /professor/docente-iah
+│           ├── tarefa/[slug]/page.tsx    ← 8 tarefas → /professor/docente-iah/tarefa/[slug]
+│           └── planejar/                 ← Aula → Sequência didática → Unidade → Bimestre → Planejamento anual
+│               ├── page.tsx              ← → /professor/docente-iah/planejar
+│               └── [nivel]/page.tsx      ← → /professor/docente-iah/planejar/[nivel]
 └── api/
     └── contato/route.ts            ← envio de e-mail via Resend (dormente até RESEND_API_KEY)
 ```
@@ -104,7 +111,7 @@ Tipografia: **Geist** (sans) para toda a interface, **Geist Mono** para rótulos
 `/entrar` → `/dashboard` (Missão ativa + progresso real) → `/missoes/[id]` (ler os 11 blocos da Missão) → Produção (autosave, entrega) → Reflexão (liberada após a entrega, autosave, registro) → banner "Aula concluída" → volta ao `/dashboard` (badge "Missão concluída") → `/diario` (reflexão listada).
 
 **Jornada do professor (piloto de agosto):**
-`/entrar` → `/professor` — lista de alunos com 8 estados (não acessou/visualizou/investigando/produzindo/rascunho/entregue/reflexão/concluiu), contadores por status que funcionam como filtro, último acesso, abertura inline de produção e reflexão de cada aluno. Fonte de dados hoje é simulada (ver Módulos existentes); trocar por dados reais não muda esta tela.
+`/entrar` → `/professor` — Card de identidade (quem, onde, com quantas Turmas/alunos), seis atalhos rápidos (Turmas, Aulas, Missões, Sondagens, Devolutivas, DocentIAH — D-044), blocos "Hoje no IAH" e "Precisa da sua atenção" (dados reais de `modules/assessment`), depois a lista de alunos com 8 estados (não acessou/visualizou/investigando/produzindo/rascunho/entregue/reflexão/concluiu), contadores por status que funcionam como filtro, último acesso, abertura inline de produção e reflexão de cada aluno. Fonte de dados hoje é simulada (ver Módulos existentes); trocar por dados reais não muda esta tela. O DocentIAH (`/professor/docente-iah`) é o núcleo futuro da experiência docente — nesta etapa, só interface e arquitetura de navegação, sem provedor de IA conectado.
 
 **Jornada comercial (mantenedor/diretor):**
 Landing (`/`) → "Entrar" (demonstração da Plataforma) ou "Solicitar Demonstração" → `/contato` (formulário + e-mails institucionais `contato@`/`comercial@iaheducacional.com.br`).
