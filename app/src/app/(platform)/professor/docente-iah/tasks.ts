@@ -34,6 +34,7 @@ export const DOCENT_TASKS: DocentTask[] = [
     title: "Apresentação de slides",
     description: "Monte os slides de apoio para uma aula ou missão.",
     icon: Presentation,
+    href: "/professor/docente-iah/apresentacao-slides",
   },
   {
     slug: "avaliacao",
