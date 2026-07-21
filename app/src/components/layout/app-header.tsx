@@ -15,7 +15,7 @@ function sectionTitle(pathname: string): string {
   if (pathname.startsWith("/diario")) return "Diário do Auditor";
   if (pathname.startsWith("/professor")) return "Painel do Professor";
   if (pathname.startsWith("/gestor")) return "Painel do Gestor";
-  return "Dashboard";
+  return "Painel de controle";
 }
 
 export function AppHeader({

@@ -31,7 +31,7 @@ export function LessonHeader({
           <ArrowLeft className="size-4" />
           Minhas Aulas
         </Link>
-        <Badge className="bg-primary/15 text-primary">Lesson Composer</Badge>
+        <Badge className="bg-primary/15 text-primary">Montador de Aula</Badge>
       </div>
       <p className="truncate text-sm font-medium text-foreground/80">
         {topic || "Nova Aula"}

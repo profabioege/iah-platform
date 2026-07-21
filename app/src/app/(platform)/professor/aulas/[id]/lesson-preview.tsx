@@ -50,14 +50,14 @@ export function LessonPreview({
         </p>
       </PreviewSection>
 
-      <PreviewSection icon={BookOpen} label="Mission Flow">
+      <PreviewSection icon={BookOpen} label="Fluxo da Missão">
         {mission ? (
           <div className="flex flex-col gap-1">
             <p className="text-sm font-semibold">{mission.title}</p>
             <p className="text-sm text-muted-foreground">{mission.guidingQuestion}</p>
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">Nenhuma Mission Flow selecionada.</p>
+          <p className="text-sm text-muted-foreground">Nenhum Fluxo da Missão selecionado.</p>
         )}
       </PreviewSection>
 
@@ -79,7 +79,7 @@ export function LessonPreview({
         {criteria.length > 0 ? (
           <div className="flex flex-col gap-3">
             <p className="text-xs text-muted-foreground">
-              {evidenceCount} evidência{evidenceCount === 1 ? "" : "s"} no Dossiê da Mission selecionada.
+              {evidenceCount} evidência{evidenceCount === 1 ? "" : "s"} no Dossiê da Missão selecionada.
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               {criteria.map((entry, i) => (
@@ -94,7 +94,7 @@ export function LessonPreview({
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Selecione uma Mission Flow para herdar a rubrica e os critérios dela.
+            Selecione um Fluxo da Missão para herdar a rubrica e os critérios dela.
           </p>
         )}
       </PreviewSection>
@@ -120,7 +120,7 @@ export function LessonPreview({
 
       <PreviewSection icon={FileText} label="Portfólio">
         <p className="text-sm text-muted-foreground">
-          Ainda conceitual (D-028) — a produção desta Lesson não é arquivada
+          Ainda conceitual (D-028) — a produção desta Aula não é arquivada
           num Portfólio do aluno nesta Sprint.
         </p>
       </PreviewSection>

@@ -48,7 +48,7 @@ export function MyLessonCard({
         </span>
         <div className="flex flex-col gap-0.5">
           <p className="text-xs font-semibold uppercase tracking-widest text-primary">
-            Minha Lesson
+            Minha Aula
           </p>
           <p className="text-sm font-medium text-foreground">{lesson.topic}</p>
           {lesson.objective ? (

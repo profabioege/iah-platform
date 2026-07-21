@@ -50,7 +50,7 @@ export function TeacherWorkspace({
                 ))}
               </div>
               <p className="text-sm text-muted-foreground">
-                Lessons, Mission publicada e acompanhamento por turma.
+                Aulas, Missão publicada e acompanhamento por turma.
               </p>
             </CardContent>
           </Card>
@@ -60,12 +60,12 @@ export function TeacherWorkspace({
       <LinkCard
         icon={CalendarRange}
         title="Planejamento Anual"
-        description="Curriculum Engine — o Currículo Vivo, navegável."
+        description="Currículo Vivo, navegável."
         href="/professor/curriculo"
       />
       <LinkCard
         icon={Wand2}
-        title="Lesson Composer"
+        title="Montador de Aula"
         description="Monte o Pacote Pedagógico de uma aula em 7 etapas."
         href="/professor/aulas"
       />
@@ -77,7 +77,7 @@ export function TeacherWorkspace({
       />
       <LinkCard
         icon={Rocket}
-        title="Mission Flow"
+        title="Fluxo da Missão"
         description="A experiência de investigação que o aluno percorre."
         href="/missoes"
       />
@@ -85,7 +85,7 @@ export function TeacherWorkspace({
       <SoonCard
         icon={Library}
         title="Biblioteca Oficial"
-        description="Knowledge Engine — acervo curado com metadados BNCC."
+        description="Acervo curado com metadados BNCC."
       />
       <LinkCard
         icon={ClipboardCheck}
@@ -95,7 +95,7 @@ export function TeacherWorkspace({
       />
       <SoonCard
         icon={BarChart3}
-        title="Analytics da Turma"
+        title="Indicadores da Turma"
         description="Indicadores pedagógicos por competência."
       />
     </section>

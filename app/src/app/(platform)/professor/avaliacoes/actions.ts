@@ -42,7 +42,7 @@ function refreshAssessmentPaths() {
 export async function createAssessmentAction(input: AssessmentDraftInput) {
   const workspace = await teacherContext();
   if (!input.title.trim()) throw new Error("Informe o título da sondagem.");
-  if (input.lessonId && input.missionId) throw new Error("Associe a uma Lesson ou Mission, não às duas.");
+  if (input.lessonId && input.missionId) throw new Error("Associe a uma Aula ou Missão, não às duas.");
   const now = new Date().toISOString();
   const assessmentId = crypto.randomUUID();
   const assessment: LessonAssessment = {

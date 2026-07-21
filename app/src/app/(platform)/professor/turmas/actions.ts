@@ -24,7 +24,7 @@ export async function publishLessonMission(params: {
 }): Promise<MissionAssignment> {
   const workspace = await getWorkspaceContext();
   if (!workspace || workspace.role === "student") {
-    throw new Error("Apenas a equipe pedagógica pode publicar Missions.");
+    throw new Error("Apenas a equipe pedagógica pode publicar Missões.");
   }
   if (
     workspace.institution.id !== params.institutionId ||

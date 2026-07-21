@@ -12,7 +12,11 @@ export type {
   EssayRubricBand,
   LessonAssessment,
 } from "./domain/entities";
-export { getAssessmentStatus } from "./domain/entities";
+export {
+  ASSESSMENT_LIFECYCLE_STATUS_LABEL,
+  ASSESSMENT_SUBMISSION_STATUS_LABEL,
+  getAssessmentStatus,
+} from "./domain/entities";
 export {
   canStudentAccess,
   canStudentSubmit,

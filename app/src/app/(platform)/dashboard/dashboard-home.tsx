@@ -144,9 +144,9 @@ export function DashboardHome({
     return (
       <Card className="mx-auto w-full max-w-3xl">
         <CardHeader>
-          <CardTitle>Nenhuma Mission publicada</CardTitle>
+          <CardTitle>Nenhuma Missão publicada</CardTitle>
           <CardDescription>
-            Sua próxima Mission aparecerá aqui quando o Professor publicar a Lesson da turma.
+            Sua próxima Missão aparecerá aqui quando o Professor publicar a Aula da turma.
           </CardDescription>
         </CardHeader>
       </Card>

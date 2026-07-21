@@ -142,16 +142,16 @@ export function TurmasExplorer({
 
       {current ? (
         <>
-          {/* Visualiza as Lessons daquela turma */}
+          {/* Visualiza as Aulas daquela turma */}
           <div className="flex flex-col gap-3">
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-              Lessons de {current.classroom.name}
+              Aulas de {current.classroom.name}
             </p>
             {lessons === null ? (
               <Skeleton className="h-20 w-full rounded-xl" />
             ) : classroomLessons.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Nenhuma Lesson desta turma ainda — monte uma no Lesson Composer
+                Nenhuma Aula desta turma ainda — monte uma no Montador de Aula
                 (Etapa 1, selecione {current.classroom.name} como Turma).
               </p>
             ) : (
@@ -174,7 +174,7 @@ export function TurmasExplorer({
                             {lesson.topic || "Aula sem tema definido"}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {mission?.title ?? "Sem Mission Flow"}
+                            {mission?.title ?? "Sem Fluxo de Missão"}
                           </p>
                         </div>
                         {alreadyPublished ? (
@@ -201,7 +201,7 @@ export function TurmasExplorer({
                             <Send className="size-4" />
                             {alreadyPublished
                               ? "Publicar novamente para a turma"
-                              : "Publicar Mission para a turma"}
+                              : "Publicar Missão para a turma"}
                           </Button>
                         </div>
                       ) : null}
@@ -219,7 +219,7 @@ export function TurmasExplorer({
             </p>
             {!current.activeAssignment ? (
               <p className="text-sm text-muted-foreground">
-                Nenhuma Mission publicada para esta turma ainda.
+                Nenhuma Missão publicada para esta turma ainda.
               </p>
             ) : (
               <>

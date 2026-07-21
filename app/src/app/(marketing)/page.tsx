@@ -135,7 +135,7 @@ const resources = [
   },
   {
     icon: ChartNoAxesCombined,
-    title: "Dashboard",
+    title: "Painel de controle",
     description: "Acompanhamento pedagógico para apoiar decisões com mais contexto.",
   },
   {

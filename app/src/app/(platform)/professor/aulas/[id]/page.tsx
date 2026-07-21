@@ -7,7 +7,7 @@ import { getWorkspaceContext, getWorkspaceUser } from "@/modules/workspace";
 import { LessonWizard } from "./lesson-wizard";
 
 export const metadata: Metadata = {
-  title: "Intelligent Lesson Composer",
+  title: "Montador Inteligente de Aula",
   description: "Monte uma aula completa em 7 etapas, com sugestões automáticas.",
 };
 

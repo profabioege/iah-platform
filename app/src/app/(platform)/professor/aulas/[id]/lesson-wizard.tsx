@@ -259,7 +259,7 @@ export function LessonWizard({
         <LessonStep
           eyebrow="Recursos"
           title="Com quais recursos?"
-          description="Busca automática no Knowledge Engine, ordenada por relevância ao Tema (dados de demonstração)."
+          description="Busca automática na Biblioteca Inteligente, ordenada por relevância ao Tema (dados de demonstração)."
         >
           <div className="flex flex-col gap-4">
             {Object.keys(groupedDocuments).length === 0 ? (
@@ -305,7 +305,7 @@ export function LessonWizard({
 
       {step === 5 && (
         <LessonStep
-          eyebrow="Mission Flow"
+          eyebrow="Fluxo da Missão"
           title="Como será a missão?"
           description="Associação automática pela combinação de Tema, Objetivo e Eixo — ou crie uma nova no Estúdio."
         >
@@ -339,13 +339,13 @@ export function LessonWizard({
         <LessonStep
           eyebrow="Avaliação"
           title="Rubrica, critérios e evidências"
-          description="Herdados automaticamente da Mission Flow selecionada — as competências avaliadas são as que você já escolheu."
+          description="Herdados automaticamente do Fluxo da Missão selecionada — as competências avaliadas são as que você já escolheu."
         >
           <div className="flex flex-col gap-4">
             {criteria.length > 0 ? (
               <>
                 <p className="text-xs text-muted-foreground">
-                  {evidenceCount} evidência{evidenceCount === 1 ? "" : "s"} no Dossiê da Mission selecionada.
+                  {evidenceCount} evidência{evidenceCount === 1 ? "" : "s"} no Dossiê da Missão selecionada.
                 </p>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {criteria.map((entry, i) => (
@@ -355,7 +355,7 @@ export function LessonWizard({
               </>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Volte à etapa Mission Flow e selecione uma Missão para herdar a rubrica.
+                Volte à etapa Fluxo da Missão e selecione uma Missão para herdar a rubrica.
               </p>
             )}
             {(lesson.bnccCompetencies.length > 0 || lesson.bnccComputacaoCompetencies.length > 0) && (
@@ -384,7 +384,7 @@ export function LessonWizard({
 
       {step === 7 && (
         <LessonStep
-          eyebrow="Preview"
+          eyebrow="Pré-visualização"
           title="O Pacote Pedagógico desta aula"
           description="Revise tudo antes de salvar."
         >
@@ -406,7 +406,7 @@ export function LessonWizard({
                 <PartyPopper className="size-5" />
               </span>
               <div>
-                <p className="text-sm font-semibold text-foreground">Lesson salva</p>
+                <p className="text-sm font-semibold text-foreground">Aula salva</p>
                 <p className="text-sm text-muted-foreground">
                   Encontre-a em &ldquo;Minhas Aulas&rdquo; a qualquer momento.
                 </p>
@@ -427,7 +427,7 @@ export function LessonWizard({
               className="w-fit"
             >
               <CheckCircle2 className="size-4" />
-              Salvar Lesson
+              Salvar Aula
             </Button>
           )}
           <MissionNavigation onBack={() => goTo(6)} hideNext />
@@ -546,7 +546,7 @@ function SelectableCard({
 
 function WizardSkeleton() {
   return (
-    <div className="flex flex-col gap-6" aria-busy="true" aria-label="Carregando a Lesson">
+    <div className="flex flex-col gap-6" aria-busy="true" aria-label="Carregando a Aula">
       <Skeleton className="h-4 w-32" />
       <Skeleton className="h-1.5 w-full rounded-full" />
       <div className="flex flex-col gap-4 py-6">

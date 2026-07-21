@@ -14,7 +14,7 @@ import { TurmasExplorer, type ClassroomLifecycle } from "./turmas-explorer";
 
 export const metadata: Metadata = {
   title: "Turmas",
-  description: "Percorra o fluxo completo: turma, Lesson, Mission, entregas.",
+  description: "Percorra o fluxo completo: turma, Aula, Missão, entregas.",
 };
 
 /**
@@ -62,13 +62,13 @@ export default async function TurmasPage() {
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
       <header className="flex flex-col gap-2">
         <p className="text-xs font-medium uppercase tracking-widest text-primary">
-          Learning Lifecycle
+          Ciclo de Aprendizagem
         </p>
         <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
           Turmas
         </h1>
         <p className="text-sm text-muted-foreground">
-          Selecione uma turma, escolha a Lesson e publique a Mission — depois
+          Selecione uma turma, escolha a Aula e publique a Missão — depois
           acompanhe quem iniciou, concluiu ou está pendente.
         </p>
       </header>

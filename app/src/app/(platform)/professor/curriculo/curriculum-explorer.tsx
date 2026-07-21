@@ -237,7 +237,7 @@ function ThemeCard({
               </Section>
             ) : null}
 
-            <Section icon={BookOpen} label={`Mission Flows (${themeMissions.length})`}>
+            <Section icon={BookOpen} label={`Fluxos de Missão (${themeMissions.length})`}>
               {themeMissions.length > 0 ? (
                 <ul className="flex flex-col gap-1">
                   {themeMissions.map((m) => (
@@ -252,11 +252,11 @@ function ThemeCard({
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-muted-foreground">Nenhuma Mission Flow vinculada.</p>
+                <p className="text-sm text-muted-foreground">Nenhum Fluxo de Missão vinculado.</p>
               )}
             </Section>
 
-            <Section icon={FileText} label={`Lessons (${themeLessons.length})`}>
+            <Section icon={FileText} label={`Aulas (${themeLessons.length})`}>
               {themeLessons.length > 0 ? (
                 <ul className="flex flex-col gap-1.5">
                   {themeLessons.map((lesson) => (
@@ -281,9 +281,9 @@ function ThemeCard({
                 </ul>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Nenhuma Lesson deste Tema ainda —{" "}
+                  Nenhuma Aula deste Tema ainda —{" "}
                   <Link href="/professor/aulas" className="font-medium text-primary underline-offset-4 hover:underline">
-                    monte uma no Lesson Composer
+                    monte uma no Montador de Aula
                   </Link>
                   .
                 </p>
@@ -311,7 +311,7 @@ function ThemeCard({
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Sem Mission Flow vinculada, não há critérios a herdar.
+                  Sem Fluxo de Missão vinculado, não há critérios a herdar.
                 </p>
               )}
             </Section>

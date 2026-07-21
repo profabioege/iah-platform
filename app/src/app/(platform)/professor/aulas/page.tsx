@@ -8,7 +8,7 @@ import { LessonList } from "./lesson-list";
 
 export const metadata: Metadata = {
   title: "Minhas Aulas",
-  description: "Monte aulas completas com o Intelligent Lesson Composer do IAH.",
+  description: "Monte aulas completas com o Montador Inteligente de Aula do IAH.",
 };
 
 /**
@@ -24,14 +24,14 @@ export default async function AulasPage() {
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
       <header className="flex flex-col gap-2">
         <p className="text-xs font-medium uppercase tracking-widest text-primary">
-          Intelligent Lesson Composer
+          Montador Inteligente de Aula
         </p>
         <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
           Minhas Aulas
         </h1>
         <p className="text-sm text-muted-foreground">
           O Método IAH monta o Pacote Pedagógico com você — Planejamento,
-          Currículo, Metodologia, Recursos, Mission Flow e Avaliação, com
+          Currículo, Metodologia, Recursos, Fluxo da Missão e Avaliação, com
           sugestões automáticas em cada etapa — salva neste dispositivo.
         </p>
       </header>

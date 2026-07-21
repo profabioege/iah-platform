@@ -276,16 +276,16 @@ export function ExecutiveDashboard({
       return "O professor responsável está vinculado e conduz todas as turmas da demonstração.";
     }
     if (view === "students") {
-      return `${totals.activeStudents} de ${totals.students} alunos já participaram da Mission ativa.`;
+      return `${totals.activeStudents} de ${totals.students} alunos já participaram da Missão ativa.`;
     }
     if (view === "classes") {
       return `${classroomRows.length} turmas estão configuradas e acompanhadas no ciclo institucional.`;
     }
     if (view === "discipline") {
-      return "A disciplina está configurada, com currículo, Lessons e Mission Flow conectados.";
+      return "A disciplina está configurada, com currículo, Aulas e Fluxo de Missão conectados.";
     }
     return inactiveStudents > 0
-      ? `A implantação avança bem; ${inactiveStudents} alunos ainda precisam iniciar a Mission.`
+      ? `A implantação avança bem; ${inactiveStudents} alunos ainda precisam iniciar a Missão.`
       : "A implantação está saudável e todas as turmas já iniciaram a operação.";
   }, [classroomRows.length, inactiveStudents, totals.activeStudents, totals.students, view]);
 
@@ -295,7 +295,7 @@ export function ExecutiveDashboard({
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary">
-              Executive Experience
+              Visão Executiva
             </Badge>
             <span className="text-xs text-muted-foreground">
               Ambiente de demonstração · dados simulados
@@ -457,7 +457,7 @@ function Overview({
                   ? `${inactiveStudents} alunos ainda não acessaram`
                   : "Todos os alunos já acessaram"
               }
-              description="Leitura da Mission ativa no ambiente demonstrativo."
+              description="Leitura da Missão ativa no ambiente demonstrativo."
               emphasis={inactiveStudents > 0}
             />
             <AttentionItem
@@ -493,8 +493,8 @@ function Overview({
         <MetricCard
           icon={BookOpenCheck}
           label="Disciplina"
-          value={`${cycleStats.missionsInProgress} Mission${cycleStats.missionsInProgress === 1 ? "" : "s"}`}
-          detail={`${cycleStats.publishedLessons} Lesson${cycleStats.publishedLessons === 1 ? "" : "s"} publicada${cycleStats.publishedLessons === 1 ? "" : "s"}`}
+          value={`${cycleStats.missionsInProgress} ${cycleStats.missionsInProgress === 1 ? "Missão" : "Missões"}`}
+          detail={`${cycleStats.publishedLessons} Aula${cycleStats.publishedLessons === 1 ? "" : "s"} publicada${cycleStats.publishedLessons === 1 ? "" : "s"}`}
         />
       </section>
 
@@ -504,7 +504,7 @@ function Overview({
             <div>
               <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Alunos</p>
               <CardTitle className="mt-1">Engajamento por turma</CardTitle>
-              <CardDescription>Participação na Mission ativa da demonstração.</CardDescription>
+              <CardDescription>Participação na Missão ativa da demonstração.</CardDescription>
             </div>
             <Badge variant="outline">Média institucional · {activeRate}%</Badge>
           </CardHeader>
@@ -712,12 +712,12 @@ function FocusedView({
     discipline: {
       badge: "Disciplina · Em operação",
       title: "Currículo em movimento",
-      description: "Currículo, Lesson Composer, Mission Flow e acompanhamento conectados numa mesma proposta pedagógica.",
+      description: "Currículo, Montador de Aula, Fluxo de Missão e acompanhamento conectados numa mesma proposta pedagógica.",
       rows: [
         ["Disciplina", subjectName],
         ["Currículo", "Configurado"],
-        ["Lessons publicadas", String(cycleStats.publishedLessons)],
-        ["Missions em andamento", String(cycleStats.missionsInProgress)],
+        ["Aulas publicadas", String(cycleStats.publishedLessons)],
+        ["Missões em andamento", String(cycleStats.missionsInProgress)],
         ["Turmas alcançadas", String(classrooms.length)],
       ],
       href: "/professor/curriculo",

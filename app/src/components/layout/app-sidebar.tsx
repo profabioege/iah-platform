@@ -45,7 +45,7 @@ type MenuItem = { title: string; icon: typeof LayoutDashboard; href?: string };
  * completo de sempre.
  */
 const TEACHER_MENU: MenuItem[] = [
-  { title: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+  { title: "Painel de controle", icon: LayoutDashboard, href: "/dashboard" },
   { title: "Missões", icon: Rocket, href: "/missoes" },
   { title: "Sondagens", icon: ClipboardList, href: "/professor/avaliacoes" },
   { title: "Professor", icon: GraduationCap, href: "/professor" },
@@ -65,7 +65,7 @@ const STUDENT_MENU: MenuItem[] = [
   { title: "Diário do Auditor", icon: NotebookPen, href: "/diario" },
   { title: "Meu Portfólio", icon: FolderKanban },
   { title: "Meu Histórico", icon: History },
-  { title: "Meu Feedback", icon: MessageSquareText },
+  { title: "Minha Devolutiva", icon: MessageSquareText },
 ];
 
 const ADMIN_MENU: MenuItem[] = [

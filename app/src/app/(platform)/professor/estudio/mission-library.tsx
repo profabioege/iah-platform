@@ -107,7 +107,7 @@ export function MissionLibrary({ author }: { author: string }) {
         <FilterSelect label="Competência" value={competency} onChange={setCompetency} options={options.competencies} />
         <FilterSelect label="Autor" value={authorFilter} onChange={setAuthorFilter} options={options.authors} />
         <FilterSelect
-          label="Status"
+          label="Situação"
           value={status}
           onChange={setStatus}
           options={Object.keys(STATUS_LABEL)}

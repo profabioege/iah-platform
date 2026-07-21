@@ -356,7 +356,7 @@ export function MissionFlow({
                       href="/dashboard"
                       className="inline-flex items-center gap-1 text-xs font-medium text-chart-2 transition-colors hover:text-foreground"
                     >
-                      Voltar ao Dashboard
+                      Voltar ao Painel de controle
                       <ArrowRight className="size-3" />
                     </Link>
                   </div>

@@ -46,7 +46,7 @@ export default async function CurriculoPage() {
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
       <header className="flex flex-col gap-2">
         <p className="text-xs font-medium uppercase tracking-widest text-primary">
-          Curriculum Engine
+          Currículo Vivo
         </p>
         <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
           Currículo

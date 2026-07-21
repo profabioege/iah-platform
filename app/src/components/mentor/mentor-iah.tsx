@@ -35,7 +35,7 @@ const INITIAL_MESSAGE: ConversationMessage = {
   id: "mentor-iah-welcome",
   role: "mentor",
   content:
-    "Olá! Sou o Mentor IAH. Vou ajudar você a organizar o raciocínio com perguntas, pistas e analogias — sem fornecer respostas prontas nem redigir sua atividade. Em que parte desta Mission você quer pensar comigo?",
+    "Olá! Sou o Mentor IAH. Vou ajudar você a organizar o raciocínio com perguntas, pistas e analogias — sem fornecer respostas prontas nem redigir sua atividade. Em que parte desta Missão você quer pensar comigo?",
 };
 
 const QUICK_SUGGESTIONS = [
@@ -185,7 +185,7 @@ export function MentorIAH({ context }: { context: MentorMissionContext }) {
           >
             <SheetTitle className="sr-only">Mentor IAH</SheetTitle>
             <SheetDescription className="sr-only">
-              Apoio socrático durante a Mission.
+              Apoio socrático durante a Missão.
             </SheetDescription>
             {conversation}
           </SheetContent>

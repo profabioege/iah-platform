@@ -17,6 +17,14 @@ export type AssessmentLifecycleStatus =
   | "closed"
   | "archived";
 
+export const ASSESSMENT_LIFECYCLE_STATUS_LABEL: Record<AssessmentLifecycleStatus, string> = {
+  draft: "Rascunho",
+  scheduled: "Agendada",
+  open: "Aberta",
+  closed: "Encerrada",
+  archived: "Arquivada",
+};
+
 export interface AssessmentOption {
   id: string;
   label: string;
@@ -121,6 +129,12 @@ export interface AssessmentSubmission {
   reopenedAt: string | null;
   updatedAt: string;
 }
+
+export const ASSESSMENT_SUBMISSION_STATUS_LABEL: Record<AssessmentSubmission["status"], string> = {
+  draft: "Rascunho",
+  submitted: "Entregue",
+  validated: "Validada",
+};
 
 export interface AssessmentResultVisibility {
   result: boolean;

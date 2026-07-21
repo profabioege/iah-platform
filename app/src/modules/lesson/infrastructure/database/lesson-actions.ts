@@ -75,7 +75,7 @@ export async function listLessonsRemote(): Promise<Lesson[]> {
     .select("*")
     .eq("institution_id", institutionId)
     .order("updated_at", { ascending: false });
-  if (error) throw new Error(`Falha ao listar Lessons: ${error.message}`);
+  if (error) throw new Error(`Falha ao listar Aulas: ${error.message}`);
   return (data ?? []).map((row) => toLesson(row as LessonRow));
 }
 
@@ -88,7 +88,7 @@ export async function getLessonRemote(id: string): Promise<Lesson | null> {
     .eq("institution_id", institutionId)
     .eq("id", id)
     .maybeSingle();
-  if (error) throw new Error(`Falha ao abrir a Lesson: ${error.message}`);
+  if (error) throw new Error(`Falha ao abrir a Aula: ${error.message}`);
   return data ? toLesson(data as LessonRow) : null;
 }
 
@@ -96,7 +96,7 @@ export async function saveLessonRemote(lesson: Lesson): Promise<void> {
   const institutionId = await requireInstitutionId();
   const workspace = await getWorkspaceContext();
   if (workspace?.role === "student") {
-    throw new Error("Apenas a equipe pedagógica pode montar Lessons.");
+    throw new Error("Apenas a equipe pedagógica pode montar Aulas.");
   }
   // Turma (quando definida) precisa pertencer ao escopo do professor —
   // mesma checagem já aplicada em professor/turmas/actions.ts.
@@ -133,5 +133,5 @@ export async function saveLessonRemote(lesson: Lesson): Promise<void> {
     },
     { onConflict: "id" },
   );
-  if (error) throw new Error(`Falha ao salvar a Lesson: ${error.message}`);
+  if (error) throw new Error(`Falha ao salvar a Aula: ${error.message}`);
 }
