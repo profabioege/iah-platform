@@ -12,7 +12,7 @@ export function SiteFooter() {
       <div className="container footer-grid">
         <div>
           <Link href="/#inicio" aria-label="IAH Educacional, início">
-            <Logo variant="dark" wordmark className="h-14 w-auto" />
+            <Logo size="md" variant="dark" className="h-14" />
           </Link>
           <p className="footer-tagline">
             Inteligência Artificial &amp; Humanidades. Um sistema de ensino

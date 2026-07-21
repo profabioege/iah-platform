@@ -25,8 +25,8 @@ export function SiteNav() {
         <Link className="brand" href="/#inicio" aria-label="IAH Educacional, início">
           {/* M18.3: reduzido no mobile, completo do tablet em diante — nunca abaixo do mínimo legível (BRAND_GUIDELINES.md) */}
           <Logo
-            variant="reverse"
-            wordmark
+            size="md"
+            variant="dark"
             className="h-10 w-auto md:h-12"
             title="IAH Educacional"
           />

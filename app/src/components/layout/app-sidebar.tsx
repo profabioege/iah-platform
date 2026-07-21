@@ -20,7 +20,6 @@ import {
 } from "lucide-react";
 
 import { Logo } from "@/components/brand/logo";
-import { BrandSymbol } from "@/components/brand/symbol";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Sidebar,
@@ -125,13 +124,15 @@ export function AppSidebar({
         >
           {/* M18.3: logo completo expandida; recolhida, só o Núcleo IAH — nunca o logotipo reduzido a tamanho ilegível */}
           <Logo
-            variant="reverse"
-            wordmark
-            className="h-12 w-auto shrink-0 group-data-[collapsible=icon]:hidden"
-          />
-          <BrandSymbol
+            size="md"
             variant="dark"
-            className="hidden h-7 w-auto shrink-0 group-data-[collapsible=icon]:block"
+            className="shrink-0 group-data-[collapsible=icon]:hidden"
+          />
+          <Logo
+            size="sm"
+            mark
+            title="IAH"
+            className="hidden shrink-0 group-data-[collapsible=icon]:block"
           />
         </Link>
       </SidebarHeader>

@@ -65,7 +65,7 @@ export default async function EntrarPage({
       />
 
       <main className="relative flex w-full max-w-sm flex-col items-center gap-9 text-center">
-        <Logo variant="dark" wordmark className="h-28 w-auto" />
+        <Logo size="lg" variant="dark" />
 
         <div className="flex flex-col gap-3">
           <h1 className="text-xl font-semibold tracking-tight">

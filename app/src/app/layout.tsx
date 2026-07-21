@@ -10,6 +10,11 @@ export const metadata: Metadata = {
     template: "%s | IAH Educacional",
   },
   description: siteConfig.description,
+  icons: {
+    icon: [{ url: "/brand/favicon.svg", type: "image/svg+xml" }],
+    shortcut: "/brand/favicon.svg",
+    apple: "/brand/favicon.svg",
+  },
 };
 
 export default function RootLayout({

@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 
-import { BrandSymbol } from "@/components/brand/symbol";
+import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -224,7 +224,7 @@ function MentorConversation({
     <div className="flex h-full min-h-0 w-full flex-col bg-background">
       <header className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
-          <BrandSymbol className="h-6" title="Mentor IAH" />
+          <Logo size="sm" mark className="h-6" title="Mentor IAH" />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">

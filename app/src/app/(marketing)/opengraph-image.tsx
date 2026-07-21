@@ -8,6 +8,8 @@ export const contentType = "image/png";
 
 /** Imagem de compartilhamento (WhatsApp, LinkedIn, etc.) com a marca IAH. */
 export default function OpengraphImage() {
+  const logoUrl = new URL("/brand/logo-dark.svg", siteConfig.url).toString();
+
   return new ImageResponse(
     (
       <div
@@ -25,27 +27,14 @@ export default function OpengraphImage() {
           fontFamily: "sans-serif",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          {/* Marca IAH — cópia da geometria master (brand/logo.tsx, M18.3); não redesenhar aqui */}
-          <svg width="165" height="78" viewBox="0 0 1100 520">
-            <rect x="20" y="20" width="90" height="480" rx="25" fill="#f4f8fc" />
-            <path
-              d="M435 22 L205 498 M435 22 L665 498"
-              fill="none"
-              stroke="#f4f8fc"
-              strokeWidth="86"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path d="M435 315 L530 500 L340 500 Z" fill="#00a9c6" />
-            <rect x="730" y="20" width="90" height="480" rx="25" fill="#f4f8fc" />
-            <rect x="990" y="20" width="90" height="480" rx="25" fill="#f4f8fc" />
-            <rect x="775" y="200" width="260" height="95" fill="#f4f8fc" />
-          </svg>
-          <span style={{ fontSize: 22, letterSpacing: 6, color: "#42e8f1" }}>
-            EDUCACIONAL
-          </span>
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element -- ImageResponse usa o SVG oficial diretamente. */}
+        <img
+          src={logoUrl}
+          alt="IAH Educacional"
+          width="236"
+          height="150"
+          style={{ objectFit: "contain" }}
+        />
 
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           <span style={{ fontSize: 20, letterSpacing: 4, color: "#7eeff5" }}>
