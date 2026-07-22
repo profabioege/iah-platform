@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 import { saveLessonDraftAction } from "./actions";
+import { ReferenceList } from "./reference-list";
 
 const textareaClassName =
   "w-full resize-y rounded-lg border border-input bg-background/60 p-3 text-sm leading-relaxed text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-ring focus:ring-2 focus:ring-ring/30";
@@ -128,17 +129,7 @@ export function LessonResult({
       {lesson.references.length > 0 ? (
         <details className="rounded-lg border border-border px-3 py-2 text-sm">
           <summary className="cursor-pointer text-xs font-medium text-muted-foreground">Ver referências utilizadas</summary>
-          <ul className="mt-2 flex flex-col gap-2">
-            {lesson.references.map((reference) => (
-              <li key={reference.id} className="flex flex-col gap-0.5 border-t border-border pt-2 text-xs first:border-t-0 first:pt-0">
-                <span className="font-medium text-foreground/90">{reference.title}</span>
-                <span className="text-muted-foreground">
-                  {reference.organization} · {reference.version} · {reference.section}
-                </span>
-                <span className="text-muted-foreground">{reference.excerpt}</span>
-              </li>
-            ))}
-          </ul>
+          <ReferenceList references={lesson.references} />
         </details>
       ) : null}
 

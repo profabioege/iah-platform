@@ -30,6 +30,7 @@ import { LessonStep } from "../../aulas/[id]/lesson-step";
 
 import { generateLessonAction, identifyContextAction, listTopicsAction, suggestConnectionsAction } from "./actions";
 import { LessonResult } from "./lesson-result";
+import { ReferenceList } from "./reference-list";
 
 const TOTAL_STEPS = 5;
 const INITIAL_CONNECTIONS_SHOWN = 3;
@@ -677,20 +678,6 @@ function ErrorCard({ message, onRetry, onCancel }: { message: string | null; onR
   );
 }
 
-function ReferenceList({ references }: { references: KnowledgeReference[] }) {
-  return (
-    <ul className="mt-2 flex flex-col gap-2">
-      {references.map((reference) => (
-        <li key={reference.id} className="flex flex-col gap-0.5 border-t border-border pt-2 text-xs first:border-t-0 first:pt-0">
-          <span className="font-medium text-foreground/90">{reference.title}</span>
-          <span className="text-muted-foreground">
-            {reference.organization} · {reference.version} · {reference.section}
-          </span>
-        </li>
-      ))}
-    </ul>
-  );
-}
 
 function CustomConnectionForm({
   onCancel,
