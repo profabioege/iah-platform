@@ -1,12 +1,13 @@
 /**
  * Persistência do DocentIAH (D-047) — enxuta, reutilizando o padrão de
- * `modules/assessment`. `type: "slides"` é o único material hoje
- * (Apresentação de slides); os outros três cards do DocentIAH
- * (Avaliação, Plano de aula, Adaptar material) reaproveitam o mesmo
- * agregado quando ganharem geração real.
+ * `modules/assessment`. `"slides"` (Apresentação de slides) e
+ * `"laboratory_lesson"` (Conexões IAH → Aula de laboratório
+ * correlacionada, `modules/conexoes-iah`) reaproveitam este mesmo
+ * agregado; os demais cards do DocentIAH (Avaliação, Plano de aula,
+ * Adaptar material) reaproveitam quando ganharem geração real.
  */
 
-export type GeneratedMaterialType = "slides";
+export type GeneratedMaterialType = "slides" | "laboratory_lesson";
 
 export type GeneratedMaterialStatus = "generated" | "saved";
 

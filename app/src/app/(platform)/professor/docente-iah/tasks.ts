@@ -1,9 +1,12 @@
 import {
   ClipboardCheck,
+  FlaskConical,
   Presentation,
   Puzzle,
   Wand2,
 } from "lucide-react";
+
+import { isConexoesIahEnabled } from "@/lib/feature-flags";
 
 export interface DocentTask {
   slug: string;
@@ -59,6 +62,17 @@ export const DOCENT_TASKS: DocentTask[] = [
     description: "Ajustar um material existente para outro contexto, turma ou necessidade.",
     icon: Puzzle,
   },
+  ...(isConexoesIahEnabled()
+    ? [
+        {
+          slug: "conexoes-iah",
+          title: "Conexões IAH",
+          description: "Conecte conteúdos do currículo a experiências investigativas de Inteligência Artificial & Humanidades.",
+          icon: FlaskConical,
+          href: "/professor/docente-iah/conexoes-iah",
+        } satisfies DocentTask,
+      ]
+    : []),
 ];
 
 export function findDocentTask(slug: string): DocentTask | undefined {

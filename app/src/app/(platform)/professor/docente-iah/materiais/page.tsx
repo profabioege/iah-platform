@@ -14,6 +14,12 @@ export const metadata: Metadata = {
 
 const TYPE_LABEL: Record<GeneratedMaterial["type"], string> = {
   slides: "Apresentação de slides",
+  laboratory_lesson: "Aula de laboratório correlacionada",
+};
+
+const DETAIL_HREF: Record<GeneratedMaterial["type"], (id: string) => string> = {
+  slides: (id) => `/professor/docente-iah/materiais/${id}`,
+  laboratory_lesson: (id) => `/professor/docente-iah/conexoes-iah/aula/${id}`,
 };
 
 /** Lista os materiais salvos pelo professor — destino de "Salvar em Meus materiais" no resultado do wizard. */
@@ -63,7 +69,7 @@ export default async function MeusMateriaisPage() {
               {saved.map((material) => (
                 <li key={material.id}>
                   <Link
-                    href={`/professor/docente-iah/materiais/${material.id}`}
+                    href={DETAIL_HREF[material.type](material.id)}
                     className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted/40 md:px-6"
                   >
                     <div className="flex flex-col">
