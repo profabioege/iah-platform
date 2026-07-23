@@ -73,6 +73,26 @@ export interface ProviderRegistry {
 }
 
 // ============================================================
+// 3.1 Capabilities iniciais mapeadas (ver docs/AI_PROVIDER_GATEWAY.md §7/§7.1
+// para entrada/schema/sensibilidade/timeout completos de cada uma).
+// "mentor_iah.guide_student" fica fora de roteamento real por enquanto —
+// listada aqui só para o CapabilityRouter não precisar de um tipo à parte
+// quando essa decisão for tomada.
+// ============================================================
+
+export type CapabilityId =
+  | "docentiah.generate_slides"
+  | "docentiah.generate_assessment"
+  | "docentiah.generate_lesson_plan"
+  | "docentiah.adapt_material"
+  | "docentiah.improve_context"
+  | "conexoes_iah.identify_context"
+  | "conexoes_iah.suggest_connections"
+  | "conexoes_iah.generate_correlated_lesson"
+  | "mentor_iah.guide_student"
+  | "documents.extract_and_summarize";
+
+// ============================================================
 // 4. CapabilityRouter
 // ============================================================
 
