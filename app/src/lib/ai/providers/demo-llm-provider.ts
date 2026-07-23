@@ -1,4 +1,5 @@
 import type { LlmCompletionRequest, LlmCompletionResult, LlmProvider } from "../llm-provider";
+import type { DocentiahImproveContextInput } from "../prompts/docentiah/improve-context/schema.ts";
 import type { DocentiahSlidesEnrichedContext } from "../prompts/docentiah/slides/v1";
 import {
   DETAIL_LEVEL_LABEL,
@@ -28,8 +29,10 @@ export const demoLlmProvider: LlmProvider = {
       );
       return { raw: JSON.stringify(output), provider: "iah-demo", model: "docentiah-demo-v1" };
     }
-    if (request.capability === "docentiah.improve_text") {
-      return { raw: improveDemoText(request.userPrompt), provider: "iah-demo", model: "docentiah-demo-v1" };
+    if (request.capability === "docentiah.improve_context") {
+      const input = request.structuredInput as DocentiahImproveContextInput;
+      const output = improveContextDemo(input.text);
+      return { raw: JSON.stringify(output), provider: "iah-demo", model: "docentiah-demo-v1" };
     }
     throw new Error(`Capacidade não suportada pelo provedor demonstrativo: ${request.capability}`);
   },
@@ -229,12 +232,9 @@ function capitalize(text: string): string {
 }
 
 /** "Melhorar com IA" no modo demonstrativo — limpeza honesta de texto, nunca invenção de conteúdo. */
-function improveDemoText(promptText: string): string {
-  const match = /<original_text>\n([\s\S]*?)\n<\/original_text>/.exec(promptText);
-  const original = (match?.[1] ?? promptText).trim();
-  if (!original) return original;
-
-  const withNormalizedSpacing = original.replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n");
+function improveContextDemo(original: string): { improvedText: string; changesSummary: string[]; warnings: string[] } {
+  const trimmed = original.trim();
+  const withNormalizedSpacing = trimmed.replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n");
   const sentences = withNormalizedSpacing
     .split(/(?<=[.!?])\s+/)
     .map((sentence) => sentence.trim())
@@ -243,6 +243,18 @@ function improveDemoText(promptText: string): string {
       const capitalized = sentence.charAt(0).toUpperCase() + sentence.slice(1);
       return /[.!?]$/.test(capitalized) ? capitalized : `${capitalized}.`;
     });
+  const improvedText = sentences.join(" ");
 
-  return sentences.join(" ");
+  const changesSummary: string[] = [];
+  if (withNormalizedSpacing !== trimmed) changesSummary.push("Espaçamento e quebras de linha normalizados.");
+  if (improvedText !== withNormalizedSpacing) changesSummary.push("Pontuação final e maiúsculas de início de frase ajustadas.");
+  if (changesSummary.length === 0) changesSummary.push("Nenhuma alteração estrutural — o texto já estava claro.");
+
+  return {
+    improvedText,
+    changesSummary,
+    warnings: [
+      "Sugestão gerada pelo motor demonstrativo do DocentIAH (sem provedor de IA externo conectado) — revise antes de usar.",
+    ],
+  };
 }

@@ -393,7 +393,13 @@ export function SlidesWizard({ defaultSubjectName }: { defaultSubjectName: strin
                     })
                   }
                 />
-                <ImproveWithAiButton text={draft.additionalContext} onAccept={(text) => update({ additionalContext: text })} />
+                <ImproveWithAiButton
+                  text={draft.additionalContext}
+                  subject={draft.subject}
+                  educationLevel={draft.educationLevel}
+                  grade={draft.grade}
+                  onAccept={(text) => update({ additionalContext: text })}
+                />
               </div>
             </Field>
 

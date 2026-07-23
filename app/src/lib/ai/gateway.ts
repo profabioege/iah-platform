@@ -17,11 +17,18 @@ import { promptTemplateRegistry, type PromptTemplate, type TextPromptTemplate } 
 
 export class AiGenerationError extends Error {}
 
+export interface AiUsage {
+  inputTokens: number;
+  outputTokens: number;
+  estimatedCostUsd: number;
+}
+
 export interface AiExecutionResult<TOutput> {
   output: TOutput;
   provider: string;
   model: string;
   promptVersion: string;
+  usage?: AiUsage;
 }
 
 export interface AiTextExecutionResult {
@@ -29,6 +36,7 @@ export interface AiTextExecutionResult {
   provider: string;
   model: string;
   promptVersion: string;
+  usage?: AiUsage;
 }
 
 function safeParseJson(raw: string): { success: true; data: unknown } | { success: false } {
@@ -63,7 +71,7 @@ export const iahAiGateway = {
       TContext,
       TOutput
     >;
-    const provider = providerOverride ?? getLlmProvider();
+    const provider = providerOverride ?? getLlmProvider(capability);
     const userPrompt = template.buildUserPrompt(input, context);
 
     async function attempt(repairNote?: string) {
@@ -102,10 +110,11 @@ export const iahAiGateway = {
       provider: result.provider,
       model: result.model,
       promptVersion: template.version,
+      usage: result.usage,
     };
   },
 
-  /** Capacidades de texto livre (sem schema de saída), ex.: "docentiah.improve_text". */
+  /** Capacidades de texto livre (sem schema de saída). */
   async executeText<TInput, TContext>(
     capability: string,
     input: TInput,
@@ -117,7 +126,7 @@ export const iahAiGateway = {
       TInput,
       TContext
     >;
-    const provider = providerOverride ?? getLlmProvider();
+    const provider = providerOverride ?? getLlmProvider(capability);
     const userPrompt = template.buildUserPrompt(input, context);
     const result = await provider.complete({
       capability,
@@ -131,6 +140,7 @@ export const iahAiGateway = {
       provider: result.provider,
       model: result.model,
       promptVersion: template.version,
+      usage: result.usage,
     };
   },
 };

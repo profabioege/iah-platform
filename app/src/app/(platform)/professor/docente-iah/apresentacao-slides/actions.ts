@@ -1,7 +1,10 @@
 "use server";
 
+import { dataAnonymizer } from "@/lib/ai/data-anonymizer";
 import { AiGenerationError, iahAiGateway } from "@/lib/ai/gateway";
+import { AiProviderConfigurationError } from "@/lib/ai/llm-provider-factory";
 import { pdfParseTextExtractor, PdfValidationError, type PdfExtractionResult } from "@/lib/ai/pdf-text-extractor";
+import { docentiahImproveContextInputSchema, type DocentiahImproveContextOutput } from "@/lib/ai/prompts/docentiah/improve-context";
 import {
   docentiahSlidesGenerationInputSchema,
   type DocentiahSlidesGenerationInput,
@@ -39,6 +42,7 @@ async function logUsage(
   model: string,
   promptVersion: string,
   status: "success" | "error",
+  usage?: { inputTokens: number; outputTokens: number; estimatedCostUsd: number },
 ) {
   const repositories = getDefaultDocentiahRepositories();
   await repositories.usage.save(workspace.institution.id, {
@@ -49,18 +53,56 @@ async function logUsage(
     provider,
     model,
     promptVersion,
-    inputTokens: null,
-    outputTokens: null,
-    estimatedCost: null,
+    inputTokens: usage?.inputTokens ?? null,
+    outputTokens: usage?.outputTokens ?? null,
+    estimatedCost: usage?.estimatedCostUsd ?? null,
     status,
     createdAt: new Date().toISOString(),
   });
 }
 
-/** "Melhorar com IA" — reescreve só o texto de "Detalhes adicionais", capacidade separada da geração dos slides. */
-export async function improveContextAction(
-  text: string,
-): Promise<{ improvedText: string } | { error: string }> {
+/**
+ * Metadados de auditoria de provedor (§8 da auditoria — "qual provedor
+ * processou cada solicitação"). Log estruturado, nunca o texto do
+ * prompt/resposta — `ProviderAuditLog` persistido (tabela própria) fica
+ * para quando um segundo provider/capability real entrar; por ora isto
+ * é o rastro mínimo em log de servidor.
+ */
+function recordProviderAudit(event: {
+  institutionId: string;
+  capability: string;
+  provider: string;
+  usedFallback: boolean;
+  latencyMs: number;
+  status: "success" | "error";
+  errorCode?: string;
+}) {
+  console.info("[iah-ai-provider-audit]", JSON.stringify(event));
+}
+
+export interface ImproveContextParams {
+  text: string;
+  subject?: string;
+  educationLevel?: DocentiahSlidesGenerationInput["educationLevel"];
+  grade?: string;
+}
+
+export type ImproveContextResult =
+  | (DocentiahImproveContextOutput & { usedFallback: boolean })
+  | { error: string };
+
+/**
+ * "Melhorar com IA" — reescreve só o texto de "Detalhes adicionais",
+ * capacidade separada da geração dos slides. Primeira capability do
+ * produto que pode rodar num provedor real (DeepSeek, atrás de
+ * `IAH_AI_DEEPSEEK_ENABLED`) — desligada, o comportamento é idêntico ao
+ * de antes (motor demonstrativo).
+ *
+ * Não aceita arquivo, não recebe contexto de aluno, nunca envia nome de
+ * aluno nem instituição (só disciplina/etapa/série do formulário) — só o
+ * texto livre do professor, sempre anonimizado antes de sair da action.
+ */
+export async function improveContextAction(params: ImproveContextParams): Promise<ImproveContextResult> {
   let workspace: WorkspaceContext;
   try {
     workspace = await requireWorkspace();
@@ -68,15 +110,63 @@ export async function improveContextAction(
     return { error: error instanceof Error ? error.message : "Sessão inválida." };
   }
 
-  const trimmed = text.trim();
-  if (!trimmed) return { error: "Escreva algum texto antes de pedir para melhorar." };
+  const parsedInput = docentiahImproveContextInputSchema.safeParse({
+    text: params.text.trim(),
+    subject: params.subject,
+    educationLevel: params.educationLevel || undefined,
+    grade: params.grade,
+  });
+  if (!parsedInput.success) {
+    const issue = parsedInput.error.issues[0];
+    return { error: issue?.message ?? "Escreva algum texto antes de pedir para melhorar." };
+  }
+
+  const sanitizedInput = { ...parsedInput.data, text: dataAnonymizer.sanitize(parsedInput.data.text, "low") };
+  const startedAt = Date.now();
+  const wasDeepSeekRequested = process.env.IAH_AI_DEEPSEEK_ENABLED === "true";
 
   try {
-    const result = await iahAiGateway.executeText("docentiah.improve_text", { text: trimmed }, {});
-    await logUsage(workspace, "docentiah.improve_text", result.provider, result.model, result.promptVersion, "success");
-    return { improvedText: result.text };
-  } catch {
-    await logUsage(workspace, "docentiah.improve_text", "iah-demo", "docentiah-demo-v1", "v1", "error");
+    const result = await iahAiGateway.execute<
+      typeof sanitizedInput,
+      Record<string, never>,
+      DocentiahImproveContextOutput
+    >("docentiah.improve_context", sanitizedInput, {});
+
+    const usedFallback = wasDeepSeekRequested && result.provider !== "deepseek";
+    await logUsage(
+      workspace,
+      "docentiah.improve_context",
+      result.provider,
+      result.model,
+      result.promptVersion,
+      "success",
+      result.usage,
+    );
+    recordProviderAudit({
+      institutionId: workspace.institution.id,
+      capability: "docentiah.improve_context",
+      provider: result.provider,
+      usedFallback,
+      latencyMs: Date.now() - startedAt,
+      status: "success",
+    });
+
+    return { ...result.output, usedFallback };
+  } catch (error) {
+    if (error instanceof AiProviderConfigurationError) {
+      // Erro claro no log do servidor, nunca exposto ao professor (Fase 6) — sem valor de segredo na mensagem.
+      console.error("[iah-ai-provider-config]", error.message);
+    }
+    await logUsage(workspace, "docentiah.improve_context", "iah-demo", "docentiah-demo-v1", "v1", "error");
+    recordProviderAudit({
+      institutionId: workspace.institution.id,
+      capability: "docentiah.improve_context",
+      provider: "iah-demo",
+      usedFallback: false,
+      latencyMs: Date.now() - startedAt,
+      status: "error",
+      errorCode: error instanceof AiGenerationError ? "ai_generation_error" : "unknown_error",
+    });
     return { error: "Não foi possível melhorar o texto agora. Tente novamente." };
   }
 }

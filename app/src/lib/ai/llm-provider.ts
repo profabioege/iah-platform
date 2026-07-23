@@ -27,6 +27,12 @@ export interface LlmCompletionResult {
   raw: string;
   provider: string;
   model: string;
+  /** Tokens/custo reais, quando o provedor reporta (provedor demonstrativo nunca preenche). */
+  usage?: {
+    inputTokens: number;
+    outputTokens: number;
+    estimatedCostUsd: number;
+  };
 }
 
 export interface LlmProvider {

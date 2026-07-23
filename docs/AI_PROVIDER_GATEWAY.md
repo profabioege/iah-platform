@@ -4,7 +4,9 @@
 >
 > Branch: `architecture/iah-ai-gateway-providers`, criada a partir de `feature/conexoes-iah-mvp` (`34fb4d2`), sem alterá-la.
 >
-> **Rodada 2 (este commit):** estende a auditoria de `595e343` sem recriá-la — fecha lacunas contra o checklist completo pedido: as duas capabilities do DocentIAH que ainda não tinham nenhuma linha (`generate_lesson_plan`, `adapt_material`, confirmadas em `tasks.ts`), atributos completos por capability (§7.1), pontos que faltavam na política de dados (retenção, logs, LGPD — §8) e reforço do plano do primeiro provedor (feature flag de desligamento e critérios de rollback — §11). Nenhum arquivo novo foi criado; os dois já existentes (`AI_PROVIDER_GATEWAY.md`, `ai-provider-gateway-interfaces.ts`) foram estendidos.
+> **Rodada 2 (`3b6f1d1`):** estende a auditoria de `595e343` sem recriá-la — fecha lacunas contra o checklist completo pedido: as duas capabilities do DocentIAH que ainda não tinham nenhuma linha (`generate_lesson_plan`, `adapt_material`, confirmadas em `tasks.ts`), atributos completos por capability (§7.1), pontos que faltavam na política de dados (retenção, logs, LGPD — §8) e reforço do plano do primeiro provedor (feature flag de desligamento e critérios de rollback — §11). Nenhum arquivo novo foi criado; os dois já existentes (`AI_PROVIDER_GATEWAY.md`, `ai-provider-gateway-interfaces.ts`) foram estendidos.
+>
+> **Rodada 3 (branch `feature/iah-ai-gateway-deepseek`):** implementa o plano do §11 — primeiro adaptador real (DeepSeek) e primeira capability roteável a ele (`docentiah.improve_context`), atrás da flag `IAH_AI_DEEPSEEK_ENABLED` (`false` por padrão). Ver §13 para o que mudou de código de fato — as seções 1–12 continuam descrevendo a arquitetura completa proposta (a maior parte ainda não implementada: `ProviderRegistry`/`CapabilityRouter` genéricos, `CostTracker`/`ProviderAuditLog` persistidos, Qwen/GLM/Kimi).
 
 ## 1. Escopo
 
@@ -205,3 +207,30 @@ Cruza cada capability com os atributos que a tabela do §7 não cobre explicitam
 - **Custo:** sem `CostTracker` ativo desde o primeiro dia, não há visibilidade de gasto por instituição — implementar junto com o primeiro adaptador, não depois.
 - **Região/soberania de dados:** DeepSeek não declara região na documentação pública consultada — instituições com exigência contratual de dados fora da China devem ser roteadas para Qwen/Model Studio (região configurável) via `ProviderPolicy`, nunca para DeepSeek por padrão nesse cenário.
 - **Vendor lock-in de prompt:** os `system instructions` atuais já são genéricos o bastante (testados só contra o demo) — validar que funcionam igualmente bem contra um modelo real antes de assumir que o texto do prompt não precisa mudar por provider.
+
+## 13. Primeiro provedor real implementado — DeepSeek + `docentiah.improve_context`
+
+Implementação do plano do §11, na branch `feature/iah-ai-gateway-deepseek` (a partir de `3b6f1d1`). Só o essencial que muda o dia a dia de quem opera isto — a arquitetura completa continua nas seções 1–12.
+
+**Variável de ambiente** (`app/.env.local`, nunca versionada):
+
+| Variável | Obrigatória se ativado | Padrão |
+|---|---|---|
+| `IAH_AI_DEEPSEEK_ENABLED` | — | `false` (ou ausente) |
+| `DEEPSEEK_API_KEY` | Sim | nenhum (sem padrão, de propósito) |
+| `DEEPSEEK_BASE_URL` | Não | `https://api.deepseek.com` |
+| `DEEPSEEK_MODEL` | Não | `deepseek-chat` — confirmar o nome vigente na documentação DeepSeek antes de ativar em produção |
+
+**Capability ativa:** só `docentiah.improve_context` ("Melhorar com IA" em Detalhes adicionais, no wizard de Apresentação de slides). Toda outra capability (`generate_slides`, Conexões IAH, etc.) continua sempre no motor demonstrativo — `getLlmProvider(capability)` só desvia para a DeepSeek nesse único caso.
+
+**Como desligar:** `IAH_AI_DEEPSEEK_ENABLED=false` (ou remover a variável) — sem deploy, sem redeploy de código, efeito imediato na próxima requisição. Volta a usar 100% o motor demonstrativo, comportamento idêntico ao de antes desta rodada.
+
+**Como reverter de vez:** apagar `DEEPSEEK_API_KEY`/`DEEPSEEK_BASE_URL`/`DEEPSEEK_MODEL`/`IAH_AI_DEEPSEEK_ENABLED` do ambiente — com a chave ausente e a flag ligada, `getLlmProvider` lança `AiProviderConfigurationError` de propósito (erro de operação, não fallback silencioso); com a flag desligada, o adaptador nunca é instanciado.
+
+**Fallback:** `resilient-llm-provider.ts` — 1 tentativa na DeepSeek → se falha de transporte (timeout 10s, rede, HTTP 429/5xx, corpo vazio ou não-JSON) → 1 retry → se falhar de novo, `circuit-breaker.ts` registra a falha (abre após 3 falhas seguidas, por 5 min) e cai no motor demonstrativo. Erro de conteúdo/schema continua sendo só o reparo-único do Gateway (`gateway.ts`, inalterado); erro de autenticação (chave inválida, HTTP 401/4xx que não é 429) nunca cai em retry nem fallback — propaga, porque mascarar isso esconderia uma chave quebrada.
+
+**Política de logs:** `recordProviderAudit()` (em `actions.ts`) grava só metadados — capability, provider efetivo, `usedFallback`, latência, status, código de erro sanitizado. Nunca grava `userPrompt`/`systemInstructions`/texto do professor; `ProviderTransportError` também nunca inclui o texto do prompt na mensagem (coberto por teste). `GenerationUsage` grava tokens/custo reais quando a DeepSeek reporta (antes sempre `null`, mesmo comportamento do demo quando não há `usage`).
+
+**Anonimização:** `data-anonymizer.ts` roda sobre `text` antes de qualquer chamada (demo ou real) — mascara e-mail, CPF e telefone; testado para não confundir um intervalo de anos de conteúdo pedagógico (ex.: "1939-1945") com telefone.
+
+**Não implementado nesta rodada** (fica para quando um 2º provider/capability real entrar, conforme o próprio §11 previa): `ProviderRegistry`/`CapabilityRouter` genéricos (hoje é uma função só, `llm-provider-factory.ts`, com 1 capability roteada — suficiente para o escopo atual), `CostTracker`/`ProviderAuditLog` persistidos em tabela própria (o rastro de auditoria hoje é log estruturado de servidor + `GenerationUsage` existente, não uma tabela nova — evita migration fora do pedido desta tarefa), `QualityEvaluationRunner`.

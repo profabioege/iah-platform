@@ -89,9 +89,3 @@ test("falha do provedor (exceção na chamada): propaga o erro, não trava silen
     /provedor indisponível/,
   );
 });
-
-test("capacidade de texto (\"melhorar com IA\") não exige schema de saída estruturado", async () => {
-  const fake = fakeProvider(["Texto melhorado."]);
-  const result = await iahAiGateway.executeText("docentiah.improve_text", { text: "texto original" }, {}, fake.provider);
-  assert.equal(result.text, "Texto melhorado.");
-});
