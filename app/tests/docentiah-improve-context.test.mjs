@@ -305,20 +305,19 @@ test("circuit breaker: abre após 3 falhas consecutivas e passa a pular direto p
   assert.equal(primaryCalls, callsBeforeFourthRequest); // circuito aberto: nem tentou o primary
 });
 
-// 14. anonimização
-test("DataAnonymizer: mascara e-mail, CPF e telefone", () => {
-  const sanitized = dataAnonymizer.sanitize(
+// 14. anonimização — cobertura completa (PII + nomes + política de bloqueio) em tests/data-anonymizer.test.mjs
+test("DataAnonymizer: mascara e-mail, CPF e telefone (smoke test — ver data-anonymizer.test.mjs para os 20 casos completos)", () => {
+  const { sanitizedText } = dataAnonymizer.analyze(
     "Contato: professor@escola.edu.br, CPF 123.456.789-01, celular (11) 91234-5678.",
-    "low",
   );
-  assert.ok(!sanitized.includes("professor@escola.edu.br"));
-  assert.ok(!sanitized.includes("123.456.789-01"));
-  assert.ok(!sanitized.includes("91234-5678"));
+  assert.ok(!sanitizedText.includes("professor@escola.edu.br"));
+  assert.ok(!sanitizedText.includes("123.456.789-01"));
+  assert.ok(!sanitizedText.includes("91234-5678"));
 });
 
 test("DataAnonymizer: não corrompe um intervalo de anos de conteúdo pedagógico", () => {
-  const sanitized = dataAnonymizer.sanitize("A Segunda Guerra Mundial (1939-1945) mudou a geopolítica.", "low");
-  assert.ok(sanitized.includes("1939-1945"));
+  const { sanitizedText } = dataAnonymizer.analyze("A Segunda Guerra Mundial (1939-1945) mudou a geopolítica.");
+  assert.ok(sanitizedText.includes("1939-1945"));
 });
 
 // 15. ausência de prompt em logs (mensagens de erro de transporte nunca incluem o prompt)

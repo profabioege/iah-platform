@@ -1,6 +1,8 @@
 "use server";
 
-import { dataAnonymizer } from "@/lib/ai/data-anonymizer";
+import { fetchInstitutionalRoster } from "@/lib/ai/anonymization/institution-roster";
+import type { AnonymizationResult } from "@/lib/ai/data-anonymizer";
+import { dataAnonymizer, guardBeforeExternalCall } from "@/lib/ai/data-anonymizer";
 import { AiGenerationError, iahAiGateway } from "@/lib/ai/gateway";
 import { AiProviderConfigurationError } from "@/lib/ai/llm-provider-factory";
 import { pdfParseTextExtractor, PdfValidationError, type PdfExtractionResult } from "@/lib/ai/pdf-text-extractor";
@@ -91,6 +93,74 @@ export type ImproveContextResult =
   | (DocentiahImproveContextOutput & { usedFallback: boolean })
   | { error: string };
 
+export type PrepareImproveContextResult =
+  | { status: "blocked"; message: string }
+  | { status: "needs_review"; sanitizedTextPreview: string }
+  | { status: "ready" }
+  | { error: string };
+
+/**
+ * Roda a política de anonimização em camadas (Camadas 1–3,
+ * docs/AI_PROVIDER_GATEWAY.md §8) sobre o texto validado — nunca acessa
+ * o Gateway. Reaproveitada por `prepareImproveContextAction` (prévia,
+ * sem chamar IA) e `improveContextAction` (chama de novo antes da IA,
+ * defesa em profundidade — nunca confia que o cliente já mandou o texto
+ * anonimizado).
+ */
+async function analyzeImproveContextText(
+  workspace: WorkspaceContext,
+  text: string,
+): Promise<{ analysis: AnonymizationResult; guard: ReturnType<typeof guardBeforeExternalCall> }> {
+  const roster = await fetchInstitutionalRoster(workspace.institution.id, workspace.classrooms);
+  const analysis = dataAnonymizer.analyze(text, { knownNames: roster });
+  return { analysis, guard: guardBeforeExternalCall(analysis) };
+}
+
+/**
+ * Prévia obrigatória antes de qualquer chamada de IA (Camada 4) — nunca
+ * chama o Gateway. `blocked`: dado pessoal não resolvido, professor
+ * precisa editar o texto. `needs_review`: anonimização automática
+ * ocorreu, mostrar a prévia e pedir confirmação. `ready`: nada a
+ * anonimizar, segue o fluxo direto (sem etapa extra).
+ */
+export async function prepareImproveContextAction(params: ImproveContextParams): Promise<PrepareImproveContextResult> {
+  let workspace: WorkspaceContext;
+  try {
+    workspace = await requireWorkspace();
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Sessão inválida." };
+  }
+
+  const parsedInput = docentiahImproveContextInputSchema.safeParse({
+    text: params.text.trim(),
+    subject: params.subject,
+    educationLevel: params.educationLevel || undefined,
+    grade: params.grade,
+  });
+  if (!parsedInput.success) {
+    const issue = parsedInput.error.issues[0];
+    return { error: issue?.message ?? "Escreva algum texto antes de pedir para melhorar." };
+  }
+
+  const { analysis, guard } = await analyzeImproveContextText(workspace, parsedInput.data.text);
+  if (!guard.allowed) {
+    recordProviderAudit({
+      institutionId: workspace.institution.id,
+      capability: "docentiah.improve_context",
+      provider: "none",
+      usedFallback: false,
+      latencyMs: 0,
+      status: "error",
+      errorCode: "blocked_personal_data",
+    });
+    return { status: "blocked", message: guard.message };
+  }
+  if (analysis.replacements.length > 0) {
+    return { status: "needs_review", sanitizedTextPreview: analysis.sanitizedText };
+  }
+  return { status: "ready" };
+}
+
 /**
  * "Melhorar com IA" — reescreve só o texto de "Detalhes adicionais",
  * capacidade separada da geração dos slides. Primeira capability do
@@ -98,9 +168,11 @@ export type ImproveContextResult =
  * `IAH_AI_DEEPSEEK_ENABLED`) — desligada, o comportamento é idêntico ao
  * de antes (motor demonstrativo).
  *
- * Não aceita arquivo, não recebe contexto de aluno, nunca envia nome de
- * aluno nem instituição (só disciplina/etapa/série do formulário) — só o
- * texto livre do professor, sempre anonimizado antes de sair da action.
+ * Não aceita arquivo, não recebe contexto de aluno solto — o professor
+ * digita livremente, e o texto passa pela política de anonimização em
+ * camadas (Camadas 1–3) antes de qualquer chamada externa, real ou
+ * demonstrativa. Se a política bloquear (`safeToSend=false`), esta
+ * função nunca chama o Gateway.
  */
 export async function improveContextAction(params: ImproveContextParams): Promise<ImproveContextResult> {
   let workspace: WorkspaceContext;
@@ -121,7 +193,22 @@ export async function improveContextAction(params: ImproveContextParams): Promis
     return { error: issue?.message ?? "Escreva algum texto antes de pedir para melhorar." };
   }
 
-  const sanitizedInput = { ...parsedInput.data, text: dataAnonymizer.sanitize(parsedInput.data.text, "low") };
+  const { analysis, guard } = await analyzeImproveContextText(workspace, parsedInput.data.text);
+  if (!guard.allowed) {
+    // Bloqueado pela Camada 3 — nunca chama o Gateway, nunca usa fallback externo, texto original preservado só no cliente.
+    recordProviderAudit({
+      institutionId: workspace.institution.id,
+      capability: "docentiah.improve_context",
+      provider: "none",
+      usedFallback: false,
+      latencyMs: 0,
+      status: "error",
+      errorCode: "blocked_personal_data",
+    });
+    return { error: guard.message };
+  }
+
+  const sanitizedInput = { ...parsedInput.data, text: analysis.sanitizedText };
   const startedAt = Date.now();
   const wasDeepSeekRequested = process.env.IAH_AI_DEEPSEEK_ENABLED === "true";
 
