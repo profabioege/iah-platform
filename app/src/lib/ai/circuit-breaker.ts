@@ -27,11 +27,20 @@ function entryFor(providerId: string): CircuitEntry {
   return entry;
 }
 
+/**
+ * Sem estado "half-open" dedicado, de propósito assumido (não uma
+ * omissão silenciosa): passada a janela de abertura, o circuito fecha
+ * por completo e a próxima chamada tenta o `primary` normalmente — não
+ * há uma "chamada de sonda" isolada antes de liberar geral. Simplifica
+ * a implementação; revisitar se um provider real começar a oscilar com
+ * frequência (nesse caso, meio-aberto evitaria um pico de tentativas
+ * simultâneas logo após a janela expirar).
+ */
 export const circuitBreaker = {
-  stateFor(providerId: string): CircuitState {
+  stateFor(providerId: string, now: () => number = Date.now): CircuitState {
     const entry = entryFor(providerId);
     if (entry.openedAt === null) return "closed";
-    if (Date.now() - entry.openedAt >= OPEN_DURATION_MS) {
+    if (now() - entry.openedAt >= OPEN_DURATION_MS) {
       // Janela de abertura expirou — fecha o circuito e dá nova chance ao provider.
       entry.openedAt = null;
       entry.consecutiveFailures = 0;

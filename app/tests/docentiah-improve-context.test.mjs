@@ -198,7 +198,7 @@ test("DeepSeekProvider: timeout aborta a chamada e lança ProviderTransportError
 });
 
 // 9. erro 429
-test("DeepSeekProvider: HTTP 429 vira ProviderTransportError(rate_limited)", async () => {
+test("DeepSeekProvider: HTTP 429 vira ProviderTransportError(rate_limit)", async () => {
   const provider = createDeepSeekProvider({ apiKey: "sk-test", baseUrl: "https://api.deepseek.com", model: "deepseek-chat" });
   await withFetch(
     async () => new Response("", { status: 429 }),
@@ -207,7 +207,7 @@ test("DeepSeekProvider: HTTP 429 vira ProviderTransportError(rate_limited)", asy
         () => provider.complete({ capability: CAPABILITY, systemInstructions: "s", userPrompt: "u" }),
         (error) => {
           assert.ok(error instanceof ProviderTransportError);
-          assert.equal(error.reason, "rate_limited");
+          assert.equal(error.reason, "rate_limit");
           return true;
         },
       );
@@ -216,7 +216,7 @@ test("DeepSeekProvider: HTTP 429 vira ProviderTransportError(rate_limited)", asy
 });
 
 // 10. erro 500
-test("DeepSeekProvider: HTTP 500 vira ProviderTransportError(server_error)", async () => {
+test("DeepSeekProvider: HTTP 500 vira ProviderTransportError(provider_5xx)", async () => {
   const provider = createDeepSeekProvider({ apiKey: "sk-test", baseUrl: "https://api.deepseek.com", model: "deepseek-chat" });
   await withFetch(
     async () => new Response("", { status: 500 }),
@@ -225,7 +225,7 @@ test("DeepSeekProvider: HTTP 500 vira ProviderTransportError(server_error)", asy
         () => provider.complete({ capability: CAPABILITY, systemInstructions: "s", userPrompt: "u" }),
         (error) => {
           assert.ok(error instanceof ProviderTransportError);
-          assert.equal(error.reason, "server_error");
+          assert.equal(error.reason, "provider_5xx");
           return true;
         },
       );
@@ -288,7 +288,7 @@ test("circuit breaker: abre após 3 falhas consecutivas e passa a pular direto p
     isConfigured: true,
     async complete() {
       primaryCalls += 1;
-      throw new ProviderTransportError("server_error", "deepseek");
+      throw new ProviderTransportError("provider_5xx", "deepseek");
     },
   };
   const fallback = fakeLlmProvider("iah-demo", [validOutputJson, validOutputJson, validOutputJson, validOutputJson]);

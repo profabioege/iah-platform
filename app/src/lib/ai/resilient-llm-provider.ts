@@ -25,8 +25,11 @@ export function createResilientProvider(options: {
 
   async function attemptPrimary(request: LlmCompletionRequest): Promise<LlmCompletionResult> {
     const result = await primary.complete(request);
+    if (!result.raw || !result.raw.trim()) {
+      throw new ProviderTransportError("empty_response", providerId, "O provedor devolveu conteúdo vazio.");
+    }
     if (!isParseableJson(result.raw)) {
-      throw new ProviderTransportError("empty_response", providerId, "Resposta não é um JSON válido.");
+      throw new ProviderTransportError("invalid_json", providerId, "O conteúdo devolvido não é um JSON válido.");
     }
     return result;
   }

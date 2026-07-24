@@ -6,6 +6,7 @@ import { dataAnonymizer, guardBeforeExternalCall } from "@/lib/ai/data-anonymize
 import { AiGenerationError, iahAiGateway } from "@/lib/ai/gateway";
 import { AiProviderConfigurationError } from "@/lib/ai/llm-provider-factory";
 import { pdfParseTextExtractor, PdfValidationError, type PdfExtractionResult } from "@/lib/ai/pdf-text-extractor";
+import { classifyProviderError } from "@/lib/ai/provider-audit-error-code";
 import { docentiahImproveContextInputSchema, type DocentiahImproveContextOutput } from "@/lib/ai/prompts/docentiah/improve-context";
 import {
   docentiahSlidesGenerationInputSchema,
@@ -252,7 +253,7 @@ export async function improveContextAction(params: ImproveContextParams): Promis
       usedFallback: false,
       latencyMs: Date.now() - startedAt,
       status: "error",
-      errorCode: error instanceof AiGenerationError ? "ai_generation_error" : "unknown_error",
+      errorCode: classifyProviderError(error),
     });
     return { error: "Não foi possível melhorar o texto agora. Tente novamente." };
   }

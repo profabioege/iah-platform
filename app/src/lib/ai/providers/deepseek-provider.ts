@@ -1,4 +1,5 @@
 import type { LlmCompletionRequest, LlmCompletionResult, LlmProvider } from "../llm-provider";
+import { classifyClientErrorStatus, ProviderConfigError } from "../provider-config-error.ts";
 import { ProviderTransportError } from "../provider-transport-error.ts";
 
 /**
@@ -81,21 +82,21 @@ export function createDeepSeekProvider(config: DeepSeekProviderConfig): LlmProvi
       }
 
       if (response.status === 429) {
-        throw new ProviderTransportError("rate_limited", "deepseek", "DeepSeek retornou 429 (rate limit).");
+        throw new ProviderTransportError("rate_limit", "deepseek", "DeepSeek retornou 429 (rate limit).");
       }
       if (response.status >= 500) {
-        throw new ProviderTransportError("server_error", "deepseek", `DeepSeek retornou ${response.status}.`);
+        throw new ProviderTransportError("provider_5xx", "deepseek", `DeepSeek retornou ${response.status}.`);
       }
       if (!response.ok) {
-        // 4xx que não é rate limit (ex.: 401 chave inválida, 400 payload) — erro de configuração/autenticação, nunca cai em retry/fallback.
-        throw new Error(`DeepSeek retornou ${response.status} — verifique DEEPSEEK_API_KEY e DEEPSEEK_MODEL.`);
+        // 4xx que não é rate limit (ex.: 401 chave inválida, 402 saldo, 404 modelo) — permanente, nunca cai em retry/fallback/circuit breaker.
+        throw new ProviderConfigError(classifyClientErrorStatus(response.status), "deepseek", response.status);
       }
 
       let data: unknown;
       try {
         data = await response.json();
       } catch {
-        throw new ProviderTransportError("empty_response", "deepseek", "Corpo da resposta não é JSON válido.");
+        throw new ProviderTransportError("invalid_json", "deepseek", "Corpo da resposta HTTP não é JSON válido.");
       }
 
       const content = extractContent(data);

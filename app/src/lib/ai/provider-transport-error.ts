@@ -1,19 +1,24 @@
 /**
- * Falha de transporte de um provedor real — nunca erro de conteúdo/schema
- * (isso continua sendo o reparo de JSON do Gateway, ver `gateway.ts`).
- * Contrato equivalente ao `TransportFailureReason` proposto na auditoria
- * (`docs/ai-provider-gateway-interfaces.ts`), estendido com
- * "empty_response" — a documentação do DeepSeek alerta que o corpo de
- * uma resposta JSON pode ocasionalmente vir vazio, caso distinto de um
- * erro HTTP.
+ * Falha de transporte de um provedor real — sempre transitória e
+ * elegível a retry único + contabilização no circuit breaker. Nunca erro
+ * de conteúdo/schema (isso continua sendo o reparo de JSON do Gateway,
+ * ver `gateway.ts`) nem erro de configuração/autenticação permanente
+ * (ver `ProviderConfigError` em `provider-config-error.ts` — 4xx que não
+ * é rate limit nunca vira `ProviderTransportError`, de propósito: não
+ * adianta repetir uma chave inválida ou falta de saldo).
+ *
+ * Nomes alinhados à taxonomia de auditoria pedida na homologação de
+ * 2026-07-24 (diagnóstico do gate DeepSeek) — usada tanto no controle
+ * (retry/circuit breaker) quanto no código sanitizado de auditoria.
  */
 export type TransportFailureReason =
   | "timeout"
   | "network_error"
-  | "rate_limited"
-  | "server_error"
+  | "rate_limit"
+  | "provider_5xx"
   | "empty_response"
-  | "circuit_open";
+  | "invalid_json"
+  | "circuit_breaker_open";
 
 export class ProviderTransportError extends Error {
   readonly providerId: string;
