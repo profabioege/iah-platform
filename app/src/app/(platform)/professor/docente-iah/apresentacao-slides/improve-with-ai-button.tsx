@@ -168,7 +168,7 @@ export function ImproveWithAiButton({
             </ul>
           ) : null}
           {suggestion.usedFallback ? (
-            <p className="text-xs text-muted-foreground">Sugestão gerada em modo demonstrativo.</p>
+            <p className="text-xs text-muted-foreground">O texto foi revisado em modo demonstrativo.</p>
           ) : null}
           <div className="flex flex-wrap gap-2">
             <Button type="button" size="sm" onClick={handleAccept}>

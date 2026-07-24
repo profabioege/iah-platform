@@ -6,6 +6,7 @@ import { dataAnonymizer, guardBeforeExternalCall } from "@/lib/ai/data-anonymize
 import { AiGenerationError, iahAiGateway } from "@/lib/ai/gateway";
 import { AiProviderConfigurationError } from "@/lib/ai/llm-provider-factory";
 import { pdfParseTextExtractor, PdfValidationError, type PdfExtractionResult } from "@/lib/ai/pdf-text-extractor";
+import { hasReachedDailyLimit, releaseInFlightLock, tryAcquireInFlightLock } from "@/lib/ai/preview-limits";
 import { classifyProviderError } from "@/lib/ai/provider-audit-error-code";
 import { docentiahImproveContextInputSchema, type DocentiahImproveContextOutput } from "@/lib/ai/prompts/docentiah/improve-context";
 import {
@@ -125,9 +126,9 @@ async function analyzeImproveContextText(
  * anonimizar, segue o fluxo direto (sem etapa extra).
  */
 export async function prepareImproveContextAction(params: ImproveContextParams): Promise<PrepareImproveContextResult> {
-  let workspace: WorkspaceContext;
+  let workspace: WorkspaceContext & { user: { teacherId: string } };
   try {
-    workspace = await requireWorkspace();
+    workspace = await requireTeacherWorkspace();
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Sessão inválida." };
   }
@@ -176,9 +177,9 @@ export async function prepareImproveContextAction(params: ImproveContextParams):
  * função nunca chama o Gateway.
  */
 export async function improveContextAction(params: ImproveContextParams): Promise<ImproveContextResult> {
-  let workspace: WorkspaceContext;
+  let workspace: WorkspaceContext & { user: { teacherId: string } };
   try {
-    workspace = await requireWorkspace();
+    workspace = await requireTeacherWorkspace();
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Sessão inválida." };
   }
@@ -194,68 +195,84 @@ export async function improveContextAction(params: ImproveContextParams): Promis
     return { error: issue?.message ?? "Escreva algum texto antes de pedir para melhorar." };
   }
 
-  const { analysis, guard } = await analyzeImproveContextText(workspace, parsedInput.data.text);
-  if (!guard.allowed) {
-    // Bloqueado pela Camada 3 — nunca chama o Gateway, nunca usa fallback externo, texto original preservado só no cliente.
-    recordProviderAudit({
-      institutionId: workspace.institution.id,
-      capability: "docentiah.improve_context",
-      provider: "none",
-      usedFallback: false,
-      latencyMs: 0,
-      status: "error",
-      errorCode: "blocked_personal_data",
-    });
-    return { error: guard.message };
+  // Fase 5 (limites de homologação da Preview) — 10 execuções/professor/dia, reaproveitando o GenerationUsage já existente.
+  const repositoriesForLimit = getDefaultDocentiahRepositories();
+  const todayUsage = await repositoriesForLimit.usage.listByInstitution(workspace.institution.id);
+  if (hasReachedDailyLimit(todayUsage, workspace.user.id, "docentiah.improve_context")) {
+    return { error: "Você atingiu o limite diário de melhorias com IA nesta Preview. Tente novamente amanhã." };
   }
 
-  const sanitizedInput = { ...parsedInput.data, text: analysis.sanitizedText };
-  const startedAt = Date.now();
-  const wasDeepSeekRequested = process.env.IAH_AI_DEEPSEEK_ENABLED === "true";
+  // 1 solicitação simultânea por professor.
+  if (!tryAcquireInFlightLock(workspace.user.id)) {
+    return { error: "Já existe uma melhoria em andamento. Aguarde ela terminar antes de pedir outra." };
+  }
 
   try {
-    const result = await iahAiGateway.execute<
-      typeof sanitizedInput,
-      Record<string, never>,
-      DocentiahImproveContextOutput
-    >("docentiah.improve_context", sanitizedInput, {});
-
-    const usedFallback = wasDeepSeekRequested && result.provider !== "deepseek";
-    await logUsage(
-      workspace,
-      "docentiah.improve_context",
-      result.provider,
-      result.model,
-      result.promptVersion,
-      "success",
-      result.usage,
-    );
-    recordProviderAudit({
-      institutionId: workspace.institution.id,
-      capability: "docentiah.improve_context",
-      provider: result.provider,
-      usedFallback,
-      latencyMs: Date.now() - startedAt,
-      status: "success",
-    });
-
-    return { ...result.output, usedFallback };
-  } catch (error) {
-    if (error instanceof AiProviderConfigurationError) {
-      // Erro claro no log do servidor, nunca exposto ao professor (Fase 6) — sem valor de segredo na mensagem.
-      console.error("[iah-ai-provider-config]", error.message);
+    const { analysis, guard } = await analyzeImproveContextText(workspace, parsedInput.data.text);
+    if (!guard.allowed) {
+      // Bloqueado pela Camada 3 — nunca chama o Gateway, nunca usa fallback externo, texto original preservado só no cliente.
+      recordProviderAudit({
+        institutionId: workspace.institution.id,
+        capability: "docentiah.improve_context",
+        provider: "none",
+        usedFallback: false,
+        latencyMs: 0,
+        status: "error",
+        errorCode: "blocked_personal_data",
+      });
+      return { error: guard.message };
     }
-    await logUsage(workspace, "docentiah.improve_context", "iah-demo", "docentiah-demo-v1", "v1", "error");
-    recordProviderAudit({
-      institutionId: workspace.institution.id,
-      capability: "docentiah.improve_context",
-      provider: "iah-demo",
-      usedFallback: false,
-      latencyMs: Date.now() - startedAt,
-      status: "error",
-      errorCode: classifyProviderError(error),
-    });
-    return { error: "Não foi possível melhorar o texto agora. Tente novamente." };
+
+    const sanitizedInput = { ...parsedInput.data, text: analysis.sanitizedText };
+    const startedAt = Date.now();
+    const wasDeepSeekRequested = process.env.IAH_AI_DEEPSEEK_ENABLED === "true";
+
+    try {
+      const result = await iahAiGateway.execute<
+        typeof sanitizedInput,
+        Record<string, never>,
+        DocentiahImproveContextOutput
+      >("docentiah.improve_context", sanitizedInput, {});
+
+      const usedFallback = wasDeepSeekRequested && result.provider !== "deepseek";
+      await logUsage(
+        workspace,
+        "docentiah.improve_context",
+        result.provider,
+        result.model,
+        result.promptVersion,
+        "success",
+        result.usage,
+      );
+      recordProviderAudit({
+        institutionId: workspace.institution.id,
+        capability: "docentiah.improve_context",
+        provider: result.provider,
+        usedFallback,
+        latencyMs: Date.now() - startedAt,
+        status: "success",
+      });
+
+      return { ...result.output, usedFallback };
+    } catch (error) {
+      if (error instanceof AiProviderConfigurationError) {
+        // Erro claro no log do servidor, nunca exposto ao professor (Fase 6) — sem valor de segredo na mensagem.
+        console.error("[iah-ai-provider-config]", error.message);
+      }
+      await logUsage(workspace, "docentiah.improve_context", "iah-demo", "docentiah-demo-v1", "v1", "error");
+      recordProviderAudit({
+        institutionId: workspace.institution.id,
+        capability: "docentiah.improve_context",
+        provider: "iah-demo",
+        usedFallback: false,
+        latencyMs: Date.now() - startedAt,
+        status: "error",
+        errorCode: classifyProviderError(error),
+      });
+      return { error: "Não foi possível melhorar o texto agora. Tente novamente." };
+    }
+  } finally {
+    releaseInFlightLock(workspace.user.id);
   }
 }
 
