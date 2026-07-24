@@ -187,9 +187,11 @@ test("classifyProviderError mapeia cada tipo de erro para o código sanitizado c
 // 12. logs sem conteúdo sensível
 test("classifyProviderError nunca devolve o texto da mensagem de erro — só o código do enum sanitizado", () => {
   const segredo = "nome-secreto-do-aluno-e-detalhe-do-prompt";
-  const code = classifyProviderError(new ProviderConfigError("payment_required", "deepseek", 402, segredo));
+  const error = new ProviderConfigError("payment_required", "deepseek", 402, { type: "invalid_request_error", param: "model", code: "model_not_found" });
+  const code = classifyProviderError(error);
   assert.equal(code, "payment_required");
   assert.ok(!code.includes(segredo));
+  assert.ok(!error.message.includes(segredo)); // mensagem é sempre construída internamente, nunca ecoa texto do provedor
 });
 
 // 13. timeout configurável por capability

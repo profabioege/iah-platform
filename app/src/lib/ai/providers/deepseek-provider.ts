@@ -1,5 +1,5 @@
 import type { LlmCompletionRequest, LlmCompletionResult, LlmProvider } from "../llm-provider";
-import { classifyClientErrorStatus, ProviderConfigError } from "../provider-config-error.ts";
+import { classifyClientErrorStatus, extractProviderErrorDetails, ProviderConfigError } from "../provider-config-error.ts";
 import { ProviderTransportError } from "../provider-transport-error.ts";
 
 /**
@@ -9,6 +9,14 @@ import { ProviderTransportError } from "../provider-transport-error.ts";
  * docs/AI_PROVIDER_GATEWAY.md); desligado por padrão via
  * `IAH_AI_DEEPSEEK_ENABLED` (lib/ai/llm-provider-factory.ts).
  *
+ * Payload mínimo revisado em 2026-07-24 (achado do gate real: HTTP 400
+ * "invalid_request"). Causa raiz confirmada em duas fontes independentes
+ * (api-docs.deepseek.com + changelog): `deepseek-chat`/`deepseek-reasoner`
+ * foram descontinuados hoje, 2026-07-24 15:59 UTC, migrando para
+ * `deepseek-v4-flash`/`deepseek-v4-pro`; e o payload não declarava
+ * `thinking`, então podia cair em modo "thinking" — que não aceita
+ * `temperature` (removido do payload mínimo).
+ *
  * Preço público consultado nesta implementação (pode mudar — não é
  * fonte de verdade de billing real, só uma estimativa de custo para o
  * `GenerationUsage`): ~US$0,14 / 1M tokens de entrada, ~US$0,28 / 1M de saída.
@@ -17,14 +25,87 @@ import { ProviderTransportError } from "../provider-transport-error.ts";
 const DEEPSEEK_INPUT_PRICE_PER_MILLION_USD = 0.14;
 const DEEPSEEK_OUTPUT_PRICE_PER_MILLION_USD = 0.28;
 
-/** Timeout único para a única capability roteada à DeepSeek hoje (docentiah.improve_context, ver docs/AI_PROVIDER_GATEWAY.md §7). */
-const DEFAULT_TIMEOUT_MS = 10_000;
+/** Timeout por capability é resolvido em `llm-provider-factory.ts` — este é só o piso se nada for passado. */
+const DEFAULT_TIMEOUT_MS = 25_000;
+
+const DEFAULT_MAX_TOKENS = 800;
+
+/** IDs atuais (verificados em api-docs.deepseek.com em 2026-07-24) — deepseek-v4-flash é o padrão econômico do IAH. */
+export const CURRENT_DEEPSEEK_MODELS = ["deepseek-v4-flash", "deepseek-v4-pro"];
+/** Descontinuados em 2026-07-24 15:59 UTC — rejeitados localmente antes de gastar uma chamada de rede. */
+export const LEGACY_DEEPSEEK_MODELS = ["deepseek-chat", "deepseek-reasoner"];
 
 export interface DeepSeekProviderConfig {
   apiKey: string | undefined;
   baseUrl: string;
   model: string;
   timeoutMs?: number;
+  maxTokens?: number;
+}
+
+export interface DeepSeekRequestBody {
+  model: string;
+  messages: Array<{ role: "system" | "user"; content: string }>;
+  response_format: { type: "json_object" };
+  max_tokens: number;
+  stream: false;
+  thinking: { type: "disabled" };
+}
+
+/** Erro de validação LOCAL — nunca chega a sair para a rede. Nunca é retryable/fallback-eligible (não é ProviderTransportError). */
+export class InvalidDeepSeekRequestError extends Error {}
+
+/** Contrato mínimo pedido para docentiah.improve_context — sem tools/tool_choice/reasoning_effort/prefix/stop/arquivos. */
+export function buildDeepSeekRequestBody(
+  request: LlmCompletionRequest,
+  model: string,
+  maxTokens: number = DEFAULT_MAX_TOKENS,
+): DeepSeekRequestBody {
+  return {
+    model,
+    messages: [
+      { role: "system", content: request.systemInstructions },
+      { role: "user", content: request.userPrompt },
+    ],
+    response_format: { type: "json_object" },
+    max_tokens: maxTokens,
+    stream: false,
+    thinking: { type: "disabled" },
+  };
+}
+
+const ALLOWED_BODY_KEYS = new Set(["model", "messages", "response_format", "max_tokens", "stream", "thinking"]);
+
+/** Validação local do body — roda sempre antes do `fetch`, nunca depois. */
+export function validateDeepSeekRequestBody(body: DeepSeekRequestBody): void {
+  for (const [key, value] of Object.entries(body)) {
+    if (value === undefined) throw new InvalidDeepSeekRequestError(`Propriedade "${key}" está undefined — remova em vez de enviar.`);
+    if (!ALLOWED_BODY_KEYS.has(key)) {
+      throw new InvalidDeepSeekRequestError(`Propriedade "${key}" não faz parte do contrato mínimo desta capability.`);
+    }
+  }
+  if (LEGACY_DEEPSEEK_MODELS.includes(body.model)) {
+    throw new InvalidDeepSeekRequestError(
+      `Modelo "${body.model}" é um nome legado, descontinuado em 2026-07-24 — use deepseek-v4-flash ou deepseek-v4-pro.`,
+    );
+  }
+  if (!CURRENT_DEEPSEEK_MODELS.includes(body.model)) {
+    throw new InvalidDeepSeekRequestError(`Modelo "${body.model}" não está na lista de modelos atuais permitidos.`);
+  }
+  if (!Array.isArray(body.messages) || body.messages.length === 0) {
+    throw new InvalidDeepSeekRequestError("messages precisa ter pelo menos 1 item.");
+  }
+  for (const message of body.messages) {
+    if (typeof message.content !== "string") {
+      throw new InvalidDeepSeekRequestError("Todo message.content precisa ser string.");
+    }
+  }
+  if (!body.response_format || body.response_format.type !== "json_object") {
+    throw new InvalidDeepSeekRequestError('response_format precisa ser exatamente {"type":"json_object"}.');
+  }
+  if (!Number.isInteger(body.max_tokens) || body.max_tokens <= 0) {
+    throw new InvalidDeepSeekRequestError("max_tokens precisa ser um inteiro positivo.");
+  }
 }
 
 function estimateCostUsd(inputTokens: number, outputTokens: number): number {
@@ -49,6 +130,9 @@ export function createDeepSeekProvider(config: DeepSeekProviderConfig): LlmProvi
         throw new Error("DeepSeekProvider chamado sem DEEPSEEK_API_KEY configurada.");
       }
 
+      const body = buildDeepSeekRequestBody(request, config.model, config.maxTokens);
+      validateDeepSeekRequestBody(body); // local, nunca sai para a rede se falhar
+
       const controller = new AbortController();
       const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -60,15 +144,7 @@ export function createDeepSeekProvider(config: DeepSeekProviderConfig): LlmProvi
             "Content-Type": "application/json",
             Authorization: `Bearer ${config.apiKey}`,
           },
-          body: JSON.stringify({
-            model: config.model,
-            messages: [
-              { role: "system", content: request.systemInstructions },
-              { role: "user", content: request.userPrompt },
-            ],
-            response_format: { type: "json_object" },
-            temperature: 0.3,
-          }),
+          body: JSON.stringify(body),
           signal: controller.signal,
         });
       } catch (error) {
@@ -89,7 +165,8 @@ export function createDeepSeekProvider(config: DeepSeekProviderConfig): LlmProvi
       }
       if (!response.ok) {
         // 4xx que não é rate limit (ex.: 401 chave inválida, 402 saldo, 404 modelo) — permanente, nunca cai em retry/fallback/circuit breaker.
-        throw new ProviderConfigError(classifyClientErrorStatus(response.status), "deepseek", response.status);
+        const errorDetails = await readErrorDetailsSafely(response);
+        throw new ProviderConfigError(classifyClientErrorStatus(response.status), "deepseek", response.status, errorDetails);
       }
 
       let data: unknown;
@@ -120,6 +197,16 @@ export function createDeepSeekProvider(config: DeepSeekProviderConfig): LlmProvi
       };
     },
   };
+}
+
+/** Lê o corpo do erro só para extrair type/param/code — nunca lança se o corpo não for JSON, nunca guarda o texto bruto. */
+async function readErrorDetailsSafely(response: Response) {
+  try {
+    const data: unknown = await response.json();
+    return extractProviderErrorDetails(data);
+  } catch {
+    return null;
+  }
 }
 
 function extractContent(data: unknown): string | null {

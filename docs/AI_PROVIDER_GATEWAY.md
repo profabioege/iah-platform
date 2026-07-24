@@ -212,6 +212,8 @@ Cruza cada capability com os atributos que a tabela do §7 não cobre explicitam
 
 Implementação do plano do §11, na branch `feature/iah-ai-gateway-deepseek` (a partir de `3b6f1d1`). Só o essencial que muda o dia a dia de quem opera isto — a arquitetura completa continua nas seções 1–12.
 
+> **Rodada 4 (2026-07-24):** gate real revelou HTTP 400 — causa raiz confirmada em `api-docs.deepseek.com`: `deepseek-chat`/`deepseek-reasoner` foram descontinuados em **2026-07-24 15:59 UTC** (a própria data desta rodada), migrando para `deepseek-v4-flash`/`deepseek-v4-pro`. `deepseek-v4-flash` passa a ser o padrão econômico inicial do IAH. Payload revisado para o contrato mínimo atual (`response_format`/`max_tokens`/`stream`/`thinking:{type:"disabled"}`, sem `temperature` — modo *thinking* não aceita esse parâmetro, um segundo fator que também podia estar contribuindo para o 400). Prompt v3 acrescenta exemplo JSON explícito no próprio texto do prompt (antes só existia implícito no schema Zod do Gateway).
+
 **Variável de ambiente** (`app/.env.local`, nunca versionada):
 
 | Variável | Obrigatória se ativado | Padrão |
@@ -219,7 +221,7 @@ Implementação do plano do §11, na branch `feature/iah-ai-gateway-deepseek` (a
 | `IAH_AI_DEEPSEEK_ENABLED` | — | `false` (ou ausente) |
 | `DEEPSEEK_API_KEY` | Sim | nenhum (sem padrão, de propósito) |
 | `DEEPSEEK_BASE_URL` | Não | `https://api.deepseek.com` |
-| `DEEPSEEK_MODEL` | Não | `deepseek-chat` — confirmar o nome vigente na documentação DeepSeek antes de ativar em produção |
+| `DEEPSEEK_MODEL` | Não | `deepseek-v4-flash` — padrão econômico inicial do IAH (verificado em api-docs.deepseek.com, 2026-07-24); `deepseek-chat`/`deepseek-reasoner` são rejeitados localmente por serem legados |
 
 **Capability ativa:** só `docentiah.improve_context` ("Melhorar com IA" em Detalhes adicionais, no wizard de Apresentação de slides). Toda outra capability (`generate_slides`, Conexões IAH, etc.) continua sempre no motor demonstrativo — `getLlmProvider(capability)` só desvia para a DeepSeek nesse único caso.
 

@@ -41,9 +41,12 @@ function getDeepSeekProvider(capability: string): LlmProvider {
   return createDeepSeekProvider({
     apiKey: process.env.DEEPSEEK_API_KEY,
     baseUrl: process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com",
-    // Nome de modelo vigente na documentação DeepSeek no momento desta implementação —
-    // verificar antes de ativar em produção (docs/AI_PROVIDER_GATEWAY.md, nota de honestidade).
-    model: process.env.DEEPSEEK_MODEL || "deepseek-chat",
+    // deepseek-v4-flash é o padrão econômico inicial do IAH — verificado em
+    // api-docs.deepseek.com em 2026-07-24 (deepseek-chat/deepseek-reasoner
+    // descontinuados na mesma data, 15:59 UTC). DEEPSEEK_MODEL continua
+    // configurável por variável de ambiente; nunca escrito em .env.local
+    // automaticamente por este código.
+    model: process.env.DEEPSEEK_MODEL || "deepseek-v4-flash",
     timeoutMs: getTimeoutMsForCapability(capability),
   });
 }
