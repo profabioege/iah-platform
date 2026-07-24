@@ -9,3 +9,13 @@
 export function isConexoesIahEnabled(): boolean {
   return process.env.NEXT_PUBLIC_FEATURE_CONEXOES_IAH === "true";
 }
+
+/**
+ * DocentIAH — Planejador Conversacional. `false`/ausente: a home do
+ * DocentIAH continua a grade de tarefas atual. `true`: a entrada vira o
+ * chat guiado. Rollback é só desligar — nenhum código novo entra em
+ * produção quando ausente.
+ */
+export function isDocentiahConversationalPlannerEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_FEATURE_DOCENTIAH_CONVERSATIONAL_PLANNER === "true";
+}

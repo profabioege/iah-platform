@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { Sparkles } from "lucide-react";
 
+import { isDocentiahConversationalPlannerEnabled } from "@/lib/feature-flags";
 import { getWorkspaceContext } from "@/modules/workspace";
 import { Card, CardContent } from "@/components/ui/card";
 
 import { ContinueSection } from "./continue-section";
+import { ConversationalPlanner } from "./planejador/conversational-planner";
 import { RelatedClassrooms } from "./related-classrooms";
 import { TaskGrid } from "./task-grid";
 
@@ -14,13 +16,17 @@ export const metadata: Metadata = {
 };
 
 /**
- * Home do DocentIAH — o núcleo futuro da experiência docente. Nesta
- * etapa é só interface e arquitetura de navegação (D-044): sem
- * provedor de IA conectado, sem chamada externa. Tarefas claras, não
- * um chat genérico — o professor sempre sabe o que está pedindo.
+ * Home do DocentIAH. Atrás de `NEXT_PUBLIC_FEATURE_DOCENTIAH_CONVERSATIONAL_PLANNER`
+ * (`false`/ausente): grade de tarefas de sempre (D-044), inalterada.
+ * `true`: Planejador Conversacional — chat guiado em vez do formulário/
+ * grade como ponto de entrada. Rollback é só desligar a flag.
  */
 export default async function DocentIahPage() {
   const workspace = await getWorkspaceContext();
+
+  if (isDocentiahConversationalPlannerEnabled() && workspace?.user.teacherId) {
+    return <ConversationalPlanner institutionId={workspace.institution.id} teacherId={workspace.user.teacherId} />;
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">

@@ -7,9 +7,21 @@
  * Adaptar material) reaproveitam quando ganharem geração real.
  */
 
-export type GeneratedMaterialType = "slides" | "laboratory_lesson";
+/**
+ * "lesson_plan" | "infographic" | "mind_map" — novos tipos do
+ * Planejador Conversacional (rascunho estruturado, MVP). O CHECK
+ * constraint de `generated_materials` no banco real só permite
+ * `'slides'` hoje — a migration que amplia isso
+ * (`app/supabase/migrations/20260724001500_docentiah_planner_materials.sql`)
+ * existe no repositório mas NÃO foi aplicada; salvar estes tipos contra
+ * o banco real falha até essa migration ser executada por decisão
+ * explícita (nunca automática). Contra o repositório seed/demo (padrão
+ * sem Supabase configurado), funciona normalmente — é TypeScript puro.
+ */
+export type GeneratedMaterialType = "slides" | "laboratory_lesson" | "lesson_plan" | "infographic" | "mind_map";
 
-export type GeneratedMaterialStatus = "generated" | "saved";
+/** "draft" — novo status do Planejador Conversacional; mesma ressalva de CHECK constraint da migration acima. */
+export type GeneratedMaterialStatus = "generated" | "saved" | "draft";
 
 export interface GeneratedMaterial {
   id: string;

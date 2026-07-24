@@ -15,9 +15,18 @@ export const metadata: Metadata = {
 const TYPE_LABEL: Record<GeneratedMaterial["type"], string> = {
   slides: "Apresentação de slides",
   laboratory_lesson: "Aula de laboratório correlacionada",
+  lesson_plan: "Plano da aula",
+  infographic: "Infográfico",
+  mind_map: "Mapa mental",
 };
 
-const DETAIL_HREF: Record<GeneratedMaterial["type"], (id: string) => string> = {
+/**
+ * Só slides e aula de laboratório têm tela de detalhe hoje — os 3 tipos
+ * novos do Planejador Conversacional (rascunho estruturado) ainda não
+ * têm visualizador próprio (fora do escopo desta entrega); a linha
+ * aparece na lista, mas sem link, até existir essa tela.
+ */
+const DETAIL_HREF: Partial<Record<GeneratedMaterial["type"], (id: string) => string>> = {
   slides: (id) => `/professor/docente-iah/materiais/${id}`,
   laboratory_lesson: (id) => `/professor/docente-iah/conexoes-iah/aula/${id}`,
 };
@@ -29,7 +38,7 @@ export default async function MeusMateriaisPage() {
 
   const repositories = getDefaultDocentiahRepositories();
   const materials = await repositories.materials.listByTeacher(workspace.institution.id, workspace.user.teacherId);
-  const saved = materials.filter((material) => material.status === "saved");
+  const saved = materials.filter((material) => material.status === "saved" || material.status === "draft");
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
@@ -66,24 +75,43 @@ export default async function MeusMateriaisPage() {
             </p>
           ) : (
             <ul className="divide-y divide-border border-t border-border">
-              {saved.map((material) => (
-                <li key={material.id}>
-                  <Link
-                    href={DETAIL_HREF[material.type](material.id)}
-                    className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted/40 md:px-6"
-                  >
+              {saved.map((material) => {
+                const detailHref = DETAIL_HREF[material.type]?.(material.id);
+                const rowContent = (
+                  <>
                     <div className="flex flex-col">
                       <span className="text-sm font-medium">{material.title}</span>
                       <span className="text-xs text-muted-foreground">
                         {new Date(material.updatedAt).toLocaleDateString("pt-BR")}
                       </span>
                     </div>
-                    <Badge variant="outline" className="text-muted-foreground">
-                      {TYPE_LABEL[material.type]}
-                    </Badge>
-                  </Link>
-                </li>
-              ))}
+                    <div className="flex items-center gap-2">
+                      {material.status === "draft" ? (
+                        <Badge variant="outline" className="text-muted-foreground">
+                          Rascunho
+                        </Badge>
+                      ) : null}
+                      <Badge variant="outline" className="text-muted-foreground">
+                        {TYPE_LABEL[material.type]}
+                      </Badge>
+                    </div>
+                  </>
+                );
+                return (
+                  <li key={material.id}>
+                    {detailHref ? (
+                      <Link
+                        href={detailHref}
+                        className="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted/40 md:px-6"
+                      >
+                        {rowContent}
+                      </Link>
+                    ) : (
+                      <div className="flex items-center justify-between gap-3 px-4 py-3 md:px-6">{rowContent}</div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </CardContent>

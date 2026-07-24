@@ -58,22 +58,39 @@ interface SlidesDraft {
   includeReferences: boolean;
 }
 
+const PLANNER_PREFILL_STORAGE_KEY = "docentiah:slides-prefill";
+
+/** Prefill vindo do Planejador Conversacional (`planejador/planner-material-flow.tsx`) — lido uma vez e descartado, nunca persistido. */
+function readPlannerPrefill(): Partial<SlidesDraft> | null {
+  if (typeof window === "undefined") return null;
+  const raw = window.sessionStorage.getItem(PLANNER_PREFILL_STORAGE_KEY);
+  if (!raw) return null;
+  window.sessionStorage.removeItem(PLANNER_PREFILL_STORAGE_KEY);
+  try {
+    const parsed = JSON.parse(raw) as Partial<SlidesDraft>;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
 function createEmptyDraft(defaultSubjectName: string | null): SlidesDraft {
+  const prefill = readPlannerPrefill();
   return {
-    subject: defaultSubjectName ?? "",
-    educationLevel: "",
-    grade: "",
-    topic: "",
+    subject: prefill?.subject || defaultSubjectName || "",
+    educationLevel: prefill?.educationLevel || "",
+    grade: prefill?.grade || "",
+    topic: prefill?.topic || "",
     lessonDurationMinutes: 50,
     customDuration: false,
     slideCount: 10,
     learningObjectives: "",
     methodology: "",
     detailLevel: "equilibrado",
-    studentProfile: "",
+    studentProfile: prefill?.studentProfile || "",
     additionalContext: "",
     webSearchEnabled: false,
-    visualTheme: "essencial",
+    visualTheme: prefill?.visualTheme || "essencial",
     includeClosingActivity: true,
     includeTeacherNotes: true,
     includeReferences: true,

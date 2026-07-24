@@ -25,3 +25,17 @@ export type {
 export { assertMaterialOwnership } from "./domain/authorization";
 
 export { getDefaultDocentiahRepositories } from "./infrastructure/repository-factory";
+
+export {
+  CLASS_PROFILE_TAGS,
+  createEmptyLessonPlanningBrief,
+  requiredFieldsMissing,
+  type ClassProfileTagId,
+  type CurriculumSkillSuggestion,
+  type IahConnectionSuggestion,
+  type LessonPlanningBrief,
+  type LessonPlanningStatus,
+  type SupportMaterialType,
+} from "./domain/lesson-planning-brief";
+
+export type { InfographicDraft, LessonPlanDraft, MindMapDraft } from "./domain/material-drafts";
