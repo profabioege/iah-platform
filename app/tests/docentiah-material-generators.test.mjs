@@ -34,16 +34,16 @@ test("mapa mental: conceito central é o tópico, com sub-ramo do conceito espec
   assert.deepEqual(draft.relations, ["Revolução Industrial → mais-valia"]);
 });
 
-test("plano de aula: perfil 'dificuldade_leitura' produz texto mais curto", () => {
+test("plano de aula: perfil 'dificuldade_leitura' produz contextualização mais curta", () => {
   const normal = generateLessonPlanDraft(baseBrief());
   const adapted = generateLessonPlanDraft(baseBrief({ classProfile: ["dificuldade_leitura"] }));
-  assert.notEqual(normal.objectives[0], adapted.objectives[0]);
-  assert.ok(adapted.objectives[0].length <= normal.objectives[0].length);
+  assert.notEqual(normal.introduction.contextualization, adapted.introduction.contextualization);
+  assert.ok(adapted.introduction.contextualization.length <= normal.introduction.contextualization.length);
 });
 
 test("plano de aula: perfil 'alunos_neurodivergentes' muda a orientação ao professor, nunca pede laudo", () => {
   const draft = generateLessonPlanDraft(baseBrief({ classProfile: ["alunos_neurodivergentes"] }));
-  assert.ok(draft.teacherGuidance.includes("previsível"));
+  assert.ok(draft.introduction.teacherGuidance.includes("previsível"));
   assert.ok(!JSON.stringify(draft).toLowerCase().includes("laudo"));
   assert.ok(!JSON.stringify(draft).toLowerCase().includes("diagnóstico"));
 });
@@ -52,9 +52,10 @@ test("plano de aula: conexão IAH e habilidades selecionadas aparecem quando pre
   const draft = generateLessonPlanDraft(
     baseBrief({
       iahConnection: { id: "c1", title: "Automação e transformação do trabalho", rationale: "r", confidence: 0.8, custom: false },
-      selectedCurriculumSkills: [{ id: "s1", code: null, description: "Analisar transformações do trabalho", document: "doc", version: "1", matchReason: "m", confidence: 0.8 }],
+      selectedCurriculumSkills: [{ id: "s1", code: null, description: "Analisar transformações do trabalho", document: "doc-bncc", version: "1", matchReason: "m", confidence: 0.8 }],
     }),
   );
-  assert.equal(draft.iahConnection, "Automação e transformação do trabalho");
-  assert.deepEqual(draft.selectedSkills, ["Analisar transformações do trabalho"]);
+  assert.equal(draft.development.iahConnection, "Automação e transformação do trabalho");
+  assert.ok(draft.development.keyConcepts.some((c) => c.term === "Analisar transformações do trabalho"));
+  assert.ok(draft.sourceReferences.includes("doc-bncc"));
 });

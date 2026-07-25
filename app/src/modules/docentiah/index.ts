@@ -38,4 +38,19 @@ export {
   type SupportMaterialType,
 } from "./domain/lesson-planning-brief";
 
-export type { InfographicDraft, LessonPlanDraft, MindMapDraft } from "./domain/material-drafts";
+export type {
+  ActivityFormat,
+  ActivityKind,
+  EssayQuestion,
+  InfographicDraft,
+  LessonPlanActivity,
+  LessonPlanDevelopment,
+  LessonPlanDraft,
+  LessonPlanDraftStatus,
+  LessonPlanIntroduction,
+  LessonPlanKeyConcept,
+  LessonPlanTopic,
+  MindMapDraft,
+  ObjectiveQuestion,
+  ResearchTask,
+} from "./domain/material-drafts";

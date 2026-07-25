@@ -2,7 +2,12 @@
 
 import { buildLessonBrief, type BuildLessonBriefOutput } from "@/lib/docentiah/lesson-brief-extractor";
 import { findCurriculumSkillSuggestions } from "@/lib/docentiah/curriculum-skill-matcher";
-import { generateInfographicDraft, generateLessonPlanDraft, generateMindMapDraft } from "@/lib/docentiah/material-generators";
+import {
+  generateInfographicDraft,
+  generateLessonPlanDraft,
+  generateMindMapDraft,
+  type LessonPlanRewriteSection,
+} from "@/lib/docentiah/material-generators";
 import { getCurriculumConnectionProvider, type EducationLevel } from "@/modules/conexoes-iah";
 import { getDefaultCurriculumRepositories } from "@/modules/curriculum";
 import {
@@ -127,6 +132,31 @@ export async function generateLessonMaterialAction(
   if (materialType === "lesson_plan") return { materialType: "lesson_plan", draft: generateLessonPlanDraft(brief) };
   if (materialType === "infographic") return { materialType: "infographic", draft: generateInfographicDraft(brief) };
   return { materialType: "mind_map", draft: generateMindMapDraft(brief) };
+}
+
+export type LessonPlanSection = LessonPlanRewriteSection;
+
+/**
+ * Reescreve só a seção pedida do Plano de aula (nunca o rascunho
+ * inteiro) — chama o mesmo gerador determinístico e o chamador
+ * descarta as demais seções do resultado, preservando as edições do
+ * professor nas outras partes.
+ */
+export async function rewriteLessonPlanSectionAction(
+  brief: LessonPlanningBrief,
+  section: LessonPlanSection,
+): Promise<{ success: true; draft: LessonPlanDraft } | { error: string }> {
+  try {
+    await requireTeacherWorkspace();
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Sessão inválida." };
+  }
+  if (!brief.topic) return { error: "Informe o conteúdo da aula antes de reescrever." };
+  // `section` decide, do lado do cliente, qual parte do rascunho é substituída
+  // (`mergeLessonPlanSection`) — o gerador em si é sempre determinístico e
+  // barato, então recria o rascunho inteiro e descarta o que não foi pedido.
+  void section;
+  return { success: true, draft: generateLessonPlanDraft(brief) };
 }
 
 /**
