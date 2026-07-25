@@ -9,6 +9,8 @@ interface LogoProps {
   size?: LogoSize;
   variant?: LogoVariant;
   mark?: boolean;
+  /** Sigla IAH isolada (sem "Educacional") para uso inline junto a texto. */
+  sigla?: boolean;
   className?: string;
   title?: string;
 }
@@ -24,23 +26,28 @@ export function Logo({
   size = "md",
   variant = "default",
   mark = false,
+  sigla = false,
   className,
   title = "IAH Educacional",
 }: LogoProps) {
   const src = mark
     ? "/brand/mark.svg"
-    : variant === "dark"
-      ? "/brand/logo-dark.svg"
-      : variant === "light"
-        ? "/brand/logo-light.svg"
-        : "/brand/logo.svg";
+    : sigla
+      ? "/brand/sigla-dark.svg"
+      : variant === "dark"
+        ? "/brand/logo-dark.svg"
+        : variant === "light"
+          ? "/brand/logo-light.svg"
+          : "/brand/logo.svg";
+
+  const [width, height] = mark ? [520, 520] : sigla ? [1100, 550] : [1100, 700];
 
   return (
     <Image
       src={src}
       alt={title}
-      width={mark ? 520 : 1100}
-      height={mark ? 520 : 700}
+      width={width}
+      height={height}
       className={cn(sizeClasses[size], "w-auto", className)}
     />
   );

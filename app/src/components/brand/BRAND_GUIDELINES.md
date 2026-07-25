@@ -16,6 +16,7 @@ Todos os consumidores usam exclusivamente os SVGs em `public/brand/`:
 | `logo-light.svg` | Logotipo para fundos claros |
 | `favicon.svg` | Favicon e ícone do manifesto |
 | `mark.svg` | Marca reduzida para espaços compactos |
+| `sigla-dark.svg` | Sigla IAH isolada (sem "Educacional"), para compor inline junto a texto sobre fundo escuro |
 
 `src/components/brand/logo.tsx` não contém geometria da marca. O componente
 apenas seleciona e renderiza um dos arquivos oficiais acima.
@@ -27,17 +28,20 @@ apenas seleciona e renderiza um dos arquivos oficiais acima.
 <Logo size="md" variant="dark" />
 <Logo size="lg" variant="light" />
 <Logo size="sm" mark />
+<Logo size="sm" sigla title="" />
 ```
 
 - `size`: `sm`, `md` ou `lg`.
 - `variant`: `default`, `dark` ou `light`.
 - `mark`: usa a marca reduzida oficial.
+- `sigla`: usa a sigla IAH isolada (sem "Educacional"), só fundo escuro; use `title=""` quando o texto ao redor já nomear o produto (imagem decorativa).
 - `className`: permitido apenas para layout e responsividade; não recolorir.
 
 ## Superfícies
 
 - Login, Landing Page, Navbar, rodapé e Sidebar importam `Logo`.
 - A Sidebar recolhida e o Mentor IAH usam `<Logo mark />`.
+- O cartão DocentIAH (Painel do Professor) usa `<Logo sigla />` para compor "Docent" + IAH estilizado no título.
 - Metadata e Manifest apontam para `public/brand/favicon.svg`.
 - Open Graph referencia `public/brand/logo-dark.svg` diretamente.
 - Não há Splash Screen dedicada. Uma futura implementação deve consumir
