@@ -537,6 +537,16 @@ function EssayQuestionEditor({
         value={question.correctionCriteria}
         onChange={(v) => onChange({ ...question, correctionCriteria: v })}
       />
+      <label className="flex flex-col gap-1 text-xs">
+        <span className="font-medium text-foreground">Pontuação (opcional)</span>
+        <input
+          type="number"
+          min={0}
+          value={question.suggestedScore ?? ""}
+          onChange={(event) => onChange({ ...question, suggestedScore: event.target.value === "" ? null : Number(event.target.value) })}
+          className="w-24 rounded-lg border border-input bg-background p-2 text-xs text-foreground"
+        />
+      </label>
     </div>
   );
 }
