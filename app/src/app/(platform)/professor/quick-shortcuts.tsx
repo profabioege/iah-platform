@@ -1,32 +1,20 @@
 import Link from "next/link";
-import {
-  ClipboardCheck,
-  MessageSquareHeart,
-  Rocket,
-  Sparkles,
-  UsersRound,
-  Wand2,
-} from "lucide-react";
+import { Rocket, Sparkles, UsersRound } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 
 /**
- * Atalhos rápidos do Painel do Professor — as seis portas de entrada da
- * rotina docente (redesenho de redução de carga cognitiva). Currículo
- * Vivo, Biblioteca Oficial e Indicadores da Turma saíram deste grid:
- * o primeiro migrou para dentro do DocentIAH (DocentIAH → Planejar →
- * Planejamento anual), os dois últimos não têm função imediata aqui
- * (Indicadores avançados vivem só na Gestão).
+ * Atalhos rápidos do Painel do Professor — as três portas de entrada da
+ * rotina docente (redesenho de redução de carga cognitiva, M18.4). Aulas,
+ * Sondagens e Devolutivas saíram deste grid: suas funções passam a ser
+ * acessadas a partir de Turmas (acompanhamento) e DocentIAH (criação).
  */
 export function QuickShortcuts() {
   return (
-    <section aria-label="Atalhos rápidos" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      <LinkCard icon={UsersRound} title="Turmas" description="Suas turmas, matrículas e sincronização." href="/professor/turmas" />
-      <LinkCard icon={Wand2} title="Aulas" description="Monte o Pacote Pedagógico de uma aula em 7 etapas." href="/professor/aulas" />
-      <LinkCard icon={Rocket} title="Missões" description="Crie, versione e publique Missões investigativas." href="/professor/estudio" />
-      <LinkCard icon={ClipboardCheck} title="Sondagens" description="Crie atividades, acompanhe respostas e valide correções." href="/professor/avaliacoes" />
-      <LinkCard icon={MessageSquareHeart} title="Devolutivas" description="Onde suas devolutivas aos alunos se concentram." href="/professor/devolutivas" />
-      <LinkCard icon={Sparkles} title="DocentIAH" description="Inteligência pedagógica para planejar, criar e acompanhar." href="/professor/docente-iah" />
+    <section aria-label="Atalhos rápidos" className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <LinkCard icon={UsersRound} title="Turmas" description="Monitore suas turmas, atividades e devolutivas." href="/professor/turmas" />
+      <LinkCard icon={Rocket} title="Missões" description="Crie e acompanhe missões investigativas." href="/professor/estudio" />
+      <LinkCard icon={Sparkles} title="DocentIAH" description="Crie suas aulas com apenas um prompt." href="/professor/docente-iah" />
     </section>
   );
 }
