@@ -67,17 +67,10 @@ export default async function EntrarPage({
       <main className="relative flex w-full max-w-sm flex-col items-center gap-9 text-center">
         <Logo size="lg" variant="dark" />
 
-        <div className="flex flex-col gap-3">
-          <h1 className="text-xl font-semibold tracking-tight">
-            <span className="block">Aprender investigando.</span>
-            <span className="block">Ensinar transformando.</span>
-          </h1>
-          <p className="text-sm leading-relaxed text-muted-foreground">
-            Desenvolva pensamento crítico, autoria e uso responsável da
-            Inteligência Artificial em um ambiente de aprendizagem
-            investigativa.
-          </p>
-        </div>
+        <h1 className="text-xl font-semibold tracking-tight">
+          <span className="block">Aprender investigando.</span>
+          <span className="block">Ensinar transformando.</span>
+        </h1>
 
         <form
           className="flex w-full flex-col gap-3"
