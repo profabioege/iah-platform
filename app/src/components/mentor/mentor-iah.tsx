@@ -19,12 +19,14 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import {
-  getMentorProvider,
+  openMentorSessionAction,
+  sendMentorMessageAction,
   type MentorHistoryMessage,
   type MentorMissionContext,
 } from "@/modules/mentor";
 
 type ConversationStatus = "idle" | "loading" | "error";
+type SessionState = "loading" | "ready" | "error";
 
 interface ConversationMessage extends MentorHistoryMessage {
   id: string;
@@ -33,8 +35,8 @@ interface ConversationMessage extends MentorHistoryMessage {
 /**
  * Abertura curta e contextual (nunca a apresentação longa de antes): usa a
  * etapa atual quando disponível, cai para o texto genérico caso contrário.
- * Calculada uma única vez por instância (ver `useState(buildGreeting)`) —
- * não deve reaparecer ao fechar/reabrir a mesma conversa.
+ * Só aparece quando a sessão carregada não tem nenhuma mensagem ainda —
+ * nunca se repete ao reabrir uma conversa existente (Fase 5).
  */
 function buildGreeting(context: MentorMissionContext): ConversationMessage {
   const stepLabel = context.currentStep.label.trim();
@@ -68,24 +70,57 @@ function useIsDesktop(): boolean {
 
 export function MentorIAH({ context }: { context: MentorMissionContext }) {
   const [open, setOpen] = React.useState(false);
-  const [messages, setMessages] = React.useState<ConversationMessage[]>(() => [
-    buildGreeting(context),
-  ]);
+  const [sessionState, setSessionState] = React.useState<SessionState>("loading");
+  const [sessionId, setSessionId] = React.useState<string | null>(null);
+  const [messages, setMessages] = React.useState<ConversationMessage[]>([]);
   const [draft, setDraft] = React.useState("");
   const [status, setStatus] = React.useState<ConversationStatus>("idle");
   const [pendingMessage, setPendingMessage] = React.useState<string | null>(null);
   const isDesktop = useIsDesktop();
-  const messageSequence = React.useRef(0);
   const messageEndRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLTextAreaElement>(null);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
   const wasOpenRef = React.useRef(false);
+  const sessionLoadStartedRef = React.useRef(false);
+  const pendingClientMessageIdRef = React.useRef<string | null>(null);
+
+  // Localiza/cria a sessão e carrega o histórico só quando o painel é
+  // aberto pela primeira vez — nunca antes (o Mentor não busca nada em
+  // segundo plano enquanto fechado). `loadSession` também serve de "tentar
+  // novamente" quando a primeira tentativa falha (ex.: atribuição ainda
+  // inexistente, sessão expirada).
+  const loadSession = React.useCallback(async () => {
+    setSessionState("loading");
+    try {
+      const { sessionId: id, messages: history } = await openMentorSessionAction(
+        context.missionId,
+      );
+      setSessionId(id);
+      setMessages(
+        history.length > 0
+          ? history.map((m) => ({ id: m.id, role: m.role, content: m.content }))
+          : [buildGreeting(context)],
+      );
+      setSessionState("ready");
+    } catch {
+      setSessionState("error");
+    }
+    // context muda de identidade a cada render do pai (currentStep avança);
+    // só o missionId importa para carregar a sessão.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [context.missionId]);
 
   React.useEffect(() => {
-    if (!open) return;
+    if (!open || sessionLoadStartedRef.current) return;
+    sessionLoadStartedRef.current = true;
+    void loadSession();
+  }, [open, loadSession]);
+
+  React.useEffect(() => {
+    if (!open || sessionState !== "ready") return;
     const focusTimer = window.setTimeout(() => inputRef.current?.focus(), 120);
     return () => window.clearTimeout(focusTimer);
-  }, [open, isDesktop]);
+  }, [open, isDesktop, sessionState]);
 
   // Foco retorna ao acionador flutuante ao fechar (Escape ou botão "X") —
   // só dispara na transição aberto → fechado, nunca na montagem inicial.
@@ -135,21 +170,19 @@ export function MentorIAH({ context }: { context: MentorMissionContext }) {
     messageEndRef.current?.scrollIntoView({ block: "nearest" });
   }, [messages, status]);
 
-  const nextId = (role: ConversationMessage["role"]) => {
-    messageSequence.current += 1;
-    return `${role}-${messageSequence.current}`;
-  };
-
   const sendMessage = async (content: string, isRetry = false) => {
     const message = content.trim();
-    if (!message || status === "loading") return;
+    if (!message || status === "loading" || !sessionId) return;
+
+    const clientMessageId =
+      isRetry && pendingClientMessageIdRef.current
+        ? pendingClientMessageIdRef.current
+        : crypto.randomUUID();
+    pendingClientMessageIdRef.current = clientMessageId;
 
     const conversation = isRetry
       ? messages
-      : [
-          ...messages,
-          { id: nextId("student"), role: "student" as const, content: message },
-        ];
+      : [...messages, { id: clientMessageId, role: "student" as const, content: message }];
 
     if (!isRetry) {
       setMessages(conversation);
@@ -159,22 +192,31 @@ export function MentorIAH({ context }: { context: MentorMissionContext }) {
     setPendingMessage(message);
 
     try {
-      const response = await getMentorProvider().sendMessage({
-        message,
+      const { mentorMessage } = await sendMentorMessageAction({
+        missionId: context.missionId,
+        sessionId,
+        clientMessageId,
+        content: message,
         history: conversation.map(({ role, content: historyContent }) => ({
           role,
           content: historyContent,
         })),
         context,
+        pedagogicalStage: context.currentStep.label || null,
       });
 
       setMessages((current) => [
         ...current,
-        { id: nextId("mentor"), role: "mentor", content: response.content },
+        { id: mentorMessage.id, role: "mentor", content: mentorMessage.content },
       ]);
       setPendingMessage(null);
+      pendingClientMessageIdRef.current = null;
       setStatus("idle");
     } catch {
+      // A mensagem do estudante já foi persistida no servidor antes da
+      // chamada ao Mentor (mentor-session-service.ts) — o que falhou aqui
+      // foi obter/gravar a resposta. Ela continua visível no histórico
+      // local e o retry (mesmo clientMessageId) não a duplica.
       setStatus("error");
     }
   };
@@ -184,20 +226,29 @@ export function MentorIAH({ context }: { context: MentorMissionContext }) {
     void sendMessage(draft);
   };
 
-  const conversation = (
-    <MentorConversation
-      messages={messages}
-      status={status}
-      draft={draft}
-      setDraft={setDraft}
-      inputRef={inputRef}
-      messageEndRef={messageEndRef}
-      onSubmit={handleSubmit}
-      onSuggestion={(suggestion) => void sendMessage(suggestion)}
-      onRetry={() => pendingMessage && void sendMessage(pendingMessage, true)}
-      onClose={() => setOpen(false)}
-    />
-  );
+  let panelContent: React.ReactNode;
+  if (sessionState === "loading") {
+    panelContent = <MentorSessionLoading onClose={() => setOpen(false)} />;
+  } else if (sessionState === "error") {
+    panelContent = (
+      <MentorSessionError onRetry={() => void loadSession()} onClose={() => setOpen(false)} />
+    );
+  } else {
+    panelContent = (
+      <MentorConversation
+        messages={messages}
+        status={status}
+        draft={draft}
+        setDraft={setDraft}
+        inputRef={inputRef}
+        messageEndRef={messageEndRef}
+        onSubmit={handleSubmit}
+        onSuggestion={(suggestion) => void sendMessage(suggestion)}
+        onRetry={() => pendingMessage && void sendMessage(pendingMessage, true)}
+        onClose={() => setOpen(false)}
+      />
+    );
+  }
 
   return (
     <>
@@ -231,7 +282,7 @@ export function MentorIAH({ context }: { context: MentorMissionContext }) {
           className="fixed top-14 right-0 bottom-0 z-30 flex w-[clamp(22rem,35vw,30rem)] border-l border-border bg-background shadow-2xl"
           data-testid="mentor-iah-desktop-panel"
         >
-          {conversation}
+          {panelContent}
         </aside>
       ) : null}
 
@@ -248,11 +299,79 @@ export function MentorIAH({ context }: { context: MentorMissionContext }) {
             <SheetDescription className="sr-only">
               Apoio socrático durante a Missão.
             </SheetDescription>
-            {conversation}
+            {panelContent}
           </SheetContent>
         </Sheet>
       ) : null}
     </>
+  );
+}
+
+function MentorHeader({ onClose }: { onClose: () => void }) {
+  return (
+    <header className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-3">
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
+        <Logo size="sm" mark className="h-6" title="Mentor IAH" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <h2 className="truncate text-sm font-semibold">Mentor IAH</h2>
+          <span className="size-2 rounded-full bg-chart-2" aria-label="Disponível" />
+        </div>
+        <p className="truncate text-xs text-muted-foreground">
+          Ajuda a pensar, sem entregar respostas
+        </p>
+      </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={onClose}
+        aria-label="Fechar Mentor IAH"
+      >
+        <X className="size-4" />
+      </Button>
+    </header>
+  );
+}
+
+function MentorSessionLoading({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="flex h-full min-h-0 w-full flex-col bg-background">
+      <MentorHeader onClose={onClose} />
+      <div
+        className="flex flex-1 items-center justify-center gap-2 px-4 text-sm text-muted-foreground"
+        aria-live="polite"
+        aria-busy="true"
+      >
+        <Sparkles className="size-4 animate-pulse text-primary" />
+        Carregando sua conversa…
+      </div>
+    </div>
+  );
+}
+
+function MentorSessionError({
+  onRetry,
+  onClose,
+}: {
+  onRetry: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="flex h-full min-h-0 w-full flex-col bg-background">
+      <MentorHeader onClose={onClose} />
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
+        <AlertCircle className="size-6 shrink-0 text-destructive" aria-hidden="true" />
+        <p role="alert" className="text-sm text-muted-foreground">
+          Não foi possível carregar sua conversa com o Mentor agora.
+        </p>
+        <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+          <RefreshCw className="size-3.5" />
+          Tentar novamente
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -283,29 +402,7 @@ function MentorConversation({
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col bg-background">
-      <header className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
-          <Logo size="sm" mark className="h-6" title="Mentor IAH" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h2 className="truncate text-sm font-semibold">Mentor IAH</h2>
-            <span className="size-2 rounded-full bg-chart-2" aria-label="Disponível" />
-          </div>
-          <p className="truncate text-xs text-muted-foreground">
-            Ajuda a pensar, sem entregar respostas
-          </p>
-        </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={onClose}
-          aria-label="Fechar Mentor IAH"
-        >
-          <X className="size-4" />
-        </Button>
-      </header>
+      <MentorHeader onClose={onClose} />
 
       <div
         role="log"

@@ -2,18 +2,21 @@ import type {
   MentorProvider,
   MentorRequest,
   MentorResponse,
-} from "../domain/mentor-provider";
+} from "../domain/mentor-provider.ts";
 
 const DEMO_DELAY_MS = 700;
 
+// `setTimeout`/`clearTimeout` globais (não `window.*`): este provider agora
+// também roda no servidor, dentro da Server Action que persiste a conversa
+// (Fase 6 — mesma camada de persistência para demo e provedor real).
 function wait(delay: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
-    const timer = window.setTimeout(resolve, delay);
+    const timer = setTimeout(resolve, delay);
 
     signal?.addEventListener(
       "abort",
       () => {
-        window.clearTimeout(timer);
+        clearTimeout(timer);
         reject(new DOMException("Operação cancelada", "AbortError"));
       },
       { once: true },
