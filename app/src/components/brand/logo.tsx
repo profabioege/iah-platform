@@ -40,7 +40,7 @@ export function Logo({
           ? "/brand/logo-light.svg"
           : "/brand/logo.svg";
 
-  const [width, height] = mark ? [520, 520] : sigla ? [1100, 550] : [1100, 700];
+  const [width, height] = mark ? [520, 545] : sigla ? [1100, 575] : [1100, 725];
 
   return (
     <Image
