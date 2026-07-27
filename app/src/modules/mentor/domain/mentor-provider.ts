@@ -14,6 +14,10 @@ export interface MentorMissionContext {
     number: number;
     label: string;
   };
+  /** Competências IAH desenvolvidas pela Missão (bloco 11), quando houver. */
+  competencies?: string[];
+  /** Produção do aluno em andamento (bloco 8), quando já houver algo escrito. */
+  studentAttempt?: string | null;
 }
 
 export interface MentorRequest {

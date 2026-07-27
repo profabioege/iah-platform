@@ -96,6 +96,25 @@ export function getStudentSubmissionStatus(
   return "not_started";
 }
 
+/**
+ * Escolhe a Missão ativa entre as disponíveis: a primeira ainda não
+ * avaliada, ou a última da lista quando todas já foram avaliadas. Mesma
+ * regra usada pelo Dashboard ("Minha Aula") para decidir qual Missão
+ * destacar — reaproveitada aqui para a navegação lateral saber para onde
+ * levar o aluno.
+ */
+export function pickActiveMissionId(
+  availableMissionIds: string[],
+  getWork: (missionId: string) => StudentWork,
+): string | null {
+  if (availableMissionIds.length === 0) return null;
+  return (
+    availableMissionIds.find(
+      (id) => getStudentSubmissionStatus(getWork(id)) !== "reviewed",
+    ) ?? availableMissionIds[availableMissionIds.length - 1]
+  );
+}
+
 /** Transições válidas do ciclo; reabertura só ocorre antes da avaliação. */
 export function canTransitionSubmission(
   from: StudentSubmissionStatus,

@@ -10,6 +10,7 @@ export {
   isMissionCompleted,
   isProductionDelivered,
   isReflectionRecorded,
+  pickActiveMissionId,
   type StudentWork,
   type StudentWorkReview,
   type StudentSubmissionStatus,

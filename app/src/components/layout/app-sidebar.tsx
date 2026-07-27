@@ -11,6 +11,7 @@ import {
   CircleUser,
   ClipboardCheck,
   ClipboardList,
+  ExternalLink,
   FileText,
   FlaskConical,
   FolderKanban,
@@ -34,6 +35,7 @@ import {
 // incompatível com este componente "use client").
 import { roleHome } from "@/modules/workspace/domain/workspace-context";
 import type { Role } from "@/modules/workspace/domain/entities";
+import { isMentorIAHEnabled } from "@/modules/mentor";
 import { Logo } from "@/components/brand/logo";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -76,11 +78,19 @@ const TEACHER_MENU: MenuItem[] = [
   { title: "Perfil", icon: CircleUser },
 ];
 
-const STUDENT_MENU: MenuItem[] = [
+/**
+ * Menu do aluno — "Minhas Sondagens" saiu apenas desta lista (D-047: a
+ * rota `/avaliacoes` e o componente continuam existindo, só não têm mais
+ * entrada fixa aqui). "Diário do Auditor" e "Mentor IAH" têm rendering
+ * próprio (ver `StudentDiarioMenuItem`/`StudentMentorMenuItem`) e por isso
+ * ficam fora deste array — este cobre só os itens antes e depois deles.
+ */
+const STUDENT_MENU_TOP: MenuItem[] = [
   { title: "Minha Aula", icon: LayoutDashboard, href: "/dashboard" },
   { title: "Minha Missão", icon: Rocket, href: "/missoes" },
-  { title: "Minhas Sondagens", icon: ClipboardList, href: "/avaliacoes" },
-  { title: "Diário do Auditor", icon: NotebookPen, href: "/diario" },
+];
+
+const STUDENT_MENU_BOTTOM: MenuItem[] = [
   { title: "Meu Portfólio", icon: FolderKanban },
   { title: "Meu Histórico", icon: History },
   { title: "Minha Devolutiva", icon: MessageSquareText },
@@ -122,7 +132,6 @@ const COORDINATOR_MENU: MenuItem[] = [
 ];
 
 function menuForRole(role: Role | null): MenuItem[] {
-  if (role === "student") return STUDENT_MENU;
   if (role === "maintainer") return MAINTAINER_MENU;
   if (role === "director") return DIRECTOR_MENU;
   if (role === "pedagogical_coordinator") return COORDINATOR_MENU;
@@ -133,17 +142,50 @@ export function AppSidebar({
   role = null,
   userName = null,
   roleLabel = null,
+  /** Missão ativa do aluno (resolvida no servidor, `layout.tsx`) — habilita o CTA do Mentor IAH. */
+  activeMissionId = null,
 }: {
   role?: Role | null;
   userName?: string | null;
   roleLabel?: string | null;
+  activeMissionId?: string | null;
 }) {
   const pathname = usePathname();
+  const isStudent = role === "student";
   const menuItems = menuForRole(role);
+  const notebookLmUrl = process.env.NEXT_PUBLIC_NOTEBOOKLM_DIARIO_URL || null;
+  const mentorAvailable = isMentorIAHEnabled() && Boolean(activeMissionId);
 
   function isActive(href: string) {
     if (href === "/dashboard") return pathname === href;
     return pathname === href || pathname.startsWith(`${href}/`);
+  }
+
+  function renderNavItem(item: MenuItem) {
+    return (
+      <SidebarMenuItem key={item.title}>
+        <SidebarMenuButton
+          render={item.href ? <Link href={item.href} /> : undefined}
+          isActive={item.href ? isActive(item.href) : false}
+          disabled={!item.href}
+          aria-disabled={!item.href || undefined}
+          tooltip={item.href ? item.title : `${item.title} — em breve`}
+          className={
+            item.href
+              ? undefined
+              : "cursor-default opacity-45 hover:bg-transparent hover:text-sidebar-foreground"
+          }
+        >
+          <item.icon />
+          <span>{item.title}</span>
+          {item.href ? null : (
+            <span className="ml-auto rounded-full border border-sidebar-border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+              Em breve
+            </span>
+          )}
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
   }
 
   const displayName = userName ?? "Auditor(a)";
@@ -183,32 +225,19 @@ export function AppSidebar({
           <SidebarGroupLabel>Plataforma</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    render={item.href ? <Link href={item.href} /> : undefined}
-                    isActive={item.href ? isActive(item.href) : false}
-                    disabled={!item.href}
-                    aria-disabled={!item.href || undefined}
-                    tooltip={
-                      item.href ? item.title : `${item.title} — em breve`
-                    }
-                    className={
-                      item.href
-                        ? undefined
-                        : "cursor-default opacity-45 hover:bg-transparent hover:text-sidebar-foreground"
-                    }
-                  >
-                    <item.icon />
-                    <span>{item.title}</span>
-                    {item.href ? null : (
-                      <span className="ml-auto rounded-full border border-sidebar-border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                        Em breve
-                      </span>
-                    )}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {isStudent ? (
+                <>
+                  {STUDENT_MENU_TOP.map(renderNavItem)}
+                  <StudentDiarioMenuItem notebookLmUrl={notebookLmUrl} />
+                  <StudentMentorMenuItem
+                    available={mentorAvailable}
+                    activeMissionId={activeMissionId}
+                  />
+                  {STUDENT_MENU_BOTTOM.map(renderNavItem)}
+                </>
+              ) : (
+                menuItems.map(renderNavItem)
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -228,5 +257,112 @@ export function AppSidebar({
         </div>
       </SidebarFooter>
     </Sidebar>
+  );
+}
+
+/**
+ * Diário do Auditor (aluno) — link externo configurável para o NotebookLM
+ * (`NEXT_PUBLIC_NOTEBOOKLM_DIARIO_URL`, variável pública, lida direto do
+ * bundle do cliente). Sem URL configurada, o item fica indisponível —
+ * nunca abre página vazia nem lança erro.
+ */
+function StudentDiarioMenuItem({ notebookLmUrl }: { notebookLmUrl: string | null }) {
+  if (!notebookLmUrl) {
+    return (
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          disabled
+          aria-disabled="true"
+          tooltip="O Diário do Auditor ainda não foi disponibilizado."
+          className="cursor-default opacity-45 hover:bg-transparent hover:text-sidebar-foreground"
+        >
+          <NotebookPen />
+          <span>Diário do Auditor</span>
+          <span className="sr-only">
+            O Diário do Auditor ainda não foi disponibilizado.
+          </span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  }
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        render={<a href={notebookLmUrl} target="_blank" rel="noopener noreferrer" />}
+        tooltip="Diário do Auditor (abre em nova aba)"
+      >
+        <NotebookPen />
+        <span>Diário do Auditor</span>
+        <ExternalLink
+          className="ml-auto size-3.5 shrink-0 text-muted-foreground"
+          aria-hidden="true"
+        />
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+}
+
+/**
+ * Mentor IAH (aluno) — CTA de marca, não um item de navegação comum: leva
+ * direto para a Missão ativa com o painel já aberto (`?mentor=open`, lido
+ * uma única vez por `MentorIAH`). Sem Missão ativa (ou com a feature flag
+ * desligada), fica indisponível — o Mentor só existe dentro do contexto de
+ * uma Missão (nunca um painel global, ver auditoria da navegação).
+ */
+function StudentMentorMenuItem({
+  available,
+  activeMissionId,
+}: {
+  available: boolean;
+  activeMissionId: string | null;
+}) {
+  const collapsedMark = (
+    <Logo
+      size="sm"
+      mark
+      title=""
+      className="hidden h-4 w-auto shrink-0 group-data-[collapsible=icon]:block"
+    />
+  );
+  const expandedBrand = (
+    <span className="flex items-center gap-1.5 group-data-[collapsible=icon]:hidden">
+      <span>Mentor</span>
+      <Logo sigla size="sm" title="" className="h-4 w-auto" />
+    </span>
+  );
+
+  if (!available || !activeMissionId) {
+    return (
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          disabled
+          aria-disabled="true"
+          aria-label="Mentor IAH"
+          tooltip="O Mentor IAH estará disponível quando você iniciar uma missão."
+          className="cursor-default border border-primary/15 opacity-45 hover:bg-transparent hover:text-sidebar-foreground"
+        >
+          {collapsedMark}
+          {expandedBrand}
+          <span className="sr-only">
+            O Mentor IAH estará disponível quando você iniciar uma missão.
+          </span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  }
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        render={<Link href={`/missoes/${activeMissionId}?mentor=open`} />}
+        aria-label="Mentor IAH"
+        tooltip="Mentor IAH"
+        className="border border-primary/30 bg-primary/10 font-medium text-foreground hover:bg-primary/15 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        {collapsedMark}
+        {expandedBrand}
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   );
 }

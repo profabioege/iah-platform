@@ -419,6 +419,8 @@ export function MissionFlow({
               number: step,
               label: MISSION_STEP_LABELS[step - 1],
             },
+            competencies: mission.competencies,
+            studentAttempt: work && work.production.trim() ? work.production : null,
           }}
         />
       ) : null}

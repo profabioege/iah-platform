@@ -30,12 +30,20 @@ interface ConversationMessage extends MentorHistoryMessage {
   id: string;
 }
 
-const INITIAL_MESSAGE: ConversationMessage = {
-  id: "mentor-iah-welcome",
-  role: "mentor",
-  content:
-    "Olá! Sou o Mentor IAH. Vou ajudar você a organizar o raciocínio com perguntas, pistas e analogias — sem fornecer respostas prontas nem redigir sua atividade. Em que parte desta Missão você quer pensar comigo?",
-};
+/**
+ * Abertura curta e contextual (nunca a apresentação longa de antes): usa a
+ * etapa atual quando disponível, cai para o texto genérico caso contrário.
+ * Calculada uma única vez por instância (ver `useState(buildGreeting)`) —
+ * não deve reaparecer ao fechar/reabrir a mesma conversa.
+ */
+function buildGreeting(context: MentorMissionContext): ConversationMessage {
+  const stepLabel = context.currentStep.label.trim();
+  const content = stepLabel
+    ? `Estou aqui. Em que parte da etapa “${stepLabel}” você quer pensar comigo?`
+    : "Estou aqui. Em que parte desta investigação você quer pensar comigo?";
+
+  return { id: "mentor-iah-welcome", role: "mentor", content };
+}
 
 const QUICK_SUGGESTIONS = [
   "Ajude-me a entender a pergunta norteadora",
@@ -60,8 +68,8 @@ function useIsDesktop(): boolean {
 
 export function MentorIAH({ context }: { context: MentorMissionContext }) {
   const [open, setOpen] = React.useState(false);
-  const [messages, setMessages] = React.useState<ConversationMessage[]>([
-    INITIAL_MESSAGE,
+  const [messages, setMessages] = React.useState<ConversationMessage[]>(() => [
+    buildGreeting(context),
   ]);
   const [draft, setDraft] = React.useState("");
   const [status, setStatus] = React.useState<ConversationStatus>("idle");
@@ -70,12 +78,58 @@ export function MentorIAH({ context }: { context: MentorMissionContext }) {
   const messageSequence = React.useRef(0);
   const messageEndRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLTextAreaElement>(null);
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
+  const wasOpenRef = React.useRef(false);
 
   React.useEffect(() => {
     if (!open) return;
     const focusTimer = window.setTimeout(() => inputRef.current?.focus(), 120);
     return () => window.clearTimeout(focusTimer);
   }, [open, isDesktop]);
+
+  // Foco retorna ao acionador flutuante ao fechar (Escape ou botão "X") —
+  // só dispara na transição aberto → fechado, nunca na montagem inicial.
+  React.useEffect(() => {
+    if (wasOpenRef.current && !open) {
+      triggerRef.current?.focus();
+    }
+    wasOpenRef.current = open;
+  }, [open]);
+
+  // Escape fecha o painel — o `<aside>` do desktop é um `<div>` simples, sem
+  // esse comportamento nativo (o Sheet mobile já trata Escape por conta
+  // própria; chamar `setOpen(false)` de novo aqui é inofensivo).
+  React.useEffect(() => {
+    if (!open) return;
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open]);
+
+  // Abertura automática vinda da navegação lateral (?mentor=open) — só é
+  // válida como consequência do clique explícito no menu, nunca por conta
+  // própria ao entrar na Missão. Lida uma única vez ao montar e o parâmetro é
+  // imediatamente consumido (removido da URL via `replaceState`, sem
+  // recarregar a página) para que um F5 depois não reabra sozinho — outros
+  // parâmetros da URL são preservados.
+  const autoOpenHandledRef = React.useRef(false);
+  React.useEffect(() => {
+    if (autoOpenHandledRef.current) return;
+    autoOpenHandledRef.current = true;
+
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("mentor") !== "open") return;
+
+    url.searchParams.delete("mentor");
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${url.pathname}${url.search}${url.hash}`,
+    );
+    setOpen(true);
+  }, []);
 
   React.useEffect(() => {
     messageEndRef.current?.scrollIntoView({ block: "nearest" });
@@ -147,20 +201,26 @@ export function MentorIAH({ context }: { context: MentorMissionContext }) {
 
   return (
     <>
+      {/*
+       * Botão discreto — acesso principal é o item "Mentor IAH" da sidebar
+       * (navega + abre via ?mentor=open); este é só o reabridor local da
+       * página, por isso não repete a marca por extenso ("Mentor" + sigla
+       * larga), só o Núcleo IAH compacto. Nunca abre sozinho — só onClick.
+       */}
       {!open ? (
         <Button
+          ref={triggerRef}
           type="button"
-          variant="outline"
-          size="lg"
+          variant="ghost"
+          size="icon"
           onClick={() => setOpen(true)}
-          aria-expanded="false"
+          aria-expanded={open}
           aria-controls="mentor-iah-panel"
-          aria-label="Mentor IAH"
-          className="fixed right-4 bottom-4 z-30 h-12 gap-1.5 rounded-full border-primary/30 bg-card px-4 shadow-lg hover:bg-card/80 md:right-6 md:bottom-6"
+          aria-label="Abrir Mentor IAH"
+          className="fixed right-4 bottom-4 z-30 size-11 rounded-full border border-border/60 bg-card/80 text-muted-foreground shadow-md backdrop-blur-sm hover:bg-card hover:text-foreground md:right-6 md:bottom-6"
           data-testid="mentor-iah-launcher"
         >
-          <span>Mentor</span>
-          <Logo sigla size="sm" title="" className="h-4" />
+          <Logo mark size="sm" title="" className="h-5 w-auto" />
         </Button>
       ) : null}
 
@@ -168,7 +228,7 @@ export function MentorIAH({ context }: { context: MentorMissionContext }) {
         <aside
           id="mentor-iah-panel"
           aria-label="Conversa com o Mentor IAH"
-          className="fixed top-14 right-0 bottom-0 z-30 flex w-[25rem] border-l border-border bg-background shadow-2xl"
+          className="fixed top-14 right-0 bottom-0 z-30 flex w-[clamp(22rem,35vw,30rem)] border-l border-border bg-background shadow-2xl"
           data-testid="mentor-iah-desktop-panel"
         >
           {conversation}
