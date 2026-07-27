@@ -5,7 +5,6 @@ import {
   AlertCircle,
   ArrowUp,
   Lightbulb,
-  MessageCircleQuestion,
   RefreshCw,
   Sparkles,
   X,
@@ -151,15 +150,17 @@ export function MentorIAH({ context }: { context: MentorMissionContext }) {
       {!open ? (
         <Button
           type="button"
+          variant="outline"
           size="lg"
           onClick={() => setOpen(true)}
           aria-expanded="false"
           aria-controls="mentor-iah-panel"
-          className="fixed right-4 bottom-4 z-30 h-12 gap-2 rounded-full px-4 shadow-lg md:right-6 md:bottom-6"
+          aria-label="Mentor IAH"
+          className="fixed right-4 bottom-4 z-30 h-12 gap-1.5 rounded-full border-primary/30 bg-card px-4 shadow-lg hover:bg-card/80 md:right-6 md:bottom-6"
           data-testid="mentor-iah-launcher"
         >
-          <MessageCircleQuestion className="size-5" />
-          Mentor IAH
+          <span>Mentor</span>
+          <Logo sigla size="sm" title="" className="h-4" />
         </Button>
       ) : null}
 
