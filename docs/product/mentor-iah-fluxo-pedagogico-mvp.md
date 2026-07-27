@@ -1,6 +1,6 @@
-# Fluxo Pedagógico do MVP do Mentor IAH
+# Fluxo Pedagógico do MVP do MentorIAH
 
-Documento de produto — define como o Mentor IAH conduzirá uma missão de aprendizagem, desde o primeiro contato do estudante até a evidência entregue ao professor. Não é uma especificação técnica: não define schema, tela, rota ou banco. Nenhum código, componente, tela ou dado foi alterado para produzir este documento.
+Documento de produto — define como o MentorIAH conduzirá uma missão de aprendizagem, desde o primeiro contato do estudante até a evidência entregue ao professor. Não é uma especificação técnica: não define schema, tela, rota ou banco. Nenhum código, componente, tela ou dado foi alterado para produzir este documento.
 
 Referências obrigatórias, não alteradas por este documento:
 
@@ -9,7 +9,7 @@ Referências obrigatórias, não alteradas por este documento:
 
 ## 1. Objetivo do MVP
 
-Definir, em um único fluxo linear, como o Mentor IAH conduz uma missão de aprendizagem do primeiro contato do estudante até a evidência entregue ao professor — aplicando na prática a mediação socrática e a Regra de Ouro da `mentor-iah-constituicao-pedagogica.md`, e o protocolo de autoria da `mentor-iah-autoria-integridade.md`, sem introduzir mecanismo novo além do que esses dois documentos já autorizam.
+Definir, em um único fluxo linear, como o MentorIAH conduz uma missão de aprendizagem do primeiro contato do estudante até a evidência entregue ao professor — aplicando na prática a mediação socrática e a Regra de Ouro da `mentor-iah-constituicao-pedagogica.md`, e o protocolo de autoria da `mentor-iah-autoria-integridade.md`, sem introduzir mecanismo novo além do que esses dois documentos já autorizam.
 
 Este documento **não inclui**: código, telas, banco de dados, nota automática, detector automático de IA, diagnóstico clínico, punição automática, gamificação ou múltiplos agentes. Qualquer um desses itens, se necessário no futuro, exige um documento de produto próprio — não é uma extensão implícita deste fluxo.
 
@@ -161,4 +161,4 @@ Esta síntese é a aplicação, ao final de uma missão específica, do Relatór
 
 ---
 
-Este documento define o fluxo pedagógico do MVP do Mentor IAH. Nenhuma tela, dado ou fluxo técnico foi implementado por este documento — ele define o que o Mentor deve conduzir, não como.
+Este documento define o fluxo pedagógico do MVP do MentorIAH. Nenhuma tela, dado ou fluxo técnico foi implementado por este documento — ele define o que o Mentor deve conduzir, não como.

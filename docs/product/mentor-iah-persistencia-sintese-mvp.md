@@ -1,6 +1,6 @@
-# Persistência da Síntese e Avaliação Assistida do MVP do Mentor IAH
+# Persistência da Síntese e Avaliação Assistida do MVP do MentorIAH
 
-Documento de produto — define como a síntese pedagógica gerada pelo Mentor IAH se torna uma nota final: as únicas ações que o professor tem disponíveis, o fluxo de decisão, os status possíveis e o que fica registrado para auditoria. Não é uma especificação técnica: não define schema, tela, rota ou banco. Nenhum código, migration, tela ou dado foi alterado para produzir este documento.
+Documento de produto — define como a síntese pedagógica gerada pelo MentorIAH se torna uma nota final: as únicas ações que o professor tem disponíveis, o fluxo de decisão, os status possíveis e o que fica registrado para auditoria. Não é uma especificação técnica: não define schema, tela, rota ou banco. Nenhum código, migration, tela ou dado foi alterado para produzir este documento.
 
 Referências obrigatórias, não alteradas por este documento:
 
@@ -96,4 +96,4 @@ Nenhum outro botão pertence a esta etapa.
 
 ---
 
-Este documento define a persistência da síntese e a avaliação assistida do MVP do Mentor IAH. Nenhuma tela, dado ou fluxo técnico foi implementado por este documento — ele define o que deve acontecer, não como.
+Este documento define a persistência da síntese e a avaliação assistida do MVP do MentorIAH. Nenhuma tela, dado ou fluxo técnico foi implementado por este documento — ele define o que deve acontecer, não como.

@@ -1,4 +1,4 @@
-# Protocolo de Autoria e Integridade do Mentor IAH
+# Protocolo de Autoria e Integridade do MentorIAH
 
 Documento de produto — define como o IAH reduzirá o uso indevido de Inteligência Artificial nos processos de aprendizagem **sem** depender de bloqueio absoluto de captura de tela ou de detectores automáticos pouco confiáveis. Não é uma especificação técnica: não define schema, tela, rota ou banco. Nenhum código, componente, tela ou dado foi alterado para produzir este documento.
 
@@ -147,4 +147,4 @@ Porque nenhum sinal técnico é confiável isoladamente (Seções 2, 3 e 6), o p
 
 ---
 
-Este protocolo é a base de princípios para qualquer implementação futura do Mentor IAH relacionada a integridade acadêmica. Nenhuma tela, dado ou fluxo descrito aqui foi implementado por este documento — ele define o que deve (e o que não deve) ser construído, não como.
+Este protocolo é a base de princípios para qualquer implementação futura do MentorIAH relacionada a integridade acadêmica. Nenhuma tela, dado ou fluxo descrito aqui foi implementado por este documento — ele define o que deve (e o que não deve) ser construído, não como.

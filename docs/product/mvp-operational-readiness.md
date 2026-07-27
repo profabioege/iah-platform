@@ -4,7 +4,7 @@ Auditoria somente de leitura — nenhum código, tela, migration ou banco foi al
 
 ## 1. Resumo executivo
 
-O MVP tem um núcleo sólido e bem testado (autenticação, controle de acesso por perfil, isolamento institucional, geração de material do DocentIAH, tratamento de erro/fallback de IA) — build, lint, TypeScript e a suíte de 197 testes de domínio passam limpos. Não é, porém, demonstrável **sem ressalvas** hoje: o Mentor IAH está atrás de uma feature flag desligada neste ambiente e nunca foi validado ao vivo; a reabertura de planejamentos gerados pelo Planejador Conversacional (Plano de aula, Infográfico, Mapa mental) não existe; e a produção/reflexão real do aluno na Missão persiste só em `localStorage` do dispositivo, não no banco, mesmo com o modo real ativo. Nenhum desses três pontos impede uma demonstração **bem roteirizada** (evitando esses caminhos), mas todos impedem uma demonstração **livre/interativa** sem risco.
+O MVP tem um núcleo sólido e bem testado (autenticação, controle de acesso por perfil, isolamento institucional, geração de material do DocentIAH, tratamento de erro/fallback de IA) — build, lint, TypeScript e a suíte de 197 testes de domínio passam limpos. Não é, porém, demonstrável **sem ressalvas** hoje: o MentorIAH está atrás de uma feature flag desligada neste ambiente e nunca foi validado ao vivo; a reabertura de planejamentos gerados pelo Planejador Conversacional (Plano de aula, Infográfico, Mapa mental) não existe; e a produção/reflexão real do aluno na Missão persiste só em `localStorage` do dispositivo, não no banco, mesmo com o modo real ativo. Nenhum desses três pontos impede uma demonstração **bem roteirizada** (evitando esses caminhos), mas todos impedem uma demonstração **livre/interativa** sem risco.
 
 ## 2. Estado do repositório
 
@@ -18,9 +18,9 @@ O MVP tem um núcleo sólido e bem testado (autenticação, controle de acesso p
 - **Seeds:** seeds em memória por módulo (`platform`, `workspace`, `docentiah`, `curriculum`, `knowledge`) para o modo demonstração; nenhum seed é gravado no banco real automaticamente.
 - **Testes existentes:** 25 arquivos, 197 casos, `node --test` (nativo, sem Jest/Vitest). Cobrem: autorização/isolamento (docentiah, assessment, conexões IAH), geração determinística de material, extração de brief, circuit breaker/resiliência de IA, anonimização de dados pessoais, limites de uso diário, feature flags.
 - **Framework de teste de interface:** nenhum configurado (sem Playwright, sem Cypress, sem `jsdom`/`@testing-library`) — a suíte inteira é lógica de domínio, sem renderização de componente.
-- **Integrações de IA:** um único gateway (`lib/ai/gateway.ts`) roteia por capability; só `docentiah.improve_context` pode ir para a DeepSeek real (`IAH_AI_DEEPSEEK_ENABLED`), com wrapper resiliente (circuit breaker + fallback para o motor demonstrativo); todas as outras capabilities (slides, plano de aula, avaliação, conexões IAH, Mentor IAH) usam sempre o motor determinístico/demonstrativo, mesmo com a flag da DeepSeek ligada (confirmado por teste).
+- **Integrações de IA:** um único gateway (`lib/ai/gateway.ts`) roteia por capability; só `docentiah.improve_context` pode ir para a DeepSeek real (`IAH_AI_DEEPSEEK_ENABLED`), com wrapper resiliente (circuit breaker + fallback para o motor demonstrativo); todas as outras capabilities (slides, plano de aula, avaliação, conexões IAH, MentorIAH) usam sempre o motor determinístico/demonstrativo, mesmo com a flag da DeepSeek ligada (confirmado por teste).
 - **Componentes do DocentIAH:** grade de tarefas clássica (padrão, sempre disponível) + Planejador Conversacional (`docente-iah/planejador/`, atrás de `NEXT_PUBLIC_FEATURE_DOCENTIAH_CONVERSATIONAL_PLANNER` — **flag que esta mesma sequência de tarefas ligou manualmente**, com autorização do usuário, para permitir os testes já realizados; não foi desligada desde então).
-- **Componentes do Mentor IAH:** um componente único (`components/mentor/mentor-iah.tsx`), botão flutuante + painel de chat (desktop/mobile), atrás de `NEXT_PUBLIC_FEATURE_MENTOR_IAH` (**desligada** neste ambiente — confirmado ao vivo: o botão não é renderizado numa Missão real). Não implementa síntese pedagógica, microdefesa nem persistência de conversa — esses conceitos existem só como documento de produto (`docs/product/mentor-iah-*.md`), ainda sem código.
+- **Componentes do MentorIAH:** um componente único (`components/mentor/mentor-iah.tsx`), botão flutuante + painel de chat (desktop/mobile), atrás de `NEXT_PUBLIC_FEATURE_MENTOR_IAH` (**desligada** neste ambiente — confirmado ao vivo: o botão não é renderizado numa Missão real). Não implementa síntese pedagógica, microdefesa nem persistência de conversa — esses conceitos existem só como documento de produto (`docs/product/mentor-iah-*.md`), ainda sem código.
 - **Fluxo de Missões:** lista → detalhe (9 microetapas: Capa, Contexto, Objetivo, Investigação com Dossiê de 4 evidências, Comparação, Produção, Critérios, Entrega, Reflexão) — confirmado ao vivo nesta sessão (login do aluno → Missões → Missão 01 → "Começar investigação" → Etapa 2 de 9 renderizada corretamente).
 - **Persistência de dados:** dupla — DocentIAH (planos, slides, infográficos, mapas mentais) grava no Supabase real quando o modo real está ativo (confirmado); a Produção/Reflexão do aluno na Missão (`modules/classroom`) grava só em `localStorage` do dispositivo, por instituição+usuário+missão, **mesmo no modo real** — não migrou para o banco.
 - **Tratamento de erros:** nenhum `error.tsx`/`not-found.tsx`/`global-error.tsx` customizado em nenhuma rota (comportamento padrão do Next.js, sem identidade da marca, em caso de exceção não tratada ou 404). Em contrapartida, os fluxos de IA têm tratamento de erro explícito e testado (gateway resiliente, mensagens nunca expõem segredo/config ao usuário).
@@ -55,7 +55,7 @@ Confirmadas por evidência direta (execução ao vivo nesta sessão ou em sessõ
 
 ## 5. Funções ausentes ou quebradas
 
-- **Mentor IAH** — componente de chat existe e parece bem construído, mas está atrás de uma flag desligada neste ambiente; **não foi possível validar nenhuma interação real** (a própria tarefa proíbe tocar `.env.local`). A síntese pedagógica para o professor e a microdefesa adaptativa — ambas especificadas em `docs/product/mentor-iah-fluxo-pedagogico-mvp.md` — **não existem em código**, só como documento de produto.
+- **MentorIAH** — componente de chat existe e parece bem construído, mas está atrás de uma flag desligada neste ambiente; **não foi possível validar nenhuma interação real** (a própria tarefa proíbe tocar `.env.local`). A síntese pedagógica para o professor e a microdefesa adaptativa — ambas especificadas em `docs/product/mentor-iah-fluxo-pedagogico-mvp.md` — **não existem em código**, só como documento de produto.
 - **Síntese pedagógica para o professor** — não implementada (ver acima).
 - **Reabertura de Plano de aula / Infográfico / Mapa mental** — não implementada (linhas da lista em "Meus materiais" sem link).
 - **Tela de erro/404 com identidade da marca** — não existe.
@@ -73,7 +73,7 @@ Confirmadas por evidência direta (execução ao vivo nesta sessão ou em sessõ
 | 7. DocentIAH | Operante (condicional) | Fluxo completo testado ponta a ponta; depende de flag ligada manualmente | Médio | Sim, se a flag for revertida sem aviso | Decidir se a flag fica ligada por padrão para a demo |
 | 8. Salvamento de planejamento | Operante | Persistência real confirmada (Supabase) | Baixo | Não | — |
 | 9. Reabertura de planejamento | Parcialmente operante | Slides: completo. Plano de aula/Infográfico/Mapa mental: sem tela de detalhe | Alto | Sim, se o roteiro tentar reabrir esses 3 tipos | Construir tela de detalhe para os 3 tipos |
-| 10. Mentor IAH | Não foi possível validar | Componente existe; flag desligada; não exercitado | Crítico | Sim | Ligar a flag e validar a conversa ao vivo antes de qualquer demo que o inclua |
+| 10. MentorIAH | Não foi possível validar | Componente existe; flag desligada; não exercitado | Crítico | Sim | Ligar a flag e validar a conversa ao vivo antes de qualquer demo que o inclua |
 | 11. Acesso do aluno a uma missão | Operante | Fluxo completo até "Etapa 2 de 9" confirmado ao vivo | Baixo | Não | — |
 | 12. Registro de tentativa do estudante | Parcialmente operante | Código existe e é usado em 4 telas; não exercitado nesta auditoria | Médio | Não, se não testado ao vivo na demo | Validar autosave/entrega ao vivo antes da demo |
 | 13. Persistência das interações | Parcialmente operante | DocentIAH: banco real. Missão do aluno: `localStorage` do dispositivo | Alto | Sim, para demo entre dispositivos diferentes | Decidir se isso é aceitável para a demo ou requer migração a banco |
@@ -87,7 +87,7 @@ Confirmadas por evidência direta (execução ao vivo nesta sessão ou em sessõ
 
 ## 7. Bloqueadores críticos
 
-1. **Mentor IAH sem validação ao vivo** — se a demonstração institucional incluir o Mentor IAH, isso é hoje um bloqueador crítico: a flag está desligada e nenhuma conversa real foi observada nesta linha de trabalho.
+1. **MentorIAH sem validação ao vivo** — se a demonstração institucional incluir o MentorIAH, isso é hoje um bloqueador crítico: a flag está desligada e nenhuma conversa real foi observada nesta linha de trabalho.
 2. **Reabertura ausente para Plano de aula/Infográfico/Mapa mental** — qualquer roteiro que planeje "gerar, salvar, fechar e reabrir" um desses 3 tipos vai travar publicamente.
 3. **Síntese pedagógica para o professor inexistente em código** — se a demonstração prometer esse recurso (documentado em `docs/product/mentor-iah-fluxo-pedagogico-mvp.md`), não há nada para mostrar.
 
@@ -108,7 +108,7 @@ Confirmadas por evidência direta (execução ao vivo nesta sessão ou em sessõ
 
 ## 10. Ordem recomendada de correção
 
-1. Ligar `NEXT_PUBLIC_FEATURE_MENTOR_IAH` e validar a conversa do Mentor IAH ao vivo (ou remover o Mentor IAH do roteiro da demo até validar).
+1. Ligar `NEXT_PUBLIC_FEATURE_MENTOR_IAH` e validar a conversa do MentorIAH ao vivo (ou remover o MentorIAH do roteiro da demo até validar).
 2. Construir a tela de detalhe/reabertura para Plano de aula, Infográfico e Mapa mental (ou remover "reabrir" do roteiro da demo para esses 3 tipos).
 3. Decidir e comunicar explicitamente o que fazer com a Síntese pedagógica para o professor: implementar antes de prometer, ou retirar da promessa da demonstração.
 4. Validar ao vivo, uma vez, a criação de uma nova Missão no Estúdio e o registro de uma tentativa do aluno (autosave/entrega) — hoje sustentados só por código e por documentação de sprints anteriores.
