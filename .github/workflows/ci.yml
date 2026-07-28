@@ -1,0 +1,78 @@
+name: CI
+
+# Gate obrigatório de qualidade (Etapa Zero da D-047). CI e CD são
+# processos distintos: este workflow NÃO faz deploy — apenas impede que
+# código quebrado chegue à main. O deploy continua sendo da Vercel.
+#
+# Nenhum segredo, nenhum banco, nenhuma migration aplicada.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Menor permissão possível: só ler o código.
+permissions:
+  contents: read
+
+# Uma execução por ref: push novo cancela o anterior da mesma branch.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-gate:
+    name: IAH Quality Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    defaults:
+      run:
+        # O projeto Next.js vive na subpasta app/ (mesma Root Directory
+        # configurada na Vercel — ver docs/DEPLOY.md).
+        working-directory: app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Node 22 é obrigatório: `npm test` usa --experimental-strip-types,
+          # que não existe no Node 20.
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      # 1. Instalação determinística — falha se o lockfile divergir.
+      - name: Instalar dependências (npm ci)
+        run: npm ci
+
+      # 2. Migrations: verificação estática, sem banco (ver o script).
+      - name: Verificar migrations
+        run: npm run migrations:check
+
+      # 3. Lint
+      - name: Lint
+        run: npm run lint
+
+      # 4. Tipos, sem emitir arquivos
+      - name: TypeScript
+        run: npx tsc --noEmit
+
+      # 5. Testes
+      - name: Testes
+        run: npm test
+
+      # 6. Build de produção.
+      # Sem variáveis de ambiente: next.config.ts calcula
+      # NEXT_PUBLIC_IAH_REAL_MODE a partir de env ausentes e resolve para
+      # "false" — o build roda em modo demonstração, sem tocar em nenhum
+      # serviço remoto. É exatamente o que queremos verificar na CI.
+      - name: Build
+        run: npm run build
