@@ -24,6 +24,7 @@ import { MissionHeader } from "./mission-header";
 import { MissionStep } from "./mission-step";
 import { MissionNavigation } from "./mission-navigation";
 import { EvidenceCard } from "./evidence-card";
+import { InvestigationGuideStepper } from "./investigation-guide-stepper";
 import { RubricCard } from "./rubric-card";
 import { ReflectionCard } from "./reflection-card";
 import { StepTransition } from "./step-transition";
@@ -468,17 +469,12 @@ function InvestigationStep({
       <MissionStep
         eyebrow="Investigação"
         title="Como examinar cada pista"
-        description="Aplique estes 5 filtros a cada item do Dossiê que vem a seguir."
+        description="Use estes cinco filtros para investigar os itens do Dossiê."
       >
-        <div className="grid gap-3 sm:grid-cols-2">
-          {parsed.investigationGuide.map((entry, i) => (
-            <RubricCard key={entry.label} entry={entry} index={i} />
-          ))}
-        </div>
-        <MissionNavigation
+        <InvestigationGuideStepper
+          entries={parsed.investigationGuide}
           onBack={onBack}
-          onNext={() => setEvidenceIndex(1)}
-          nextLabel="Ver o Dossiê"
+          onComplete={() => setEvidenceIndex(1)}
         />
       </MissionStep>
     );

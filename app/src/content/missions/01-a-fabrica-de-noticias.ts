@@ -108,30 +108,48 @@ export const missionAFabricaDeNoticias: Mission = {
       "projetada no chão aponta para um lado diferente da luz que ilumina a " +
       "cena. A matéria não identifica a escola nem o nome completo do aluno.",
 
-    "GUIA DE INVESTIGAÇÃO · Fonte — Quem assina esta informação? É uma pessoa, " +
-      "veículo ou instituição que existe e pode ser encontrada fora deste " +
-      'texto? "Especialistas dizem" e "estudo aponta" sem nome não são fonte.',
+    "GUIA DE INVESTIGAÇÃO · Fonte — Pergunta: Quem assina esta informação? " +
+      "| Explicação: Verifique se a pessoa, veículo ou instituição realmente " +
+      "existe e pode ser encontrada fora daquele conteúdo. " +
+      '| Sinal de alerta: Expressões como "especialistas dizem" ou "estudo ' +
+      'aponta" sem identificar a fonte. ' +
+      '| Exemplo: Uma notícia cita "pesquisadores", mas não informa nomes, ' +
+      "universidade ou link para o estudo.",
 
-    "GUIA DE INVESTIGAÇÃO · Data e escopo — Quando isso teria acontecido, e " +
-      "onde? Datas ausentes e escopos genéricos demais (\"no país\", \"todo " +
-      'mundo") são sinal de alerta; datas e recortes específicos (uma cidade, ' +
-      "um número de escolas, um período) são mais fáceis de checar — e é isso " +
-      "que os torna prováveis.",
+    "GUIA DE INVESTIGAÇÃO · Data e escopo — Pergunta: Quando e onde isso " +
+      "aconteceu? " +
+      "| Explicação: Procure datas, lugares e recortes específicos que possam " +
+      "ser verificados. " +
+      '| Sinal de alerta: Expressões vagas como "no país", "recentemente" ou ' +
+      '"todo mundo". ' +
+      '| Exemplo: O texto afirma que algo ocorreu "em várias escolas", mas ' +
+      "não diz quais, onde ou quando.",
 
-    "GUIA DE INVESTIGAÇÃO · Evidência — Que dado sustenta a afirmação? Um " +
-      "número existe porque alguém mediu algo (amostra, método, margem de " +
-      "erro) ou porque soa impressionante? Estatísticas redondas demais (97%, " +
-      "100%) sem metodologia são mais fabricadas do que exatas.",
+    "GUIA DE INVESTIGAÇÃO · Evidência — Pergunta: Que prova sustenta essa " +
+      "afirmação? " +
+      "| Explicação: Verifique a origem dos números, o método utilizado e se " +
+      "outras fontes confirmam a informação. " +
+      "| Sinal de alerta: Percentuais muito precisos sem metodologia, amostra " +
+      "ou margem de erro. " +
+      '| Exemplo: A manchete apresenta "97% das pessoas", mas não informa ' +
+      "quem realizou a pesquisa.",
 
-    "GUIA DE INVESTIGAÇÃO · Linguagem — O texto pede para você sentir algo " +
-      "com urgência (indignação, medo, orgulho) antes de pensar? Pedidos " +
-      'como "compartilhe antes que apaguem" existem para que você propague ' +
-      "antes de verificar — é o oposto do que um auditor faz.",
+    "GUIA DE INVESTIGAÇÃO · Linguagem — Pergunta: O texto quer informar ou " +
+      "provocar uma reação imediata? " +
+      "| Explicação: Observe palavras que despertam medo, indignação ou " +
+      "urgência antes de apresentar evidências. " +
+      '| Sinal de alerta: Pedidos como "compartilhe antes que apaguem". ' +
+      "| Exemplo: O texto tenta convencer o leitor pela emoção, sem oferecer " +
+      "fontes verificáveis.",
 
-    "GUIA DE INVESTIGAÇÃO · Coerência interna — Se há uma imagem descrita, " +
-      "ela é fisicamente possível? Mãos, sombras, reflexos e textos dentro de " +
-      "imagens são onde geradores de IA mais erram; qualquer detalhe " +
-      "impossível derruba a manchete sozinho.",
+    "GUIA DE INVESTIGAÇÃO · Coerência interna — Pergunta: Os detalhes " +
+      "apresentados fazem sentido juntos? " +
+      "| Explicação: Compare imagens, datas, sombras, textos, proporções e " +
+      "contradições dentro do próprio material. " +
+      "| Sinal de alerta: Elementos fisicamente impossíveis ou informações " +
+      "que se contradizem. " +
+      "| Exemplo: Uma imagem apresenta sombras em direções incompatíveis ou " +
+      "textos deformados dentro da cena.",
 
     "CRITÉRIOS DE AUDITORIA · Conta como evidência válida: fonte identificável " +
       "e localizável fora do texto, dado com metodologia declarada (amostra, " +
