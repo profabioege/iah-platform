@@ -23,6 +23,16 @@ export interface ParsedEvidence {
 export interface ParsedGuideEntry {
   label: string;
   description: string;
+  /**
+   * Campos estruturados opcionais do Guia de Investigação. Só existem
+   * quando o conteúdo da Missão usa a convenção `Pergunta: … | Explicação:
+   * … | Sinal de alerta: … | Exemplo: …` (ver docs/MISSION_TEMPLATE.md).
+   * Ausentes, a apresentação recai em `description` — nenhuma Missão é
+   * obrigada a adotar a convenção.
+   */
+  question?: string;
+  warning?: string;
+  example?: string;
 }
 
 export interface ParsedMissionContent {
@@ -35,6 +45,33 @@ export interface ParsedMissionContent {
 const EVIDENCE_RE = /^DOSSIÊ · Item (\d+) — "([^"]+)"\s*\(([^)]+)\)\.\s*([\s\S]*)$/;
 const GUIDE_RE = /^GUIA DE INVESTIGAÇÃO · ([^—]+) — ([\s\S]*)$/;
 const CRITERIA_RE = /^CRITÉRIOS DE AUDITORIA · ([^:]+): ([\s\S]*)$/;
+
+/**
+ * Campos estruturados opcionais de um Guia de Investigação, no formato
+ * `Pergunta: … | Explicação: … | Sinal de alerta: … | Exemplo: …`.
+ * Texto que não siga a convenção volta inteiro como `description`.
+ */
+function parseGuideFields(raw: string): Omit<ParsedGuideEntry, "label"> {
+  const text = raw.trim();
+  if (!text.includes("|")) return { description: text };
+
+  const fields = new Map<string, string>();
+  for (const part of text.split("|")) {
+    const separator = part.indexOf(":");
+    if (separator === -1) continue;
+    const key = part.slice(0, separator).trim().toLowerCase();
+    const value = part.slice(separator + 1).trim();
+    if (key && value) fields.set(key, value);
+  }
+
+  const description = fields.get("explicação") ?? text;
+  return {
+    description,
+    question: fields.get("pergunta"),
+    warning: fields.get("sinal de alerta"),
+    example: fields.get("exemplo"),
+  };
+}
 
 export function parseMissionContent(
   didacticMaterials: string[],
@@ -59,7 +96,7 @@ export function parseMissionContent(
     if (guideMatch) {
       investigationGuide.push({
         label: guideMatch[1].trim(),
-        description: guideMatch[2].trim(),
+        ...parseGuideFields(guideMatch[2]),
       });
       continue;
     }
