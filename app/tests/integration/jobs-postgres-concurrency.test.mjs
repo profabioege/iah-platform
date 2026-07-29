@@ -221,3 +221,110 @@ test("ordenação: capability incompatível, attempts esgotado e estado terminal
     assert.equal(rows[0].locked_by, null, `job ${id} não deveria ter sido tocado pelo claim`);
   }
 });
+
+// ---------------------------------------------------------------------
+// Auditoria de isolamento multi-tenant do claim (pós-MM3).
+//
+// `iah_claim_next_job` é deliberadamente global entre instituições —
+// escopado só por capability, nunca por institution_id (§10.1 do
+// documento de arquitetura: o token do worker tem "escopo por
+// capability"; §10.4: "o claim devolve institution_id", ele não o
+// recebe). Isso é coerente com um único Hermes Agent compartilhado
+// processando jobs de todas as instituições — não workers dedicados por
+// tenant. Estes testes provam, com PostgreSQL real e a MESMA capability
+// em duas instituições diferentes, que isso não causa vazamento de
+// dados: cada job reivindicado preserva seu próprio institution_id, e
+// as operações seguintes (complete/cancel) continuam isoladas por
+// id+lock ou por institution_id explícito, nunca cruzando instituições.
+// ---------------------------------------------------------------------
+
+test("multi-tenant: mesma capability em duas instituições — cada claim preserva o institution_id correto, sem cruzamento", async () => {
+  const institutionA = await createTestInstitution();
+  const institutionB = await createTestInstitution();
+  const sharedCapability = nextCapability();
+
+  const jobA = await insertJob({ institutionId: institutionA, capability: sharedCapability });
+  const jobB = await insertJob({ institutionId: institutionB, capability: sharedCapability });
+
+  const [claim1, claim2] = await Promise.all([
+    claimNext("worker-tenant-1", sharedCapability),
+    claimNext("worker-tenant-2", sharedCapability),
+  ]);
+
+  const claimed = [claim1, claim2].filter(Boolean);
+  assert.equal(claimed.length, 2, "as duas instituições deveriam ter seus jobs reivindicados");
+
+  const byId = new Map(claimed.map((job) => [job.id, job]));
+  assert.equal(byId.get(jobA)?.institution_id, institutionA);
+  assert.equal(byId.get(jobB)?.institution_id, institutionB);
+
+  // Nenhum worker recebeu o job da instituição errada.
+  assert.notEqual(claim1.id, claim2.id);
+
+  const { rows } = await pool.query(
+    "select id, institution_id, locked_by from iah_jobs where id = any($1) order by id",
+    [[jobA, jobB]],
+  );
+  for (const row of rows) {
+    const expectedInstitution = row.id === jobA ? institutionA : institutionB;
+    assert.equal(row.institution_id, expectedInstitution, "institution_id não pode ter sido corrompido pelo claim compartilhado");
+  }
+});
+
+test("multi-tenant: complete de um job da instituição A não afeta o job concorrente da instituição B", async () => {
+  const institutionA = await createTestInstitution();
+  const institutionB = await createTestInstitution();
+  const sharedCapability = nextCapability();
+
+  const jobA = await insertJob({ institutionId: institutionA, capability: sharedCapability });
+  const jobB = await insertJob({ institutionId: institutionB, capability: sharedCapability });
+
+  const claimA = await claimNext("worker-a", sharedCapability);
+  const claimB = await claimNext("worker-b", sharedCapability);
+  // Endereça cada claim ao seu job de origem — ordem entre A/B não é garantida.
+  const [ownerOfA, ownerOfB] = claimA.id === jobA ? ["worker-a", "worker-b"] : ["worker-b", "worker-a"];
+  assert.deepEqual(new Set([claimA.id, claimB.id]), new Set([jobA, jobB]));
+
+  await pool.query(
+    `update iah_jobs set status='succeeded', output='{"ok":true}', completed_at=now(),
+       locked_at=null, lock_expires_at=null, locked_by=null
+     where id = $1 and locked_by = $2 and status = 'processing'`,
+    [jobA, ownerOfA],
+  );
+
+  const jobBRow = await pool.query("select status, locked_by from iah_jobs where id = $1", [jobB]);
+  assert.equal(jobBRow.rows[0].status, "processing", "concluir o job de A não pode alterar o status do job de B");
+  assert.equal(jobBRow.rows[0].locked_by, ownerOfB);
+});
+
+test("multi-tenant: cancel com institutionId de A não afeta job da instituição B mesmo sabendo o id", async () => {
+  const institutionA = await createTestInstitution();
+  const institutionB = await createTestInstitution();
+  const jobB = await insertJob({ institutionId: institutionB, status: "queued" });
+
+  const { rowCount } = await pool.query(
+    `update iah_jobs set status='cancelled', cancelled_at=now()
+     where institution_id = $1 and id = $2 and status in ('queued','processing')`,
+    [institutionA, jobB],
+  );
+  assert.equal(rowCount, 0, "cancel não pode afetar job de outra instituição mesmo informando o id certo");
+
+  const job = await pool.query("select status from iah_jobs where id = $1", [jobB]);
+  assert.equal(job.rows[0].status, "queued");
+});
+
+test("multi-tenant: mesma idempotencyKey em instituições diferentes com capability compartilhada continua válida", async () => {
+  const institutionA = await createTestInstitution();
+  const institutionB = await createTestInstitution();
+  const sharedCapability = nextCapability();
+  const idempotencyKey = nextJobId("shared-idem-multitenant");
+
+  await insertJob({ institutionId: institutionA, capability: sharedCapability, idempotency_key: idempotencyKey });
+  await insertJob({ institutionId: institutionB, capability: sharedCapability, idempotency_key: idempotencyKey });
+
+  const { rows } = await pool.query(
+    "select institution_id from iah_jobs where idempotency_key = $1 order by institution_id",
+    [idempotencyKey],
+  );
+  assert.equal(rows.length, 2, "a mesma idempotencyKey em instituições diferentes deve continuar criando jobs distintos");
+});
