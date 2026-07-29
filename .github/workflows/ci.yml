@@ -4,7 +4,10 @@ name: CI
 # processos distintos: este workflow NÃO faz deploy — apenas impede que
 # código quebrado chegue à main. O deploy continua sendo da Vercel.
 #
-# Nenhum segredo, nenhum banco, nenhuma migration aplicada.
+# Nenhum segredo, nenhum acesso ao Supabase remoto. O único banco tocado
+# é o service container PostgreSQL efêmero abaixo (credenciais
+# descartáveis, existe só durante o job) — usado apenas pelos testes de
+# integração da fila de jobs (Micro Missão 3).
 
 on:
   pull_request:
@@ -27,6 +30,24 @@ jobs:
     name: IAH Quality Gate
     runs-on: ubuntu-latest
     timeout-minutes: 20
+
+    # PostgreSQL efêmero só para os testes de integração da fila de jobs
+    # (Micro Missão 3) — usuário, senha e banco descartáveis, sem volume,
+    # nunca o Supabase remoto. Ver app/scripts/postgres-test-env.mjs.
+    services:
+      postgres:
+        image: postgres:16.4
+        env:
+          POSTGRES_USER: iah_test
+          POSTGRES_PASSWORD: iah_test_only_ci
+          POSTGRES_DB: iah_jobs_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
 
     defaults:
       run:
@@ -68,6 +89,15 @@ jobs:
       # 5. Testes
       - name: Testes
         run: npm test
+
+      # 5b. Testes de integração/concorrência da fila contra PostgreSQL
+      # real (Micro Missão 3) — usa o service container acima, nunca o
+      # Supabase remoto. Nenhuma secret: credenciais só existem nesta
+      # execução e no banco descartável.
+      - name: Testes de integração (PostgreSQL)
+        run: npm run test:integration:postgres
+        env:
+          TEST_DATABASE_URL: postgresql://iah_test:iah_test_only_ci@localhost:5432/iah_jobs_test
 
       # 6. Build de produção.
       # Sem variáveis de ambiente: next.config.ts calcula
