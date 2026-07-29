@@ -24,6 +24,22 @@ export interface HeartbeatParams {
   now: string;
 }
 
+/**
+ * Resultado tipado do heartbeat (Micro Missão 2) — substitui o retorno
+ * simples `Promise<AsyncJob>` original porque a operação tem desfechos
+ * distintos que o chamador precisa distinguir sem depender de `catch`.
+ *
+ * Não existe desfecho "instituição incompatível": `HeartbeatParams` nunca
+ * recebe `institutionId` (ver comentário acima) — não há valor do
+ * chamador para comparar contra o do job, então esse caso é
+ * estruturalmente impossível aqui, não apenas não verificado.
+ */
+export type HeartbeatResult =
+  | { outcome: "renewed"; job: AsyncJob }
+  | { outcome: "not_found" }
+  | { outcome: "lock_lost" }
+  | { outcome: "invalid_state" };
+
 export interface CompleteParams {
   id: string;
   workerId: string;
@@ -66,8 +82,8 @@ export interface AsyncJobRepository {
    */
   claimNext(params: ClaimNextParams): Promise<AsyncJob | null>;
 
-  /** Estende `lockExpiresAt`; falha se o lock já foi perdido (§10.2). */
-  heartbeat(params: HeartbeatParams): Promise<AsyncJob>;
+  /** Estende `lockExpiresAt`; resultado tipado em vez de lançar (§10.2). */
+  heartbeat(params: HeartbeatParams): Promise<HeartbeatResult>;
 
   complete(params: CompleteParams): Promise<AsyncJob>;
 

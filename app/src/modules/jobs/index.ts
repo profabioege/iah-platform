@@ -21,5 +21,16 @@ export type {
   CompleteParams,
   FailParams,
   HeartbeatParams,
+  HeartbeatResult,
   ReleaseForRetryParams,
 } from "./domain/repositories";
+export {
+  AsyncJobIdempotencyConflictError,
+  AsyncJobInvalidStateError,
+  AsyncJobLockLostError,
+  AsyncJobNotFoundError,
+} from "./domain/errors";
+export type { ClaimCandidateQuery } from "./domain/claim-ordering";
+export { selectClaimCandidate } from "./domain/claim-ordering";
+export { createDatabaseAsyncJobRepository } from "./infrastructure/database/database-repositories";
+export { getDefaultAsyncJobRepository } from "./infrastructure/repository-factory";
