@@ -10,11 +10,13 @@ import type {
   KnowledgeCollection,
   KnowledgeDifficultyLevel,
   KnowledgeDocument,
+  KnowledgeDocumentUnit,
   KnowledgeReference,
   KnowledgeResourceType,
   KnowledgeSource,
   KnowledgeTag,
   KnowledgeTopic,
+  OfficialReferenceDetails,
 } from "./entities";
 
 /**
@@ -81,4 +83,26 @@ export interface KnowledgeRepositories {
   tags: KnowledgeTagRepository;
   topics: KnowledgeTopicRepository;
   references: KnowledgeReferenceRepository;
+}
+
+/**
+ * Contrato para os metadados bibliográficos de documentos oficiais
+ * (`category: "official_reference"`) — 1:1 com `KnowledgeDocument`.
+ * Ainda sem implementação de infraestrutura nesta Micro Missão (ver
+ * docs/product/mec-referencial-ia-2026-integration.md, "Próximos
+ * passos"): só o contrato de domínio, como pedido no escopo.
+ */
+export interface OfficialReferenceRepository {
+  getByDocumentId(documentId: string): Promise<OfficialReferenceDetails | null>;
+  save(details: OfficialReferenceDetails): Promise<OfficialReferenceDetails>;
+}
+
+/**
+ * Contrato para as unidades de conteúdo citáveis de um documento
+ * (capítulo/seção/página). Idem: sem implementação de infraestrutura
+ * nesta Micro Missão.
+ */
+export interface KnowledgeDocumentUnitRepository {
+  listByDocument(documentId: string): Promise<KnowledgeDocumentUnit[]>;
+  save(unit: KnowledgeDocumentUnit): Promise<KnowledgeDocumentUnit>;
 }
