@@ -9,7 +9,9 @@
     "lint": "eslint",
     "migrations:check": "node scripts/check-migrations.mjs",
     "test": "node --test --experimental-strip-types tests/*.test.mjs",
-    "test:integration:postgres": "node scripts/run-postgres-integration-tests.mjs"
+    "test:integration:postgres": "node scripts/run-postgres-integration-tests.mjs",
+    "knowledge:official-reference:dry-run": "node --experimental-strip-types scripts/ingest-official-reference.mjs --dry-run",
+    "knowledge:official-reference:ingest": "node --experimental-strip-types scripts/ingest-official-reference.mjs --persist"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -31,6 +33,7 @@
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
