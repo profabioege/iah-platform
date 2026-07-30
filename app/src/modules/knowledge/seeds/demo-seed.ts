@@ -55,6 +55,7 @@ export const DEMO_KNOWLEDGE_DOCUMENT: KnowledgeDocument = {
   estimatedMinutes: 5,
   difficultyLevel: "introdutorio",
   license: "Uso interno IAH",
+  category: null,
   scope: "global",
   institutionId: null,
   sourceId: DEMO_KNOWLEDGE_SOURCE.id,
