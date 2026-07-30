@@ -1,9 +1,10 @@
 # Referencial do MEC sobre IA na Educação — integração à Biblioteca Inteligente
 
-**Status:** Contratos de domínio, extensão de dados e importador implementados
-e testados. **Nenhum dado foi inserido em nenhum banco** — esta Micro Missão
-entrega a estrutura e o mecanismo de ingestão, não a ingestão em si (ver
-"Próximos passos").
+**Status:** Contratos de domínio, extensão de dados, importador e persistência
+real em PostgreSQL implementados e testados (seção 12). Validado com o
+documento real contra um PostgreSQL efêmero local (Podman) — **nenhum dado foi
+inserido no Supabase remoto**, e o driver/serviço ainda não são usados pela
+aplicação web (ver "Próximos passos").
 
 ## 1. O documento
 
@@ -245,15 +246,149 @@ dois artefatos reais de conversão) — **o documento completo nunca foi
 copiado para um fixture de teste**, apenas usado uma vez, localmente, no
 dry-run acima.
 
+## 12. Persistência PostgreSQL (Micro Missão seguinte)
+
+Implementa a persistência real de `document` + `details` + `units` — antes
+só existiam os contratos de domínio. **Continua sem uso pela aplicação web e
+sem nenhuma conexão com o Supabase remoto** (ver "Bloqueio de banco remoto").
+
+### Arquitetura
+
+- `infrastructure/database/postgres-official-reference-driver.ts` — driver
+  `pg` (não `@supabase/supabase-js`): a operação de ingestão precisa de
+  `BEGIN`/`COMMIT`/`ROLLBACK` reais entre três tabelas
+  (`knowledge_documents`, `knowledge_official_references`,
+  `knowledge_document_units`), algo que o cliente REST do Supabase não
+  expõe (mesma razão pela qual `iah_claim_next_job`, D-047, precisou de uma
+  função SQL via `.rpc()`). Implementa `OfficialReferenceRepository` e
+  `KnowledgeDocumentUnitRepository` (contratos já existentes, sem mudança de
+  assinatura) mais dois helpers estreitos para o documento base
+  (`insertKnowledgeDocumentRow`/`findKnowledgeDocumentRowById` — não é uma
+  implementação completa de `KnowledgeDocumentRepository`, que tem
+  `list`/`search` irrelevantes para a ingestão).
+- `services/official-reference-ingestion-service.ts` —
+  `createOfficialReferenceIngestionService(pool)`, mesmo padrão
+  `create*Service` de `modules/platform/services/`. Recebe um `pg.Pool`
+  (não um agregado de repositórios pré-montado) porque o limite
+  transacional exige possuir a mesma conexão do início ao fim.
+
+### Transação de ingestão
+
+Uma única transação (`client.query("BEGIN")` → … → `COMMIT`/`ROLLBACK`):
+
+1. já existe um documento com este `id` (derivado do checksum)? Se sim,
+   commit vazio, retorna `{ outcome: "already_ingested" }` — **idempotente**,
+   não duplica nada.
+2. existe conflito de chave natural (mesmo título + edição + data de
+   publicação, checksum diferente)? Se sim, `ROLLBACK` implícito (erro
+   lançado dentro do `try`, capturado pelo `catch` que sempre reverte) e
+   `OfficialReferenceChecksumConflictError` — nunca sobrescreve.
+3. insere `knowledge_documents` + `knowledge_official_references`.
+4. insere todas as `knowledge_document_units`.
+5. confere a contagem persistida contra a esperada
+   (`OfficialReferenceUnitCountMismatchError` se divergir).
+6. `COMMIT`.
+
+Qualquer exceção em qualquer passo cai no `catch`, que sempre executa
+`ROLLBACK` antes de relançar o erro — comprovado por teste: uma unidade com
+`sequence` duplicada (violação da constraint `unique(document_id,
+sequence)`) no meio do lote reverte a transação inteira, sem deixar nem o
+documento, nem a referência, nem nenhuma unidade órfã.
+
+### Idempotência e conflito — três cenários reais
+
+- **Mesmo documento** (mesmo `id`, derivado do checksum): segunda ingestão
+  retorna `already_ingested`, mesma contagem de unidades, nenhuma linha
+  nova.
+- **Conflito de checksum** (mesmo título + edição + data, conteúdo
+  diferente): `OfficialReferenceChecksumConflictError`, nenhuma linha
+  gravada.
+- **Nova edição** (edição ou data diferentes): cria uma referência
+  independente (novo `id`, novo checksum) — a anterior não é tocada.
+
+### Comando de ingestão local
+
+`app/scripts/ingest-official-reference.mjs` (`node --experimental-strip-types`):
+
+```
+npm run knowledge:official-reference:dry-run -- --file <caminho>
+npm run knowledge:official-reference:ingest  -- --file <caminho>
+```
+
+- `--dry-run` (padrão): só faz o parse e mostra estatísticas — nunca abre
+  conexão com banco.
+- `--persist`: exige `TEST_DATABASE_URL` (ou `--database-url-env <NOME>`)
+  apontando para um PostgreSQL **local**; executa a ingestão real dentro da
+  transação acima.
+- Nunca imprime a connection string nem o conteúdo integral do documento —
+  só título, checksum abreviado (12 caracteres), quantidade de unidades,
+  unidades vazias descartadas, intervalo de páginas e o resultado
+  (`ingested`/`already_ingested`).
+
+### Bloqueio de banco remoto
+
+`assertLocalDatabaseUrl()` só aceita `localhost` e `127.0.0.1` (mesmo host
+usado pelo harness de teste e pelo service container da CI) — qualquer
+outro hostname (Supabase ou qualquer serviço gerenciado) é rejeitado antes
+de abrir qualquer conexão, sem flag de bypass. **Autorização futura para o
+Supabase remoto é uma decisão separada e explícita**, fora desta Micro
+Missão: exigiria trocar o host permitido, decidir o papel de conexão
+(`service_role`, nunca `anon`/`authenticated`) e uma revisão de segurança
+própria — nada disso foi implementado aqui.
+
+### Validação real (Podman, banco efêmero, nenhuma escrita permanente)
+
+Reutilizado integralmente o harness já existente
+(`scripts/postgres-test-env.mjs`, `postgres:16.4`, porta só em
+`127.0.0.1`, sem volume) — nenhuma infraestrutura de banco duplicada.
+Executado uma vez, localmente, contra o arquivo real:
+
+1. Postgres efêmero sobe, as 8 migrations são aplicadas num banco vazio.
+2. Primeira ingestão: `outcome: "ingested"`, **78 unidades persistidas**,
+   páginas **5–241**.
+3. Segunda ingestão (mesmo arquivo): `outcome: "already_ingested"`, mesma
+   contagem — **idempotência real comprovada no banco**, não só na função
+   pura do importador.
+4. Consulta direta confirma exatamente 1 linha em `knowledge_documents` com
+   este id e 78 linhas em `knowledge_document_units`.
+5. Container parado e removido — `podman ps -a` sem nenhum residual.
+
+### Testes PostgreSQL novos
+
+`app/tests/integration/knowledge-official-reference-postgres.test.mjs` — 15
+testes reais (roda com `npm run test:integration:postgres`, mesmo runner e
+mesmo harness dos testes de `iah_jobs`, sem duplicar infraestrutura):
+schema (tabelas, coluna `category`, RLS habilitada), ingestão real (insere,
+ordem preservada, páginas preservadas, checksum preservado, citação
+recuperável, escopo global/`institution_id` null/`license` null),
+idempotência, conflito de checksum, nova edição, rollback atômico
+(nenhuma unidade órfã), `original_source` vs. `curated_summary`
+distinguíveis, `institution_id` falso rejeitado pelo check constraint,
+`anon`/`authenticated` bloqueados, conexão padrão (papel server-side)
+autorizada.
+
+### Limitações desta Micro Missão
+
+- Sem embeddings, sem busca vetorial, sem RAG — a persistência é
+  relacional simples, texto + metadados, nada de índice semântico.
+- Sem uso pela aplicação web: o driver e o serviço existem, prontos para
+  receber uma conexão server-side no futuro, mas nenhuma rota/Server Action
+  os chama ainda.
+- Sem ingestão no Supabase remoto — só valida contra Postgres efêmero local
+  (Podman) ou o service container da CI.
+- Detecção de conflito de checksum é por chave natural (título + edição +
+  data) — um erro de digitação na edição ou na data faria dois documentos
+  com o mesmo conteúdo passarem por "novas edições" distintas em vez de
+  conflito; aceitável para o volume atual (ingestão manual, um documento
+  por vez), não para ingestão em massa.
+
 ## Próximos passos (fora do escopo desta Micro Missão)
 
-- Implementação de infraestrutura (Supabase) para
-  `OfficialReferenceRepository` e `KnowledgeDocumentUnitRepository` — hoje
-  só os contratos de domínio existem.
-- Um script/rota que efetivamente rode o importador contra o arquivo e
-  persista `document` + `details` + `units` no banco (criação do
-  `knowledge_sources` correspondente, `kind: "manual"`, incluída).
+- Autorização explícita e revisão de segurança para apontar a ingestão ao
+  Supabase remoto (papel de conexão, host permitido, quem pode disparar).
 - Consumo real por DocentIAH/MentorIAH/Planejamento — hoje só documentado
   na Fase 8, nenhum código dos três módulos foi tocado.
 - Classificação temática mais fina (cross-cutting, baseada em conteúdo) além
   da estrutural por heading, caso o produto precise dela.
+- Embeddings/busca vetorial/RAG, caso o produto precise de recuperação
+  semântica em vez de só citação por página/seção.
