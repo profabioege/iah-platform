@@ -583,27 +583,206 @@ a {
 .contrast-card-highlight li { color: #f0fbfd; }
 .contrast-card-highlight li svg { width: 16px; height: 16px; flex: none; color: var(--cyan); }
 
-/* Bloco de confiança — credibilidade do fundador */
-.founder-section { padding: 76px 0; background: var(--iah-navy-800); }
-.founder-quote { max-width: 780px; margin: 0 auto; text-align: center; }
-.founder-quote-mark {
-  display: block;
-  margin-bottom: 6px;
-  color: var(--cyan);
-  font-family: var(--iah-font-sans);
-  font-size: 52px;
-  line-height: 1;
-  opacity: 0.5;
-}
-.founder-quote p {
+/* ------------------------------------------------------------------
+   Nossa origem — prova de autoridade do fundador (id da section:
+   "quem-somos", mantido por estabilidade de âncora).
+   Markup em src/components/marketing/quem-somos.tsx.
+   ------------------------------------------------------------------ */
+.about-section { background: var(--iah-paper); color: var(--ink); }
+
+.about-header { max-width: 760px; }
+.about-eyebrow {
   margin: 0;
-  color: #eef6fb;
-  font-family: var(--iah-font-sans);
-  font-size: clamp(19px, 2.2vw, 26px);
-  font-weight: 500;
-  line-height: 1.45;
-  letter-spacing: -0.015em;
+  color: var(--iah-teal-600);
+  font-family: var(--iah-font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: 1.3;
+  text-transform: uppercase;
 }
+.about-header h2 {
+  margin: 18px 0 0;
+  font-family: var(--iah-font-sans);
+  font-size: clamp(2.5rem, 4vw, 3.5rem);
+  font-weight: 540;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.about-highlight { color: var(--iah-teal-600); }
+
+.about-layout { position: relative; display: grid; grid-template-columns: 7fr 5fr; gap: 80px; align-items: start; margin-top: 56px; }
+.about-copy { min-width: 0; }
+
+/* Divisor fino entre as colunas — só existe quando o grid tem 2 colunas
+   (ver breakpoint 1024px abaixo, onde ele é ocultado ao empilhar). */
+.about-divider {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: calc(58.3333% - 6.67px);
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(9, 127, 144, 0.22) 15%, rgba(9, 127, 144, 0.22) 85%, transparent);
+}
+
+.about-blocks { display: flex; flex-direction: column; gap: 28px; }
+.about-block-title {
+  margin: 0 0 8px;
+  color: var(--iah-teal-600);
+  font-family: var(--iah-font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+.about-block p { margin: 0; color: var(--iah-slate-500); font-size: 17px; line-height: 1.7; }
+
+.about-foundation { margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--iah-line); }
+.about-foundation-label {
+  margin: 0;
+  color: var(--iah-slate-500);
+  font-family: var(--iah-font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+.about-foundation-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 0;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.4;
+}
+.about-foundation-list li { position: relative; padding: 0 16px; }
+.about-foundation-list li:first-child { padding-left: 0; }
+.about-foundation-list li + li::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 0;
+  width: 1px;
+  height: 12px;
+  background: var(--iah-line);
+}
+.about-foundation-note { margin: 14px 0 0; color: var(--iah-slate-500); font-size: 13px; font-style: italic; line-height: 1.5; }
+
+.about-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin: 44px 0 0; }
+.about-metric { padding: 0 24px; }
+.about-metric:first-child { padding-left: 0; }
+.about-metric:last-child { padding-right: 0; }
+.about-metric + .about-metric { border-left: 1px solid var(--iah-line); }
+.about-metric-value { color: var(--iah-teal-600); font-family: var(--iah-font-sans); font-size: 32px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; }
+.about-metric-label { margin: 6px 0 0; color: var(--iah-slate-500); font-size: 13px; letter-spacing: 0.06em; line-height: 1.4; text-transform: uppercase; }
+
+.about-link { position: relative; display: inline-flex; align-items: center; gap: 8px; margin-top: 34px; color: var(--iah-teal-600); font-size: 15px; font-weight: 500; }
+.about-link svg { width: 16px; height: 16px; }
+.about-link span { position: relative; }
+.about-link span::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -3px;
+  left: 0;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 250ms ease;
+}
+.about-link:hover span::after,
+.about-link:focus-visible span::after { transform: scaleX(1); }
+
+.about-card {
+  padding: 32px;
+  border: 1px solid var(--iah-line);
+  border-radius: var(--iah-radius-xl);
+  background: var(--iah-white);
+  box-shadow: var(--iah-shadow-card);
+}
+.about-name { margin: 0; color: var(--ink); font-family: var(--iah-font-sans); font-size: 22px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; }
+.about-role { margin: 6px 0 0; color: var(--iah-teal-600); font-size: 15px; font-weight: 500; line-height: 1.4; }
+
+/* Foto do fundador: inset de ~7% para não tocar as bordas do card, com
+   respiro maior acima (separação do texto biográfico) do que abaixo. */
+.about-figure { position: relative; margin: 48px 3.5% 0; }
+.about-figure::before {
+  content: "";
+  position: absolute;
+  top: -14px;
+  left: -14px;
+  z-index: 0;
+  width: 56%;
+  height: 56%;
+  border-top: 2px solid rgba(66, 232, 241, 0.32);
+  border-left: 2px solid rgba(66, 232, 241, 0.32);
+  border-radius: 28px 0 0 0;
+  pointer-events: none;
+}
+.about-figure::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: 28px;
+  background: linear-gradient(165deg, rgba(6, 16, 31, 0.1), rgba(6, 16, 31, 0.02) 60%);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+.about-photo {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+  border-radius: 28px;
+  object-fit: cover;
+  object-position: 50% 78%;
+  background: var(--iah-mist);
+  filter: saturate(0.95);
+  box-shadow: 0 24px 48px -16px rgba(6, 16, 31, 0.22);
+}
+
+.about-quote { margin: 22px 0 0; padding-left: 20px; border-left: 3px solid var(--iah-teal-600); }
+.about-quote p { margin: 0; color: var(--ink-soft); font-size: 17px; font-style: italic; line-height: 1.6; }
+
+.about-chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 24px 0 0; list-style: none; }
+.about-chips li {
+  padding: 6px 14px;
+  border-radius: 100px;
+  background: var(--iah-mist);
+  background: color-mix(in srgb, var(--iah-teal-600) 8%, transparent);
+  color: var(--iah-teal-600);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.about-social { margin-top: 80px; padding-top: 48px; border-top: 1px solid var(--iah-line); }
+.about-social-label { margin: 0; color: var(--iah-slate-500); font-size: 12px; letter-spacing: 0.14em; text-align: center; text-transform: uppercase; }
+.about-social-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 32px; padding: 0; margin: 32px 0 0; list-style: none; }
+.about-social-grid li { display: flex; align-items: center; justify-content: center; }
+.about-social-grid img { max-width: 100%; height: auto; filter: grayscale(1); opacity: 0.55; transition: filter 250ms ease, opacity 250ms ease; }
+.about-social-grid li:hover img { filter: grayscale(0); opacity: 1; }
+
+/* Entrada em cascata (80ms entre blocos) — só é armada por JS quando o
+   usuário não pediu prefers-reduced-motion (ver quem-somos.tsx). */
+.about-section.is-armed .about-reveal { opacity: 0; transform: translateY(24px); }
+.about-section.is-visible .about-reveal {
+  opacity: 1;
+  transform: none;
+  transition: opacity 620ms ease, transform 620ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.about-section.is-visible .about-reveal-2 { transition-delay: 80ms; }
+.about-section.is-visible .about-reveal-3 { transition-delay: 160ms; }
+.about-section.is-visible .about-reveal-4 { transition-delay: 240ms; }
 
 .section-resources { background: var(--iah-paper); color: var(--ink); }
 .resource-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-top: 59px; overflow: hidden; border: 1px solid #dce5ed; border-radius: 11px; background: #dce5ed; }
@@ -834,6 +1013,27 @@ a {
   .final-orbit span:nth-child(1) { width: 510px; }
   .footer-grid { grid-template-columns: 1fr; gap: 30px; padding: 42px 0 32px; }
   .footer-base { flex-wrap: wrap; align-content: center; padding: 14px 0; }
+}
+
+/* Breakpoints próprios da seção "Nossa origem" (1024/640, conforme
+   especificação da seção — os demais blocos usam 900/650). */
+@media (max-width: 1024px) {
+  .about-layout { grid-template-columns: 1fr; gap: 48px; margin-top: 44px; }
+  .about-divider { display: none; }
+  .about-card { max-width: 520px; }
+}
+
+@media (max-width: 640px) {
+  .about-header h2 { font-size: 2rem; }
+  .about-foundation-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .about-foundation-list li { padding: 0; }
+  .about-foundation-list li + li::before { display: none; }
+  .about-metrics { grid-template-columns: 1fr; gap: 0; margin-top: 36px; }
+  .about-metric { padding: 0; }
+  .about-metric + .about-metric { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--iah-line); border-left: 0; }
+  .about-card { padding: 24px; }
+  .about-social { margin-top: 56px; padding-top: 36px; }
+  .about-social-grid { gap: 24px; margin-top: 26px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -25,6 +25,7 @@ import {
 
 import Link from "next/link";
 
+import { QuemSomos } from "@/components/marketing/quem-somos";
 import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteNav } from "@/components/marketing/site-nav";
 
@@ -382,18 +383,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="section founder-section">
-          <div className="container">
-            <blockquote className="founder-quote">
-              <span className="founder-quote-mark" aria-hidden="true">&ldquo;</span>
-              <p>
-                O fundador do IAH já ministra a disciplina de Inteligência
-                Artificial em uma escola. Toda a metodologia apresentada nesta
-                plataforma já nasceu da prática em sala de aula.
-              </p>
-            </blockquote>
-          </div>
-        </section>
+        <QuemSomos />
 
         <section className="section section-resources" id="recursos">
           <div className="container">

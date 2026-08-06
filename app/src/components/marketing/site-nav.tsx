@@ -8,6 +8,7 @@ import { Logo } from "@/components/brand/logo";
 
 const LINKS = [
   { href: "/#plataforma", label: "Plataforma" },
+  { href: "/#quem-somos", label: "Nossa origem" },
   { href: "/#metodo", label: "Metodologia" },
   { href: "/#recursos", label: "Recursos" },
 ];
