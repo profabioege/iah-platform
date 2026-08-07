@@ -98,8 +98,76 @@ Regra central: **dado fictício nunca é inserido por uma migration.**
 3. [ ] `AUTH_SECRET`, `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` definidas em `app/.env.local` e na Vercel — as **três**, nunca um subconjunto (`getPlatformConfigError()` recusa configuração parcial).
 4. [ ] `node db/seed/seed-demo.mjs` executado com `IAH_DEMO_PASSWORD` definida, para o cenário de demonstração existir no banco (opcional — só necessário se o ambiente publicado deve manter contas fictícias).
 5. [ ] Login validado (Credentials, com uma conta do seed ou uma inserida manualmente).
-6. [ ] Jornada completa validada entre navegadores/dispositivos diferentes (publicar → aluno vê/entrega → professor avalia → aluno vê devolutiva → gestor vê indicadores) — **ainda não executado neste projeto**, é o próximo bloqueador real.
+6. [ ] Jornada completa validada entre navegadores/dispositivos diferentes (publicar → aluno vê/entrega → professor avalia → aluno vê devolutiva → gestor vê indicadores) — **ainda não executado neste projeto**, é o próximo bloqueador real. A matriz abaixo é o roteiro dessa validação.
 7. [ ] Políticas RLS por tenant, se/quando existir acesso direto do navegador ao banco (hoje não existe).
+
+## Matriz manual de validação dos quatro perfis
+
+O que os testes automatizados já cobrem: papel → rota inicial, gates de rota (3 papéis × 5 prefixos), corte de turmas por matrícula, recusa das Server Actions e ausência de dado real nos seeds (`app/tests/workspace-*.test.mjs`, `platform-*.test.mjs`, `demo-seed-privacy.test.mjs`).
+
+O que **só** a validação manual cobre — e por isso esta matriz existe: **sincronismo entre navegadores**. Um teste unitário não prova que a ação do Professor num navegador aparece na tela do Aluno em outro; isso é comportamento de sessão, cache e revalidação do Next.js, e é o critério 5 de aceitação.
+
+### Preparação
+
+- Modo real ativo (itens 1–4 acima). **Sinal de que ativou: a senha some da tela de login** — em modo demonstração ela é exibida.
+- Quatro navegadores **de perfis distintos** (janela anônima não basta em todos: sessões podem compartilhar armazenamento). Recomendado: Chrome, Chrome (segundo perfil), Firefox, Edge — ou dispositivos diferentes.
+- Contas: `diretor@`, `fabio.ege@`, `aluno01@`, `aluno02@` — todas `@institutohorizonte.edu.br`, senha do `IAH_DEMO_PASSWORD`.
+- Console aberto nos quatro (critério 10: nenhum erro).
+
+### A. Autenticação e roteamento (critérios 1, 2)
+
+| # | Navegador | Ação | Esperado |
+|---|---|---|---|
+| A1 | 1 | Entrar como `diretor@` | Cai em `/gestor` |
+| A2 | 2 | Entrar como `fabio.ege@` | Cai em `/professor` |
+| A3 | 3 | Entrar como `aluno01@` | Cai em `/dashboard` |
+| A4 | 4 | Entrar como `aluno02@` | Cai em `/dashboard` |
+| A5 | 1 | Recarregar `/gestor` | Sessão persiste, sem voltar ao login |
+
+### B. Permissões por papel (critério 3)
+
+| # | Navegador | Ação | Esperado |
+|---|---|---|---|
+| B1 | 3 | Digitar `/professor` na barra de endereço | Redireciona para `/dashboard` |
+| B2 | 3 | Digitar `/gestor` | Redireciona para `/dashboard` |
+| B3 | 2 | Digitar `/gestor` | Redireciona para `/professor` |
+| B4 | 2 | Abrir `/dashboard` | Abre (o professor pode ver a área do aluno) |
+| B5 | — | Sair da sessão e abrir `/missoes` | Redireciona para `/entrar` |
+
+### C. Isolamento entre os dois alunos (critério 4)
+
+| # | Navegador | Ação | Esperado |
+|---|---|---|---|
+| C1 | 3 | Listar turmas visíveis no painel | Só **1º EM A** |
+| C2 | 3 | Abrir o Diário | Só as próprias reflexões |
+| C3 | 4 | Após o Aluno 01 entregar, abrir a Missão | A produção do colega **não** aparece |
+| C4 | 3 | Abrir a Missão do Aluno 02 pela URL, se houver id na rota | Recusa ou mostra o próprio trabalho, nunca o do colega |
+
+### D. Jornada ponta a ponta e sincronismo (critérios 5, 6, 7, 8)
+
+Cada passo é validado **no outro navegador**, com recarga da página — é isso que prova o modo real.
+
+| # | Navegador | Ação | Esperado (onde verificar) |
+|---|---|---|---|
+| D0 | 1 | Abrir `/gestor` antes de tudo | Painel **zerado** — é o "antes" da demonstração |
+| D1 | 2 | Publicar a Missão 01 para 1º EM A | 3 e 4: a Missão aparece após recarregar |
+| D2 | 3 | Iniciar a Missão e salvar produção | 2: acompanhamento da turma mostra o Aluno 01 produzindo |
+| D3 | 4 | Iniciar, produzir e entregar | 2: Aluno 02 aparece como entregue |
+| D4 | 3 | Entregar produção e registrar reflexão | 2: Aluno 01 aparece como concluído |
+| D5 | 2 | Avaliar a entrega do Aluno 01 (nota + devolutiva) | 3: devolutiva visível após recarregar; 4: **nada muda** |
+| D6 | 1 | Recarregar `/gestor` | Indicadores refletem o que acabou de acontecer |
+| D7 | 1 | Conferir o número de entregas | Bate com o que os navegadores 3 e 4 fizeram |
+
+### E. Higiene (critérios 9, 10, 13)
+
+| # | Verificação | Esperado |
+|---|---|---|
+| E1 | Nomes exibidos nas quatro telas | Só Instituto Horizonte, Helena Duarte, Fabio Ege e "Aluno(a) de demonstração NN" |
+| E2 | Console dos quatro navegadores | Sem erro |
+| E3 | `git status` na worktree | Nenhum `.env*` versionado |
+| E4 | Tela de login | Senha **não** exibida (confirma modo real) |
+
+Registrar o resultado (data, navegadores usados, o que falhou) junto do fechamento do Lote 3.
 
 ## Fluxo de dados (visão de ponta a ponta)
 
