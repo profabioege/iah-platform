@@ -97,18 +97,23 @@ export const DEMO_MISSION_RECORD: MissionRecord = {
 };
 
 /** 10 alunos fictícios (2 por turma) — as mesmas contas de login do Workspace (M15). */
-// Índices 4–5 (2º EM A, turma da jornada demonstrativa M21) começam sem
-// acesso: a jornada Gestor → Professor → Aluno parte do zero nessa turma.
+// Índices 0–1 (1º EM A, turma da jornada demonstrativa) começam sem
+// acesso: a jornada Direção → Professor → Aluno parte do zero nessa
+// turma, e é ela que `aluno01@`/`aluno02@` — os dois perfis de estudante
+// do roteiro — ocupam. Mesma turma da Lesson semeada nos dois modos
+// (`modules/lesson/seeds/demo-seed.ts` e `app/db/seed/seed-demo.mjs`):
+// se o modo real ficar indisponível, o modo demonstração conta a mesma
+// história em vez de outra.
 const DEMO_ROSTER: Array<{
   status: StudentMissionStatus;
   lastAccessAt: string | null;
 }> = [
-  { status: "concluiu", lastAccessAt: "2026-07-16T10:42:00-03:00" },
-  { status: "reflexao", lastAccessAt: "2026-07-16T10:41:00-03:00" },
+  { status: "nao_acessou", lastAccessAt: null },
+  { status: "nao_acessou", lastAccessAt: null },
   { status: "entregue", lastAccessAt: "2026-07-16T10:35:00-03:00" },
   { status: "entregue", lastAccessAt: "2026-07-16T10:33:00-03:00" },
-  { status: "nao_acessou", lastAccessAt: null },
-  { status: "nao_acessou", lastAccessAt: null },
+  { status: "concluiu", lastAccessAt: "2026-07-16T10:42:00-03:00" },
+  { status: "reflexao", lastAccessAt: "2026-07-16T10:41:00-03:00" },
   { status: "investigando", lastAccessAt: "2026-07-16T10:39:00-03:00" },
   { status: "visualizou", lastAccessAt: "2026-07-16T10:29:00-03:00" },
   { status: "rascunho", lastAccessAt: "2026-07-16T10:40:00-03:00" },
@@ -153,17 +158,13 @@ export const DEMO_MISSION_PROGRESS: MissionProgress[] = DEMO_STUDENTS.map(
   }),
 );
 
-/** Texto de Produção — só para quem já entregou (índices 0–3: 1º EM A e 1º EM B). */
+/**
+ * Texto de Produção — só para quem já entregou (índices 2–5: 1º EM B e
+ * 2º EM A). Os índices acompanham `DEMO_ROSTER`: produção existe para
+ * `entregue`, `reflexao` e `concluiu`. 1º EM A (0–1) está fora porque é
+ * a turma da jornada demonstrativa, que parte do zero.
+ */
 const DEMO_PRODUCTION_TEXT: Record<number, string> = {
-  0:
-    "Veredito 1: falsa — nenhuma outra fonte confirma. Veredito 2: real — " +
-    "duas agências publicaram no mesmo dia. Veredito 3: falsa — a foto é de " +
-    "2019. Veredito 4: real. Minha manchete: \"Prefeitura anuncia aulas de " +
-    "drone para o 6º ano\" — engana porque cita uma fonte oficial que não existe.",
-  1:
-    "Auditoria: 1 falsa (sem autor), 2 real, 3 falsa (site imita portal " +
-    "conhecido), 4 real. Manchete criada: \"Escola de Itu proíbe caneta azul\" " +
-    "— crível porque parece regra escolar comum; denuncia-se pela ausência de fonte.",
   2:
     "Vereditos: falsa, real, falsa, real. A manchete que gerei usa números " +
     "exatos (\"87% dos alunos\") para parecer pesquisa séria — é isso que a denuncia: " +
@@ -171,14 +172,23 @@ const DEMO_PRODUCTION_TEXT: Record<number, string> = {
   3:
     "1: falsa — o \"jornal\" não existe. 2: real. 3: falsa — IA gerou a imagem " +
     "(mão com seis dedos). 4: real. Manchete: \"Merenda terá robô cozinheiro\".",
+  4:
+    "Veredito 1: falsa — nenhuma outra fonte confirma. Veredito 2: real — " +
+    "duas agências publicaram no mesmo dia. Veredito 3: falsa — a foto é de " +
+    "2019. Veredito 4: real. Minha manchete: \"Prefeitura anuncia aulas de " +
+    "drone para o 6º ano\" — engana porque cita uma fonte oficial que não existe.",
+  5:
+    "Auditoria: 1 falsa (sem autor), 2 real, 3 falsa (site imita portal " +
+    "conhecido), 4 real. Manchete criada: \"Escola de Itu proíbe caneta azul\" " +
+    "— crível porque parece regra escolar comum; denuncia-se pela ausência de fonte.",
 };
 
-/** Reflexão registrada — só para quem concluiu o Diário (índices 0–1). */
+/** Reflexão registrada — só para quem chegou ao Diário (índices 4–5). */
 const DEMO_REFLECTION_TEXT: Record<number, string> = {
-  0:
+  4:
     "Quase acreditei na manchete 3 porque a foto parecia recente. Aprendi a " +
     "procurar a data original da imagem antes de confiar.",
-  1:
+  5:
     "Percebi que manchete boa de compartilhar é justamente a que merece mais " +
     "desconfiança.",
 };

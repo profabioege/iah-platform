@@ -1,67 +1,87 @@
 # Autenticação — IAH Educacional
 
-Login com Google (Auth.js v5), sessão persistente, middleware de rotas privadas e provisionamento automático do primeiro usuário real (o fundador, professor do Colégio Beryon). Complementa [SUPABASE.md](SUPABASE.md) (banco), [PERSISTENCE.md](PERSISTENCE.md) e [GOOGLE_WORKSPACE.md](GOOGLE_WORKSPACE.md). Decisão registrada em `DECISIONS.md` D-025.
+Login institucional, sessão, gates por papel e os dois modos de operação da instância. Complementa [SUPABASE.md](SUPABASE.md) (banco), [PERSISTENCE.md](PERSISTENCE.md) (persistência) e [GOOGLE_WORKSPACE.md](GOOGLE_WORKSPACE.md) (credenciais Google). Decisões em `DECISIONS.md` D-025 e D-041.
 
-## Estado honesto desta fase
+> **Documento reescrito.** A versão anterior descrevia apenas o login Google e o provisionamento automático do professor do Colégio Beryon, como se fosse o único caminho. Desde a M22 o caminho principal é **e-mail + senha (Auth.js Credentials) contra o banco**; o Google é opcional e pode nunca ser configurado.
 
-**O código está completo; as credenciais não existem ainda.** Criar o projeto no Google Cloud e o projeto Supabase são ações nos seus consoles, com a sua conta — o passo a passo está abaixo e em `SUPABASE.md`. Sem as variáveis de ambiente, a Plataforma opera exatamente como antes (modo demonstração, acesso direto); com elas, o login Google passa a valer automaticamente, sem nenhuma mudança de código. O fluxo autenticado ainda **não foi validado ponta a ponta** — será, no primeiro login real.
+## Dois modos, uma única flag
+
+`isAuthConfigured()` ([auth-flags.ts](../app/src/lib/auth-flags.ts)) decide o modo da instância inteira — autenticação **e** persistência juntas, nunca uma sem a outra:
+
+| | Modo REAL | Modo DEMONSTRAÇÃO |
+|---|---|---|
+| Ativa quando | `AUTH_SECRET` + `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` definidas | nenhuma das três definida |
+| Login | Auth.js Credentials contra `users.password_hash` (scrypt) | seed em memória, senha única |
+| Senha na tela `/entrar` | **não aparece** | aparece (é uma barreira de demonstração, não segurança) |
+| Sessão | JWT assinado (`platformUserId`, `institutionId`, `role`) | cookie httpOnly com o id do usuário |
+| Dados | Supabase/PostgreSQL, server-side, service role | seeds em memória + `localStorage` |
+| Entre navegadores | ✅ sincroniza | ❌ cada navegador é uma ilha |
+
+Configuração **parcial** nunca é aceita: `getPlatformConfigError()` devolve um diagnóstico nomeando o que falta, e as telas o exibem. Nunca há fallback silencioso para seed.
 
 ## Arquitetura
 
 ```
 src/lib/auth-flags.ts        ← isAuthConfigured() (edge-safe, decide demo × real)
-src/auth.config.ts           ← config edge-safe (provider Google, callback authorized)
-src/auth.ts                  ← config completa (signIn/jwt/session + provisionamento)
-src/middleware.ts            ← proteção de /dashboard, /missoes, /diario, /professor
-src/app/api/auth/[...]       ← endpoints do Auth.js (login/logout/callback)
-src/modules/identity/        ← contexto Identidade & Acesso (provisionamento)
-modules/integrations/auth/   ← contrato AuthProvider (D-019) + authJsAuthProvider real
-components/layout/session-controls.tsx ← "Sair" no header (só com sessão ativa)
+src/lib/password.ts          ← hash scrypt (zero dependência nova)
+src/auth.config.ts           ← config edge-safe (providers, callback authorized)
+src/auth.ts                  ← config completa (Credentials + Google + provisionamento)
+src/middleware.ts            ← gates por papel em todas as rotas da Plataforma
+src/app/entrar/page.tsx      ← tela única de login (papel nunca é escolhido)
+src/modules/workspace/       ← sessão, contexto pedagógico, permissões
+src/modules/identity/        ← provisionamento no primeiro login Google
 ```
 
-- **Toda autenticação passa pelo contrato `AuthProvider`** (`getAuthProvider()`): real com credenciais, simulado sem — nenhum componente importa `next-auth` diretamente.
-- **Sessão: JWT** (cookie assinado, persistente entre visitas). Por isso **não há tabela de sessões** — ela só existe na estratégia "database" do Auth.js; criar uma tabela morta seria pior que documentar a escolha (D-025). Papel e instituição viajam no token.
-- **Config dividida em duas** (`auth.config.ts` × `auth.ts`): o middleware roda no edge e não pode carregar supabase-js; o provisionamento (Node) fica só na config completa, via import dinâmico.
+- **O papel nunca é escolhido na tela.** Ele vem do vínculo persistido (`profiles.role`) e determina a rota inicial.
+- **Config dividida em duas** (`auth.config.ts` × `auth.ts`): o middleware roda no edge e não pode carregar `supabase-js`; o provisionamento (Node) só existe na config completa, via import dinâmico.
 
-## Fluxo do primeiro login
+## Login por e-mail e senha (caminho principal)
 
 ```
-Entrar com Google → allowlist (AUTH_ALLOWED_EMAILS)
-  → criar Usuário (users)
-  → criar Professor (teachers, ligado ao usuário)
-  → criar Perfil professor (profiles)
-  → associar à Instituição (AUTH_DEFAULT_INSTITUTION_SLUG)
-  → redirecionar ao Dashboard
+/entrar → Auth.js Credentials → users.password_hash (scrypt) → profiles.role
+       → roleHome(role) → rota inicial do papel
 ```
 
-Tudo automático e idempotente (logins seguintes só atualizam `last_login_at`). Regras de segurança deliberadas:
+Não há autoprovisionamento por senha: a conta precisa existir no banco. Para o ambiente demonstrativo, as contas são criadas pelo script de seed (`SUPABASE.md`, seção 4).
 
-- **Allowlist fechada por padrão**: sem `AUTH_ALLOWED_EMAILS`, nenhum login é aceito — sem ela, qualquer conta Google do mundo entraria.
-- **A Instituição nunca é criada automaticamente**: a linha do Colégio Beryon é inserida por você (`SUPABASE.md`); se o slug não existir, o login é negado com erro claro em vez de criar um tenant fantasma.
-- **Falha de provisionamento nega o login** (não cria sessão sem persistência — o critério da Sprint é ser reconhecido E persistido).
+## Login com Google (opcional)
 
-## Middleware (rotas privadas)
+Só existe se `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` e `AUTH_SECRET` estiverem definidas. No primeiro login provisiona Usuário → Professor → Perfil → Instituição, de forma idempotente. Regras deliberadas:
 
-`/dashboard`, `/missoes`, `/diario`, `/professor` (e subrotas) exigem sessão **quando a autenticação está configurada**; sem configuração, passam livres (demo). Landing, `/demonstracao` e `/entrar` são sempre públicas. O redirecionamento para `/entrar` é automático (callback `authorized`).
+- **Allowlist fechada por padrão** (`AUTH_ALLOWED_EMAILS`): sem ela, nenhum login Google é aceito — do contrário qualquer conta Google do mundo entraria.
+- **A Instituição nunca é criada automaticamente**: se `AUTH_DEFAULT_INSTITUTION_SLUG` não existir no banco, o login é negado com erro claro em vez de criar um tenant fantasma.
+- **Falha de provisionamento nega o login**: não se cria sessão sem persistência.
+
+**No ambiente demonstrativo, o Google fica desconfigurado de propósito.** Menos superfície, menos console, e o cenário fictício não deve aceitar contas Google reais.
+
+## Papéis, rotas e gates
+
+`roleHome()` ([workspace-context.ts](../app/src/modules/workspace/domain/workspace-context.ts)) e o middleware são as duas únicas fontes:
+
+| Papel (Workspace) | `profiles.role` | Rota inicial | Bloqueado de |
+|---|---|---|---|
+| `admin` | `administrador` / `admin_iah` | `/gestor` | — |
+| `teacher` | `professor` | `/professor` | `/gestor` |
+| `student` | `aluno` | `/dashboard` | `/gestor`, `/professor` |
+
+Rotas protegidas pelo matcher: `/dashboard`, `/missoes`, `/diario`, `/professor`, `/gestor` (e subrotas). Landing, `/demonstracao` e `/entrar` são sempre públicas. Sem sessão, qualquer rota protegida redireciona a `/entrar`.
+
+**O gate de rota é a primeira camada, não a única.** Toda Server Action revalida no servidor: recusa `role === "student"` para ações pedagógicas e confere se a turma informada pertence ao contexto do usuário. `institutionId`, `classroomId` e `studentId` são **sempre** derivados da sessão — nunca aceitos como parâmetro do cliente (D-041).
+
+## Escopo de dados por papel
+
+`getWorkspaceContext()` aplica o escopo **no servidor**, antes de qualquer tela renderizar:
+
+- **aluno** → só as turmas em que está matriculado (`enrollments`);
+- **professor** → só as turmas que leciona (`classroom_teachers`);
+- **admin** → todas as turmas da própria instituição.
+
+Nenhum papel enxerga outra instituição: `institution_id` é filtro obrigatório em todo contrato de repositório (D-023).
 
 ## Logout
 
-Botão "Sair" no header da Plataforma (com nome do usuário), renderizado apenas com sessão ativa. Encerra a sessão e volta a `/entrar`.
+Botão "Sair" no header da Plataforma, renderizado apenas com sessão ativa. Encerra a sessão e volta a `/entrar`.
 
-## Como ativar (seus ~15 minutos de console)
+## Limites honestos do modo demonstração
 
-1. **Google Cloud** (detalhes em `GOOGLE_WORKSPACE.md`): criar projeto → tela de consentimento OAuth → credencial "Aplicação Web" com redirect URIs:
-   - `http://localhost:3000/api/auth/callback/google` (dev)
-   - `https://iah-platform.vercel.app/api/auth/callback/google` (produção)
-   - Adicionar seu e-mail como test user enquanto o app não é verificado.
-2. **Supabase**: seguir `SUPABASE.md` (criar projeto, aplicar migrations 0001–0003, inserir a linha da sua Instituição).
-3. **Variáveis** em `app/.env.local` e no painel da Vercel (nomes em `app/.env.example`): `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_SECRET` (gere com `npx auth secret`), `AUTH_ALLOWED_EMAILS` (seu e-mail), `AUTH_DEFAULT_INSTITUTION_SLUG`, e as três do Supabase.
-4. Redeploy na Vercel → entrar com sua conta Google → conferir no Supabase as linhas criadas em `users`, `teachers` e `profiles`.
-
-**Nota:** ao definir `GOOGLE_CLIENT_ID/SECRET`, o card "Integrações" do Painel do Professor passa a mostrar "Conectado" e o Import Wizard tenta o serviço real do Classroom (que segue stub até a próxima Sprint) — a lista de turmas aparece vazia em vez de simulada. Comportamento esperado nesta fase.
-
-## O que esta Sprint NÃO fez (por decisão)
-
-- Nenhuma chamada à Google Classroom API (próxima Sprint, sobre `GOOGLE_CLASSROOM_INTEGRATION.md`).
-- Nenhum mock removido: todos continuam necessários para o modo demonstração e desenvolvimento sem credenciais — a aposentadoria segue o checklist de `PERSISTENCE.md`, página a página.
-- Papéis além de `professor` não são provisionados automaticamente (aluno/gestor entram em Sprints futuras, via importação/convite).
+Sem as três variáveis, a sessão é um cookie com o id do usuário em texto puro e a senha é uma constante versionada, exibida na tela de login. Isso é uma **barreira de apresentação, não autenticação**. Qualquer ambiente que possa receber uma pessoa de fora — inclusive o ambiente demonstrativo publicado — deve rodar em modo real.

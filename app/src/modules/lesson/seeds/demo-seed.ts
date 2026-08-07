@@ -1,19 +1,24 @@
 import type { Lesson } from "../domain/lesson";
 
 /**
- * Lesson institucional da jornada demonstrativa M21 — turma 2º EM A, o
+ * Lesson institucional da jornada demonstrativa — turma 1º EM A, o
  * cenário oficial da demonstração comercial. Referencia somente ids
  * canônicos dos módulos Platform, Library e Knowledge, sem duplicar
  * entidades. As competências repetem as da própria Mission 01
  * (`modules/library`) — entrada livre, sem código BNCC fabricado
  * (D-029/D-030: o catálogo formal ainda não existe).
+ *
+ * A turma é 1º EM A para coincidir com `aluno01@`/`aluno02@`, os dois
+ * estudantes do roteiro de demonstração — mesma turma usada pelo seed
+ * do banco real (`app/db/seed/seed-demo.mjs`). Os dois modos contam a
+ * mesma história.
  */
 export const DEMO_LESSON: Lesson = {
-  id: "lesson-horizonte-fabrica-noticias-2em-a",
+  id: "lesson-horizonte-fabrica-noticias-1em-a",
   author: "Fabio Ege",
-  grade: "2º ano E.M.",
-  classroomId: "class-2em-a",
-  classroomLabel: "2º EM A",
+  grade: "1º ano E.M.",
+  classroomId: "class-1em-a",
+  classroomLabel: "1º EM A",
   estimatedMinutes: 50,
   topic: "Desinformação e verificação de fontes",
   objective:

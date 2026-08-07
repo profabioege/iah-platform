@@ -96,7 +96,9 @@ async function main() {
     {
       id: "user-diretor",
       institution_id: INSTITUTION_ID,
-      name: "Direção Instituto Horizonte",
+      // Persona fictícia da Direção (D-015/D-039). Nenhuma pessoa real
+      // além do professor fundador aparece neste seed.
+      name: "Helena Duarte",
       email: `diretor@${DOMAIN}`,
       password_hash: passwordHash,
       status: "active",
@@ -225,15 +227,23 @@ async function main() {
     },
   ]);
 
-  // Lesson da jornada demonstrativa (M21) — turma 2º EM A.
+  // Lesson da jornada demonstrativa — turma 1º EM A.
+  //
+  // A turma da jornada é 1º EM A porque é nela que estão matriculados
+  // `aluno01@` e `aluno02@` (enrollments: Math.floor(i / 2) → índices 0
+  // e 1 caem em CLASSROOMS[0]). Os dois perfis de estudante do roteiro
+  // de demonstração são, então, literalmente "Aluno 01" e "Aluno 02" —
+  // o e-mail digitado na tela de login bate com o papel apresentado.
+  // Este seed não insere progresso nenhum: a jornada nasce zerada em
+  // todas as turmas e é preenchida ao vivo durante a demonstração.
   await upsert("lessons", [
     {
-      id: "lesson-horizonte-fabrica-noticias-2em-a",
+      id: "lesson-horizonte-fabrica-noticias-1em-a",
       institution_id: INSTITUTION_ID,
       author: "Fabio Ege",
-      grade: "2º ano E.M.",
-      classroom_id: "class-2em-a",
-      classroom_label: "2º EM A",
+      grade: "1º ano E.M.",
+      classroom_id: "class-1em-a",
+      classroom_label: "1º EM A",
       estimated_minutes: 50,
       topic: "Desinformação e verificação de fontes",
       objective:
