@@ -229,6 +229,39 @@ Consequências, nesta ordem:
 
 Corrigir isso é trabalho próprio, fora da M23: migrar `modules/authoring` para o mesmo padrão de `modules/lesson` (Server Actions + tabela, com a factory decidindo entre real e local). **Não fazer agora.**
 
+## Reset do ambiente demonstrativo
+
+`app/db/seed/reset-demo.mjs` devolve o tenant fictício ao estado D0, para que a jornada seja repetível: `seed → D0–D6 → reset → D0` quantas vezes forem necessárias. Sem ele, a primeira rodada do Lote 3 deixaria resíduo e a segunda partiria de um baseline diferente — um ambiente de demonstração que só funciona uma vez não é reproduzível.
+
+**Escopo permanente, não uma limitação a remover:** é ferramenta exclusiva de desenvolvimento e demonstração do Instituto Horizonte, e recusa qualquer tenant diferente de `inst-horizonte`. **Não é** ferramenta de exclusão de instituição real, offboarding de cliente, administração multi-tenant, atendimento a pedido de exclusão sob a LGPD, nem reset de escola real. Cada um desses casos exige o que este script não tem: trilha de auditoria, base legal, política de retenção, comprovação de exclusão e autorização humana registrada.
+
+**O que é limpo** (dinâmico, tudo com `institution_id`): `mission_assignments`, `mission_progress`, `productions`, `reflections`, `mission_reviews` e `classroom_sync_states`.
+**O que é preservado** (estrutural, semeado): instituição, ano letivo, contas, perfis, professor, alunos, turmas, vínculos, matrículas, disciplina, Missão e Lesson.
+
+**Salvaguardas:** dry run é o padrão; a destruição exige `--execute` **e** `--confirm-tenant=inst-horizonte`; a identidade do tenant é conferida em `id`, `name` e `domain` antes de qualquer remoção; todo `DELETE` é tenant-scoped; nenhuma saída imprime URL, chave ou senha.
+
+### RESET MULTI-TABLE TRANSACTION = P2 (demonstração) · P1 (ferramenta genérica)
+
+As remoções **não correm dentro de uma transação única** — cada tabela é um `DELETE` independente. Uma falha intermediária pode deixar o tenant parcialmente limpo.
+
+| | |
+|---|---|
+| Hoje | **fail-fast** — para no primeiro erro, nunca continua em silêncio |
+| | **idempotente** — reexecutar conclui o que faltou, sem duplicar nem quebrar |
+| | **reexecutável** com segurança quantas vezes for preciso |
+| | **valida o baseline ao final** — dinâmico zerado, estrutural intacto |
+| Risco | falha intermediária = estado parcialmente limpo |
+| Para o Instituto Horizonte | **risco aceito nesta fase** — dado fictício, reexecução resolve |
+| Para escola real | **não aceitável** — vira P1 antes de qualquer evolução do mecanismo para ferramenta operacional genérica ou uso com instituições reais |
+
+Resolver de verdade exige RPC ou stored procedure e uma migration nova — deliberadamente fora do escopo do Lote 2.5.
+
+### Contrato de schema nos testes
+
+O harness de teste (`app/tests/support/fake-supabase-admin.mjs`) conhece as colunas reais das tabelas que o reset usa e **falha** se uma query filtrar por coluna inexistente. Existe por causa de um defeito concreto: `institutions` é a raiz do tenant e não tem `institution_id` — ela se identifica pelo próprio `id`. Consultá-la pela coluna errada devolvia zero em silêncio, e o reset acusava "tabela estrutural vazia". Contra o PostgreSQL seria um erro `42703`; num dublê permissivo, era um bug esperando a primeira execução real.
+
+**A autoridade do contrato é o SQL das migrations**, nunca o dublê. Tabela nova usada pelo reset exige declarar suas colunas ali, lidas da migration.
+
 ## Fluxo de dados (visão de ponta a ponta)
 
 ```
