@@ -4,6 +4,42 @@ import Google from "next-auth/providers/google";
 import { isAuthConfigured, isGoogleAuthConfigured } from "@/lib/auth-flags";
 
 /**
+ * Autorização por papel — ALLOWLIST explícita, deny by default.
+ *
+ * Separação estrita de papéis (decisão da M23): administrador NÃO tem
+ * acesso implícito à área docente, e professor não tem acesso implícito
+ * à jornada do aluno. Privilégio administrativo nunca é bypass das
+ * permissões de professor; quem exerce as duas funções precisará de um
+ * papel docente explícito ou de troca de contexto — nunca de herança.
+ *
+ * Os papéis são os PERSISTIDOS em `profiles.role` (migration 0003), não
+ * os do Workspace. Acrescentar um papel ao CHECK do banco sem
+ * acrescentá-lo aqui é seguro por construção: ele nasce sem acesso.
+ */
+const AREA_ROLES: Record<string, readonly string[]> = {
+  "/gestor": ["administrador", "admin_iah"],
+  "/professor": ["professor"],
+  "/dashboard": ["aluno"],
+  "/missoes": ["aluno"],
+  "/diario": ["aluno"],
+};
+
+/** Prefixos avaliados, na mesma ordem do `config.matcher` do middleware. */
+const PRIVATE_AREAS = Object.keys(AREA_ROLES);
+
+/**
+ * Destino do papel quando ele não pode ficar onde está. Papel fora do
+ * vocabulário não tem área própria e volta ao login — negar por padrão
+ * vale também para o redirecionamento.
+ */
+function roleHome(role: string): string {
+  if (role === "administrador" || role === "admin_iah") return "/gestor";
+  if (role === "professor") return "/professor";
+  if (role === "aluno") return "/dashboard";
+  return "/entrar";
+}
+
+/**
  * Configuração EDGE-SAFE do Auth.js — usada pelo middleware.
  *
  * Aqui não entra nada que dependa de Node/banco: o provider Credentials
@@ -54,9 +90,15 @@ export const authConfig = {
     /**
      * Porta das rotas privadas. Sem o modo real configurado, a barreira
      * do Institutional Workspace (middleware) cuida do acesso; com ele,
-     * exige sessão E aplica o gate por papel — /gestor é exclusivo do
-     * administrador, /professor é vedado ao aluno. O papel vem do vínculo
+     * exige sessão E aplica o gate por papel, sempre lido do vínculo
      * persistido (token), nunca do cliente.
+     *
+     * A decisão de acesso é uma ALLOWLIST: um papel só entra numa área
+     * se estiver escrito em `AREA_ROLES`. Papel ausente, desconhecido,
+     * futuro ou malformado não aparece em lista nenhuma e por isso é
+     * negado — nunca há fallback permissivo. Isso substitui a denylist
+     * de `/professor`, que liberava qualquer papel diferente de "aluno"
+     * e teria dado acesso silencioso a papéis administrativos novos.
      */
     authorized({ auth, request }) {
       if (!isAuthConfigured()) return true;
@@ -65,21 +107,22 @@ export const authConfig = {
         | undefined;
       if (!user) return false;
 
-      const role = user.role ?? "";
+      // Comparação EXATA, sem normalizar: `trim()`/`toLowerCase()` só
+      // ampliariam o conjunto de papéis aceitos. "professor " e
+      // "Professor" não são o papel `professor` — são papéis malformados,
+      // e papel malformado é negado como qualquer desconhecido.
+      const role = typeof user.role === "string" ? user.role : "";
       const { pathname } = request.nextUrl;
 
-      if (
-        pathname.startsWith("/gestor") &&
-        !["administrador", "admin_iah"].includes(role)
-      ) {
-        return Response.redirect(
-          new URL(role === "professor" ? "/professor" : "/dashboard", request.nextUrl),
-        );
-      }
-      if (pathname.startsWith("/professor") && role === "aluno") {
-        return Response.redirect(new URL("/dashboard", request.nextUrl));
-      }
-      return true;
+      const area = PRIVATE_AREAS.find((prefix) => pathname.startsWith(prefix));
+      if (!area) return true; // fora das áreas privadas conhecidas
+      if (AREA_ROLES[area].includes(role)) return true;
+
+      // Papel sem área própria (desconhecido/ausente) volta ao login: não
+      // há destino seguro que se possa presumir para ele.
+      const home = roleHome(role);
+      if (pathname.startsWith(home)) return false; // corta laço de redirecionamento
+      return Response.redirect(new URL(home, request.nextUrl));
     },
   },
 } satisfies NextAuthConfig;

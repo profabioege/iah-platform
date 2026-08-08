@@ -9,6 +9,8 @@ import {
   resolveSessionRole,
   WORKSPACE_SESSION_COOKIE,
 } from "@/modules/workspace/infrastructure/session-cookie";
+import { roleHome } from "@/modules/workspace/domain/workspace-context";
+import type { Role } from "@/modules/workspace/domain/entities";
 
 /**
  * Middleware de rotas privadas da Plataforma.
@@ -17,10 +19,26 @@ import {
  * sempre — o gate isAuthConfigured() vem ANTES de invocar o Auth.js
  * (sem AUTH_SECRET ele lança MissingSecret na entrada). Sem ela, vale o
  * Institutional Workspace (M15): toda rota da Plataforma exige a sessão
- * local simulada, e o papel do usuário limita o alcance — aluno não
- * acessa /professor nem /gestor; /gestor é exclusivo do Administrador
- * Institucional. Landing, /demonstracao e /entrar seguem públicas.
+ * local simulada, e o papel limita o alcance. Landing, /demonstracao e
+ * /entrar seguem públicas.
  */
+
+/**
+ * Espelho da allowlist de `auth.config.ts` nos papéis do Workspace —
+ * mesma separação estrita (M23): cada papel alcança apenas a própria
+ * área, sem herança administrativa. Papel que não resolve a partir do
+ * cookie já cai antes, no redirecionamento para /entrar.
+ */
+const AREA_ROLES: Record<string, readonly Role[]> = {
+  "/gestor": ["admin"],
+  "/professor": ["teacher"],
+  "/dashboard": ["student"],
+  "/missoes": ["student"],
+  "/diario": ["student"],
+};
+
+const PRIVATE_AREAS = Object.keys(AREA_ROLES);
+
 const nextAuthMiddleware = NextAuth(authConfig).auth as unknown as (
   request: NextRequest,
 ) => Response | Promise<Response>;
@@ -37,14 +55,9 @@ export default function middleware(request: NextRequest) {
     return NextResponse.redirect(login);
   }
 
-  if (pathname.startsWith("/gestor") && role !== "admin") {
-    return NextResponse.redirect(
-      new URL(role === "teacher" ? "/professor" : "/dashboard", request.url),
-    );
-  }
-
-  if (pathname.startsWith("/professor") && role === "student") {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+  const area = PRIVATE_AREAS.find((prefix) => pathname.startsWith(prefix));
+  if (area && !AREA_ROLES[area].includes(role)) {
+    return NextResponse.redirect(new URL(roleHome(role), request.url));
   }
 
   return NextResponse.next();
