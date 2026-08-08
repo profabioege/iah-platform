@@ -126,13 +126,19 @@ O que **só** a validação manual cobre — e por isso esta matriz existe: **si
 
 ### B. Permissões por papel (critério 3)
 
+**Separação estrita de papéis** (M23): cada papel alcança apenas a própria área. Administrador **não** herda a área docente; professor **não** herda a jornada do aluno. Privilégio administrativo nunca é bypass de permissão de professor — quem exerce as duas funções precisará de papel docente explícito ou troca de contexto. A allowlist vive em `app/src/auth.config.ts` (`AREA_ROLES`) e é espelhada em `app/src/middleware.ts`.
+
 | # | Navegador | Ação | Esperado |
 |---|---|---|---|
 | B1 | 3 | Digitar `/professor` na barra de endereço | Redireciona para `/dashboard` |
 | B2 | 3 | Digitar `/gestor` | Redireciona para `/dashboard` |
 | B3 | 2 | Digitar `/gestor` | Redireciona para `/professor` |
-| B4 | 2 | Abrir `/dashboard` | Abre (o professor pode ver a área do aluno) |
+| B4 | 2 | Abrir `/dashboard` | Redireciona para `/professor` — professor não herda a jornada do aluno |
 | B5 | — | Sair da sessão e abrir `/missoes` | Redireciona para `/entrar` |
+| B6 | 1 | Digitar `/professor` | Redireciona para `/gestor` — administrador não herda a área docente |
+| B7 | 1 | Digitar `/dashboard` | Redireciona para `/gestor` |
+
+B4, B6 e B7 são a contraparte manual dos testes de `workspace-route-gates.test.mjs`: o teste prova a decisão do gate; a matriz prova que o navegador realmente obedece a ela, com sessão real e redirecionamento visível.
 
 ### C. Isolamento entre os dois alunos (critério 4)
 
@@ -154,9 +160,49 @@ Cada passo é validado **no outro navegador**, com recarga da página — é iss
 | D2 | 3 | Iniciar a Missão e salvar produção | 2: acompanhamento da turma mostra o Aluno 01 produzindo |
 | D3 | 4 | Iniciar, produzir e entregar | 2: Aluno 02 aparece como entregue |
 | D4 | 3 | Entregar produção e registrar reflexão | 2: Aluno 01 aparece como concluído |
-| D5 | 2 | Avaliar a entrega do Aluno 01 (nota + devolutiva) | 3: devolutiva visível após recarregar; 4: **nada muda** |
+| D5 | 2 | Avaliar a entrega do Aluno 01 (nota + devolutiva) | ver protocolo de snapshot negativo abaixo — **obrigatório** |
 | D6 | 1 | Recarregar `/gestor` | Indicadores refletem o que acabou de acontecer |
 | D7 | 1 | Conferir o número de entregas | Bate com o que os navegadores 3 e 4 fizeram |
+
+#### Ficha de registro obrigatória (D0–D7)
+
+Nenhuma etapa é aprovada por funcionar na mesma sessão em que foi executada. Registrar, por etapa:
+
+| Campo | |
+|---|---|
+| Etapa | D0 … D7 |
+| Sessão / navegador | 1 Diretora · 2 Professor · 3 Aluno 01 · 4 Aluno 02 |
+| Papel | administrador / professor / aluno |
+| Ação executada | |
+| Resultado na própria sessão | |
+| Reload realizado | sim/não — **qual** sessão recarregou |
+| Persistência observada | banco / localStorage / memória |
+| **Resultado no outro navegador** | ← campo decisivo |
+| Veredito | PASS / FAIL |
+
+**Regra absoluta:** uma etapa que funcione apenas no mesmo navegador ou dispositivo é **FAIL**, não PASS parcial.
+
+#### D5 — snapshot negativo obrigatório
+
+D5 é a única etapa que prova, ao mesmo tempo, que a avaliação chega a quem deve e **não vaza** para quem não deve. Sem o snapshot anterior não há com o que comparar, e a metade negativa fica por conta da impressão de quem olha.
+
+**ANTES da avaliação** — registrar, em sessões independentes:
+
+| | Aluno 01 (sessão 3) | Aluno 02 (sessão 4) |
+|---|---|---|
+| status | | |
+| produção (texto e horário de entrega) | | |
+| reflexão (texto e horário) | | |
+| devolutiva (nota, critérios, feedback) | | |
+
+**AÇÃO** — o Professor (sessão 2) avalia **somente** o Aluno 01: nota, critérios observados e devolutiva.
+
+**DEPOIS** — registrar de novo os dois, com recarga em cada sessão:
+
+- **Aluno 01** apresenta a devolutiva correta — nota, critérios e feedback exatamente como o Professor registrou.
+- **Aluno 02 permanece inalterado** nos quatro campos: status, produção, reflexão e devolutiva. Nenhuma avaliação aparece para ele.
+
+**PASS exige as três condições:** (1) evidência positiva no Aluno 01, (2) evidência negativa no Aluno 02, (3) ambas verificadas em sessões independentes. Faltando qualquer uma, D5 é FAIL.
 
 ### E. Higiene (critérios 9, 10, 13)
 
@@ -168,6 +214,20 @@ Cada passo é validado **no outro navegador**, com recarga da página — é iss
 | E4 | Tela de login | Senha **não** exibida (confirma modo real) |
 
 Registrar o resultado (data, navegadores usados, o que falhou) junto do fechamento do Lote 3.
+
+### Fora do escopo do Lote 3 — e por quê
+
+**AUTHORING SHARED PERSISTENCE = P1 — SCHOOL READY**
+
+`modules/authoring` (Estúdio de Missões) é o único módulo da Plataforma que **não tem caminho de modo real**: `localMissionStudioRepository` grava sempre em `localStorage`, sem Server Action equivalente. Uma Missão criada no Estúdio existe apenas no dispositivo de quem a criou.
+
+Consequências, nesta ordem:
+
+1. **Não abrir o Estúdio de Missões durante o Lote 3.** Ele produziria um resultado não representativo do teste multiusuário — a Missão simplesmente não apareceria nas outras sessões, e o FAIL seria do módulo, não da arquitetura sob teste.
+2. **Isso não bloqueia DEMO READY.** A jornada usa a Lesson e a Mission que já existem no seed (`lesson-horizonte-fabrica-noticias-1em-a`, `01-a-fabrica-de-noticias`); nenhuma autoria nova é necessária para percorrer D0–D7.
+3. **Isso BLOQUEIA SCHOOL READY.** Uma escola real precisa criar as próprias Missões, e um professor que perde a autoria ao trocar de computador não tem sistema — tem rascunho. Enquanto o fluxo de autoria necessário à operação depender exclusivamente do dispositivo, a primeira escola não pode ser considerada pronta.
+
+Corrigir isso é trabalho próprio, fora da M23: migrar `modules/authoring` para o mesmo padrão de `modules/lesson` (Server Actions + tabela, com a factory decidindo entre real e local). **Não fazer agora.**
 
 ## Fluxo de dados (visão de ponta a ponta)
 
