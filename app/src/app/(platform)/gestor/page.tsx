@@ -4,6 +4,7 @@ import { getWorkspaceContext } from "@/modules/workspace";
 import { getDefaultRepositories } from "@/modules/platform";
 
 import { ExecutiveDashboard } from "./executive-dashboard";
+import { computeExecutiveTotals } from "./executive-totals";
 
 export const metadata: Metadata = {
   title: "Visão Executiva",
@@ -76,15 +77,8 @@ export default async function GestorPage() {
     (total, classroom) => total + classroom.studentCount,
     0,
   );
-  const activeStudents = studentRows.filter(
-    (item) => item.status !== "nao_acessou",
-  ).length;
-  const deliveredStudents = studentRows.filter((item) =>
-    ["entregue", "reflexao", "concluiu"].includes(item.status),
-  ).length;
-  const completedStudents = studentRows.filter(
-    (item) => item.status === "concluiu",
-  ).length;
+  const { activeStudents, deliveredStudents, completedStudents, reviewedStudents } =
+    computeExecutiveTotals(studentRows);
   const teacher = teachers[0];
 
   return (
@@ -105,6 +99,7 @@ export default async function GestorPage() {
         activeStudents,
         deliveredStudents,
         completedStudents,
+        reviewedStudents,
       }}
       students={studentRows}
       assignments={assignmentRows}

@@ -75,6 +75,7 @@ interface ExecutiveDashboardProps {
     activeStudents: number;
     deliveredStudents: number;
     completedStudents: number;
+    reviewedStudents: number;
   };
   students: Array<{
     id: string;
@@ -90,7 +91,6 @@ interface LearningCycleStats {
   reviewedStudents: number;
   publishedLessons: number;
   missionsInProgress: number;
-  recentEvents: string[];
 }
 
 const IMPLEMENTATION_PROGRESS = 75;
@@ -182,40 +182,13 @@ export function ExecutiveDashboard({
           engagement: percentage(activeCount, classroomStudents.length),
         };
       });
-      const recentEvents = studentStates
-        .flatMap(({ work }) => {
-          if (!work) return [];
-          const events: Array<{ at: string; label: string }> = [];
-          if (work.review) {
-            events.push({
-              at: work.review.reviewedAt,
-              label: "Avaliação registrada pelo professor",
-            });
-          }
-          if (work.reflectionRecordedAt) {
-            events.push({
-              at: work.reflectionRecordedAt,
-              label: "Ciclo de aprendizagem concluído por aluno",
-            });
-          }
-          if (work.productionDeliveredAt) {
-            events.push({
-              at: work.productionDeliveredAt,
-              label: "Nova produção entregue",
-            });
-          }
-          return events;
-        })
-        .sort((a, b) => b.at.localeCompare(a.at))
-        .slice(0, 3)
-        .map((event) => event.label);
-
       setLiveCycle({
         totals: {
           students: studentStates.length,
           activeStudents,
           deliveredStudents,
           completedStudents: deliveredStudents,
+          reviewedStudents,
         },
         classrooms: classroomRows,
         stats: {
@@ -232,7 +205,6 @@ export function ExecutiveDashboard({
           missionsInProgress: mergedAssignments.filter(
             (assignment) => assignment.status === "published",
           ).length,
-          recentEvents,
         },
       });
     };
@@ -252,14 +224,13 @@ export function ExecutiveDashboard({
   const classroomRows = liveCycle?.classrooms ?? classrooms;
   const cycleStats = liveCycle?.stats ?? {
     pendingReviews: initialTotals.completedStudents,
-    reviewedStudents: 0,
+    reviewedStudents: initialTotals.reviewedStudents,
     publishedLessons: new Set(
       assignments.map((item) => item.lessonId).filter(Boolean),
     ).size,
     missionsInProgress: assignments.filter(
       (item) => item.status === "published",
     ).length,
-    recentEvents: [],
   };
   const firstName = managerName.split(/\s+/).filter(Boolean)[0] ?? "Gestor";
   const greetingName = firstName.toLocaleLowerCase("pt-BR") === "direção" ? null : firstName;
@@ -581,44 +552,6 @@ function Overview({
             <StructureItem icon={Users} label={`${totals.students} alunos matriculados`} />
             <StructureItem icon={GraduationCap} label="Professor responsável vinculado" />
             <StructureItem icon={BookOpenCheck} label={subjectName} />
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-              Avaliação docente
-            </p>
-            <CardTitle className="mt-1">
-              {cycleStats.pendingReviews} entregas pendentes
-            </CardTitle>
-            <CardDescription>
-              Produções concluídas que ainda aguardam devolutiva humana.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader>
-            <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-              Evolução recente
-            </p>
-            <CardTitle className="mt-1">Movimentos do ciclo</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-3 text-sm">
-            {cycleStats.recentEvents.length > 0 ? (
-              cycleStats.recentEvents.map((event, index) => (
-                <div key={`${event}-${index}`} className="flex items-center gap-3">
-                  <span className="size-2 shrink-0 rounded-full bg-chart-2" />
-                  <span>{event}</span>
-                </div>
-              ))
-            ) : (
-              <p className="text-muted-foreground">
-                Novas entregas e avaliações aparecerão aqui.
-              </p>
-            )}
           </CardContent>
         </Card>
       </div>
