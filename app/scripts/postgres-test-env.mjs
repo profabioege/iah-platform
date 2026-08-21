@@ -126,13 +126,14 @@ export async function waitForReady(databaseUrl, { timeoutMs = 30_000, intervalMs
 
 /**
  * Papéis mínimos exigidos pelas migrations (0006/0007 fazem GRANT/REVOKE
- * para `service_role`, `anon`, `authenticated`). O Supabase já cria esses
- * papéis; este banco efêmero não tem Supabase, então criamos só os três
- * papéis vazios (sem LOGIN, sem privilégio nenhum) — nunca alteramos as
+ * para `service_role`, `anon`, `authenticated`; 0009 faz ALTER DEFAULT
+ * PRIVILEGES FOR ROLE `postgres`). O Supabase já cria esses papéis; este
+ * banco efêmero não tem Supabase, então criamos só os quatro papéis
+ * vazios (sem LOGIN, sem privilégio nenhum) — nunca alteramos as
  * migrations, nunca concedemos nada além do que elas mesmas concedem.
  */
 export async function bootstrapSupabaseRoles(client) {
-  const roles = ["service_role", "anon", "authenticated"];
+  const roles = ["service_role", "anon", "authenticated", "postgres"];
   for (const role of roles) {
     await client.query(
       `do $$ begin
