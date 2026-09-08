@@ -3,6 +3,6 @@
   <rect width="520" height="520" rx="112" fill="#07101d"/>
   <g transform="translate(50 48) scale(0.81)">
     <path d="M260 22 L30 498 M260 22 L490 498" fill="none" stroke="#ffffff" stroke-width="86" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M260 315 L355 500 L165 500 Z" fill="#00a9c6"/>
+    <path d="M260 315 L355 500 L165 500 Z" fill="#42e8f1"/>
   </g>
 </svg>
