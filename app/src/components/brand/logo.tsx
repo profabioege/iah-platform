@@ -49,6 +49,14 @@ export function Logo({
         ? "var(--iah-ink)"
         : undefined;
 
+  // Núcleo IAH: sempre --iah-cyan-400 (BRAND_GUIDELINES.md). Wordmark:
+  // --iah-teal-600 sobre fundo claro (primary/light), --iah-cyan-400
+  // sobre fundo escuro (reverse/dark/auto).
+  const wordmarkColor =
+    variant === "light" || variant === "primary"
+      ? "var(--iah-teal-600)"
+      : "var(--iah-cyan-400)";
+
   // Proporções reconstruídas a partir do arquivo oficial logoIAH1.png
   // fornecido pelo fundador em 19/07/2026. A versão anterior condensava
   // o conjunto e alterava de forma perceptível o A e o wordmark.
@@ -79,7 +87,7 @@ export function Logo({
       />
       <path
         d="M435 315 L530 500 L340 500 Z"
-        fill="#00a9c6"
+        fill="var(--iah-cyan-400)"
       />
 
       {/* H */}
@@ -96,7 +104,7 @@ export function Logo({
           fontSize="68"
           fontWeight="300"
           letterSpacing="30"
-          fill="#00a9c6"
+          fill={wordmarkColor}
         >
           EDUCACIONAL
         </text>

@@ -37,7 +37,7 @@ export default function OpengraphImage() {
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            <path d="M435 315 L530 500 L340 500 Z" fill="#00a9c6" />
+            <path d="M435 315 L530 500 L340 500 Z" fill="#42e8f1" />
             <rect x="730" y="20" width="90" height="480" rx="25" fill="#f4f8fc" />
             <rect x="990" y="20" width="90" height="480" rx="25" fill="#f4f8fc" />
             <rect x="775" y="200" width="260" height="95" fill="#f4f8fc" />

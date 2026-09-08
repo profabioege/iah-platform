@@ -48,7 +48,7 @@ export function BrandSymbol({
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <path d="M260 315 L355 500 L165 500 Z" fill="#00a9c6" />
+      <path d="M260 315 L355 500 L165 500 Z" fill="var(--iah-cyan-400)" />
     </svg>
   );
 }
