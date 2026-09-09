@@ -23,6 +23,12 @@
   --iah-navy-700: #0c1b2c;
   --iah-navy-600: #0e283d;
 
+  /* ------ Camada 1: cor — logotipo oficial ------
+     Cores medidas no vetor entregue pelo fundador em 08/09/2026. Uso
+     exclusivo do logotipo: não substituem a paleta de interface abaixo. */
+  --iah-brand-navy: #031d43; /* letras do logotipo sobre fundo claro */
+  --iah-brand-accent: #0093b0; /* Núcleo IAH e wordmark EDUCACIONAL */
+
   /* ------ Camada 1: cor — marca e acentos ------ */
   --iah-cyan-400: #42e8f1; /* cor primária da marca */
   --iah-cyan-300: #7cf2f8; /* hover do primário */

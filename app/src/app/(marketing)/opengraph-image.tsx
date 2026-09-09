@@ -1,5 +1,11 @@
 import { ImageResponse } from "next/og";
 
+import {
+  PATH_LETTERS,
+  PATH_TRIANGLE,
+  PATH_WORDMARK,
+  VIEWBOX_LOCKUP,
+} from "@/components/brand/official-paths";
 import { siteConfig } from "@/lib/site";
 
 export const alt = siteConfig.title;
@@ -25,26 +31,17 @@ export default function OpengraphImage() {
           fontFamily: "sans-serif",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          {/* Marca IAH — cópia da geometria master (brand/logo.tsx, M18.3); não redesenhar aqui */}
-          <svg width="165" height="78" viewBox="0 0 1100 520">
-            <rect x="20" y="20" width="90" height="480" rx="25" fill="#f4f8fc" />
+        <div style={{ display: "flex", alignItems: "center" }}>
+          {/* Marca IAH — mesmos paths do master (brand/logo.tsx); não redesenhar
+              aqui. Cores literais porque o next/og não resolve variáveis CSS. */}
+          <svg width="233" height="140" viewBox={VIEWBOX_LOCKUP}>
+            <path fill="#ffffff" fillRule="evenodd" d={PATH_LETTERS} />
             <path
-              d="M435 22 L205 498 M435 22 L665 498"
-              fill="none"
-              stroke="#f4f8fc"
-              strokeWidth="86"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+              fill="#0093b0"
+              fillRule="evenodd"
+              d={`${PATH_TRIANGLE} ${PATH_WORDMARK}`}
             />
-            <path d="M435 315 L530 500 L340 500 Z" fill="#00a9c6" />
-            <rect x="730" y="20" width="90" height="480" rx="25" fill="#f4f8fc" />
-            <rect x="990" y="20" width="90" height="480" rx="25" fill="#f4f8fc" />
-            <rect x="775" y="200" width="260" height="95" fill="#f4f8fc" />
           </svg>
-          <span style={{ fontSize: 22, letterSpacing: 6, color: "#42e8f1" }}>
-            EDUCACIONAL
-          </span>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
