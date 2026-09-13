@@ -32,15 +32,34 @@ export function resetTestEnv() {
   env.revalidated.length = 0;
 }
 
-/** Liga o modo REAL para o código sob teste (mesmas flags de `lib/auth-flags`). */
+/**
+ * Liga o modo REAL para o código sob teste — declaração explícita de
+ * `IAH_AUTH_MODE` mais a configuração completa que ela exige (mesmas
+ * regras de `lib/auth-flags`). Valores fictícios, nunca credenciais.
+ */
 export function enableRealMode() {
+  process.env.IAH_AUTH_MODE = "supabase";
   process.env.AUTH_SECRET = "test-auth-secret";
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.invalid";
   process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key";
 }
 
-/** Volta ao modo DEMONSTRAÇÃO (nenhuma variável definida). */
+/**
+ * Liga o modo DEMONSTRAÇÃO — também por declaração explícita: desde o
+ * hardening, ausência de variáveis significa INDISPONÍVEL, nunca demo.
+ */
 export function enableDemoMode() {
+  process.env.IAH_AUTH_MODE = "demo";
+  delete process.env.AUTH_SECRET;
+  delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+  delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+  delete process.env.GOOGLE_CLIENT_ID;
+  delete process.env.GOOGLE_CLIENT_SECRET;
+}
+
+/** Estado INDISPONÍVEL: nada declarado, nada configurado. */
+export function enableUnavailableMode() {
+  delete process.env.IAH_AUTH_MODE;
   delete process.env.AUTH_SECRET;
   delete process.env.NEXT_PUBLIC_SUPABASE_URL;
   delete process.env.SUPABASE_SERVICE_ROLE_KEY;

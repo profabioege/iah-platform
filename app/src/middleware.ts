@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import NextAuth from "next-auth";
 
 import { authConfig } from "@/auth.config";
-import { isAuthConfigured } from "@/lib/auth-flags";
+import { getAuthMode } from "@/lib/auth-flags";
 // Import direto do arquivo edge-safe — o barrel do módulo puxa
 // next/headers (session.ts), que não roda no middleware.
 import {
@@ -15,12 +15,17 @@ import type { Role } from "@/modules/workspace/domain/entities";
 /**
  * Middleware de rotas privadas da Plataforma.
  *
- * Com autenticação real configurada (Auth.js + Google), vale o fluxo de
- * sempre — o gate isAuthConfigured() vem ANTES de invocar o Auth.js
- * (sem AUTH_SECRET ele lança MissingSecret na entrada). Sem ela, vale o
- * Institutional Workspace (M15): toda rota da Plataforma exige a sessão
- * local simulada, e o papel limita o alcance. Landing, /demonstracao e
- * /entrar seguem públicas.
+ * Um caminho por modo declarado (`IAH_AUTH_MODE`, ver lib/auth-flags):
+ *
+ *  - `supabase`: fluxo do Auth.js. O gate vem ANTES de invocá-lo, pois
+ *    sem AUTH_SECRET ele lança MissingSecret na entrada.
+ *  - `demo`: Institutional Workspace (M15) — toda rota da Plataforma
+ *    exige a sessão local simulada, e o papel limita o alcance.
+ *  - indisponível: nenhuma rota privada é liberada. Um cookie de
+ *    demonstração remanescente NÃO vale aqui — é justamente o fallback
+ *    silencioso que este gate existe para impedir.
+ *
+ * Landing, /demonstracao e /entrar seguem públicas.
  */
 
 /**
@@ -44,7 +49,11 @@ const nextAuthMiddleware = NextAuth(authConfig).auth as unknown as (
 ) => Response | Promise<Response>;
 
 export default function middleware(request: NextRequest) {
-  if (isAuthConfigured()) return nextAuthMiddleware(request);
+  const mode = getAuthMode();
+  if (mode === "supabase") return nextAuthMiddleware(request);
+  if (mode !== "demo") {
+    return NextResponse.redirect(new URL("/entrar", request.url));
+  }
 
   const { pathname } = request.nextUrl;
   const userId = request.cookies.get(WORKSPACE_SESSION_COOKIE)?.value;
