@@ -26,7 +26,8 @@ export const metadata: Metadata = {
 };
 
 const ERROR_MESSAGES: Record<string, string> = {
-  credenciais: "E-mail ou senha inválidos.",
+  credenciais:
+    "E-mail ou senha incorretos. Verifique os dados e tente novamente.",
   sessao: "Sua sessão expirou — entre novamente.",
   indisponivel:
     "Não foi possível falar com o servidor de autenticação. Tente novamente em instantes.",
@@ -53,35 +54,34 @@ export default async function EntrarPage({
   const errorMessage = erro ? (ERROR_MESSAGES[erro] ?? ERROR_MESSAGES.credenciais) : null;
 
   return (
-    <div className="dark relative flex min-h-svh flex-col items-center justify-center overflow-hidden bg-background px-6 text-foreground">
-      {/* brilhos decorativos da marca */}
+    <div className="dark relative flex min-h-svh flex-col items-center justify-center overflow-hidden bg-background px-6 py-10 text-foreground">
+      {/* brilhos discretos da marca — só o ciano institucional */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -left-40 top-1/4 size-[32rem] rounded-full bg-primary/10 blur-3xl"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-40 bottom-0 size-[32rem] rounded-full bg-chart-2/10 blur-3xl"
+        className="pointer-events-none absolute -right-40 bottom-0 size-[28rem] rounded-full bg-primary/5 blur-3xl"
       />
 
-      <main className="relative flex w-full max-w-sm flex-col items-center gap-9 text-center">
-        <Logo variant="dark" wordmark className="h-28 w-auto" />
+      <main className="relative flex w-full max-w-sm flex-col items-center text-center">
+        <Logo variant="dark" wordmark className="h-16 w-auto sm:h-20" />
 
-        <div className="flex flex-col gap-2">
-          <h1 className="text-xl font-semibold tracking-tight">
-            Laboratório do Auditor
+        <div className="mt-8 flex flex-col gap-2 sm:mt-9">
+          <h1 className="text-balance text-2xl font-semibold tracking-tight">
+            Acesse o IAH Educacional
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Investigar, produzir e auditar a realidade — com método e uso
-            crítico da Inteligência Artificial.
+          <p className="text-balance text-sm leading-relaxed text-muted-foreground">
+            Entre com seu e-mail e senha para continuar.
           </p>
         </div>
 
         <form
-          className="flex w-full flex-col gap-3"
+          className="mt-7 flex w-full flex-col gap-4 rounded-[20px] border border-border bg-card/60 p-6 text-left sm:mt-8 sm:p-7"
           action={realMode ? credentialsLoginAction : demoLoginAction}
         >
-          <label className="flex flex-col gap-1.5 text-left">
+          <label className="flex flex-col gap-2">
             <span className="text-xs font-medium text-muted-foreground">
               E-mail
             </span>
@@ -90,6 +90,7 @@ export default async function EntrarPage({
               name="email"
               required
               autoComplete="email"
+              className="h-11 rounded-xl px-3.5"
               placeholder={
                 realMode
                   ? "voce@suaescola.edu.br"
@@ -97,7 +98,7 @@ export default async function EntrarPage({
               }
             />
           </label>
-          <label className="flex flex-col gap-1.5 text-left">
+          <label className="flex flex-col gap-2">
             <span className="text-xs font-medium text-muted-foreground">
               Senha
             </span>
@@ -106,20 +107,28 @@ export default async function EntrarPage({
               name="password"
               required
               autoComplete="current-password"
+              className="h-11 rounded-xl px-3.5"
               placeholder="••••••••"
             />
           </label>
           {errorMessage ? (
-            <p role="alert" className="text-sm text-destructive">
+            <p
+              role="alert"
+              className="rounded-xl border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-sm leading-relaxed text-destructive"
+            >
               {errorMessage}
             </p>
           ) : null}
-          <Button type="submit" size="lg" className="mt-1 w-full">
+          <Button
+            type="submit"
+            size="lg"
+            className="mt-1 h-11 w-full rounded-xl font-semibold"
+          >
             Entrar
             <ArrowRight className="size-4" />
           </Button>
           {realMode ? null : (
-            <p className="text-xs leading-relaxed text-muted-foreground">
+            <p className="border-t border-border pt-4 text-xs leading-relaxed text-muted-foreground">
               Ambiente de demonstração — contas simuladas do{" "}
               {WORKSPACE_INSTITUTION.name} (ex.: {WORKSPACE_TEACHER.email}),
               senha {WORKSPACE_DEMO_PASSWORD}.
@@ -129,13 +138,18 @@ export default async function EntrarPage({
 
         {realMode && isGoogleAuthConfigured() ? (
           <form
-            className="w-full"
+            className="mt-5 w-full"
             action={async () => {
               "use server";
               await signIn("google", { redirectTo: "/entrar" });
             }}
           >
-            <Button type="submit" variant="outline" size="lg" className="w-full">
+            <Button
+              type="submit"
+              variant="outline"
+              size="lg"
+              className="h-11 w-full rounded-xl"
+            >
               Entrar com Google
             </Button>
             <p className="mt-3 text-xs text-muted-foreground">
