@@ -1,12 +1,18 @@
 import { ImageResponse } from "next/og";
 
+import {
+  PATH_LETTER_A,
+  PATH_TRIANGLE,
+  VIEWBOX_SYMBOL,
+} from "@/components/brand/official-paths";
+
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
 
 /**
  * Apple touch icon (PNG 180×180, gerado no build) — Núcleo IAH sobre
- * navy, mesmo path do master `components/brand/symbol.tsx` (M18.3),
- * apenas escalado com margem. Não redesenhar: alterar sempre via master.
+ * navy, com os mesmos paths do master `components/brand/logo.tsx`.
+ * Cores literais porque o next/og não resolve variáveis CSS.
  */
 export default function AppleIcon() {
   return new ImageResponse(
@@ -18,19 +24,12 @@ export default function AppleIcon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: "#07101d",
+          backgroundColor: "#031d43",
         }}
       >
-        <svg width="132" height="132" viewBox="0 0 520 520">
-          <path
-            d="M260 22 L30 498 M260 22 L490 498"
-            fill="none"
-            stroke="#ffffff"
-            strokeWidth="86"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path d="M260 315 L355 500 L165 500 Z" fill="#00a9c6" />
+        <svg width="130" height="129" viewBox={VIEWBOX_SYMBOL}>
+          <path fill="#ffffff" fillRule="evenodd" d={PATH_LETTER_A} />
+          <path fill="#0093b0" fillRule="evenodd" d={PATH_TRIANGLE} />
         </svg>
       </div>
     ),
