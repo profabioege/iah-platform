@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { localMissionRepository } from "@/modules/library";
-import { isAuthConfigured } from "@/lib/auth-flags";
+import { requirePlatformDataMode } from "@/lib/platform-access";
 import { createLearningCycleService, getDefaultRepositories } from "@/modules/platform";
 import { getWorkspaceContext } from "@/modules/workspace";
 import { emptyStudentWork } from "@/modules/classroom";
@@ -24,6 +24,10 @@ export default async function MissaoDetalhePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  // Primeira instrução: nenhuma consulta a seed, sessão ou repositório
+  // pode acontecer antes da recusa no estado indisponível.
+  const mode = requirePlatformDataMode();
+
   const { id } = await params;
   const mission = await localMissionRepository.getById(id);
 
@@ -32,7 +36,7 @@ export default async function MissaoDetalhePage({
   const workspace = await getWorkspaceContext();
 
   let source: StudentWorkSource;
-  if (isAuthConfigured()) {
+  if (mode === "supabase") {
     const classroomId = workspace?.classrooms[0]?.id;
     const initialWork =
       workspace?.role === "student" && workspace.user.studentId && classroomId

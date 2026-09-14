@@ -14,7 +14,7 @@
 
 import { cookies } from "next/headers";
 
-import { isAuthConfigured } from "@/lib/auth-flags";
+import { getAuthMode } from "@/lib/auth-flags";
 
 import type { Role, WorkspaceUser } from "../domain/entities";
 import type { WorkspaceContext } from "../domain/workspace-context";
@@ -172,8 +172,19 @@ async function getRealWorkspaceContext(): Promise<WorkspaceContext | null> {
   };
 }
 
+/**
+ * Identidade do usuário da instância — a decisão tem TRÊS estados, não
+ * dois. No estado indisponível o cookie do Workspace não vale sessão:
+ * um cookie remanescente de uma demonstração daria identidade de
+ * professor semeado numa instalação comercial mal configurada. Só o
+ * modo `demo` declarado aceita esse cookie.
+ */
 export async function getWorkspaceUser(): Promise<WorkspaceUser | null> {
-  if (isAuthConfigured()) return getRealWorkspaceUser();
+  const mode = getAuthMode();
+  if (mode === "supabase") return getRealWorkspaceUser();
+
+  if (mode !== "demo") return null;
+
   const store = await cookies();
   const userId = store.get(WORKSPACE_SESSION_COOKIE)?.value;
   if (!userId) return null;
@@ -183,10 +194,15 @@ export async function getWorkspaceUser(): Promise<WorkspaceUser | null> {
 /**
  * Contexto pedagógico do usuário autenticado: Instituição, Ano Letivo,
  * perfil, permissões, Disciplinas e as Turmas relevantes ao papel.
+ * Mesma regra de três estados de `getWorkspaceUser()`.
  */
 export async function getWorkspaceContext(): Promise<WorkspaceContext | null> {
-  if (isAuthConfigured()) return getRealWorkspaceContext();
+  const mode = getAuthMode();
+  if (mode === "supabase") return getRealWorkspaceContext();
 
+  // `getWorkspaceUser()` já aplica a regra dos três estados (e mantém a
+  // rota dinâmica): fora do modo `demo` devolve null e o contexto cai
+  // junto — nenhum dado fictício é montado.
   const user = await getWorkspaceUser();
   if (!user) return null;
 

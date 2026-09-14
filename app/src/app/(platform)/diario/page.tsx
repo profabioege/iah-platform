@@ -1,5 +1,5 @@
 import { localMissionRepository } from "@/modules/library";
-import { isAuthConfigured } from "@/lib/auth-flags";
+import { requirePlatformDataMode } from "@/lib/platform-access";
 import { getDefaultRepositories } from "@/modules/platform";
 import { getWorkspaceContext } from "@/modules/workspace";
 
@@ -12,6 +12,10 @@ import { DiarioList, type DiarioSource, type MissionRef } from "./diario-list";
  * demonstração, a listagem (cliente) lê do dispositivo.
  */
 export default async function DiarioPage() {
+  // Primeira instrução: nenhuma consulta a seed, sessão ou repositório
+  // pode acontecer antes da recusa no estado indisponível.
+  const mode = requirePlatformDataMode();
+
   const missions = await localMissionRepository.list();
   const refs: MissionRef[] = missions.map((m) => ({
     id: m.id,
@@ -22,7 +26,7 @@ export default async function DiarioPage() {
   const workspace = await getWorkspaceContext();
 
   let source: DiarioSource;
-  if (isAuthConfigured()) {
+  if (mode === "supabase") {
     const studentId = workspace?.role === "student" ? workspace.user.studentId : null;
     const reflections =
       workspace && studentId
