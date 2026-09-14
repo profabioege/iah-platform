@@ -43,8 +43,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           .eq("status", "active")
           .maybeSingle();
         if (error) {
+          // Falha de INFRAESTRUTURA não é credencial inválida: devolver
+          // null aqui faria o banco fora do ar aparecer para o usuário
+          // como "e-mail ou senha incorretos". Lançar mantém o erro fora
+          // da família CredentialsSignin, e a tela mostra indisponível.
           console.error("[auth] Falha ao consultar usuário.", error.message);
-          return null;
+          throw new Error("auth_backend_unavailable");
         }
         if (!user?.password_hash) return null;
         if (!verifyPassword(password, user.password_hash as string)) {

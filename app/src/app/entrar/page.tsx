@@ -6,15 +6,16 @@ import { ArrowRight } from "lucide-react";
 import { AuthError } from "next-auth";
 
 import { signIn } from "@/auth";
-import { isAuthConfigured, isGoogleAuthConfigured } from "@/lib/auth-flags";
+import {
+  getAuthMode,
+  isGoogleAuthConfigured,
+  logAuthModeDiagnosticsOnce,
+} from "@/lib/auth-flags";
 import {
   getWorkspaceAuthProvider,
   getWorkspaceUser,
   roleHome,
-  WORKSPACE_DEMO_PASSWORD,
-  WORKSPACE_INSTITUTION,
   WORKSPACE_SESSION_COOKIE,
-  WORKSPACE_TEACHER,
 } from "@/modules/workspace";
 import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
@@ -26,62 +27,94 @@ export const metadata: Metadata = {
 };
 
 const ERROR_MESSAGES: Record<string, string> = {
-  credenciais: "E-mail ou senha inválidos.",
+  credenciais:
+    "E-mail ou senha incorretos. Verifique os dados e tente novamente.",
   sessao: "Sua sessão expirou — entre novamente.",
   indisponivel:
     "Não foi possível falar com o servidor de autenticação. Tente novamente em instantes.",
 };
 
+/** Mensagem única do estado indisponível — neutra, sem pista de configuração. */
+const UNAVAILABLE_MESSAGE =
+  "A plataforma está temporariamente indisponível. Tente novamente mais tarde.";
+
+// Fora do render de propósito: em desenvolvimento o Next reencaminha o
+// console do servidor para o navegador, e o diagnóstico nomeia
+// variáveis de ambiente. Aqui ele fica só no terminal do servidor.
+logAuthModeDiagnosticsOnce();
+
 /**
  * Entrada da Plataforma — login institucional: e-mail + senha, papel
  * identificado automaticamente pelo vínculo persistido (nunca escolhido
- * na tela). No modo REAL (M22), as credenciais são verificadas contra o
- * banco via Auth.js (Credentials; Google opcional, D-025) e NENHUMA
- * senha aparece na tela. No modo demonstração local, vale o Workspace
- * simulado de sempre (M15), com as contas fictícias exibidas.
+ * na tela). NENHUMA senha aparece na tela em modo algum.
+ *
+ * O modo vem declarado em `IAH_AUTH_MODE` (lib/auth-flags):
+ *  - `supabase`: credenciais verificadas contra o banco via Auth.js
+ *    (Credentials; Google só se realmente configurado, D-025);
+ *  - `demo`: Workspace local simulado (M15), identificado apenas pelo
+ *    selo "Ambiente de demonstração" — sem exemplo de conta nem senha;
+ *  - indisponível: sem formulário e sem Google, só a mensagem neutra.
+ *    O diagnóstico com nomes de variáveis fica no log do servidor e
+ *    nunca é enviado ao navegador.
  */
 export default async function EntrarPage({
   searchParams,
 }: {
   searchParams: Promise<{ erro?: string }>;
 }) {
-  const realMode = isAuthConfigured();
-  const user = await getWorkspaceUser();
+  const mode = getAuthMode();
+  const realMode = mode === "supabase";
+  const demoMode = mode === "demo";
+
+  // Sessão já ativa leva direto à área do papel. No estado indisponível
+  // nem se consulta: um cookie de demonstração remanescente não pode
+  // valer como sessão (`getWorkspaceUser` resolve Auth.js no modo real e
+  // o cookie do Workspace no modo demonstração).
+  const user = mode === "unavailable" ? null : await getWorkspaceUser();
   if (user) redirect(roleHome(user.role));
 
   const { erro } = await searchParams;
   const errorMessage = erro ? (ERROR_MESSAGES[erro] ?? ERROR_MESSAGES.credenciais) : null;
 
   return (
-    <div className="dark relative flex min-h-svh flex-col items-center justify-center overflow-hidden bg-background px-6 text-foreground">
-      {/* brilhos decorativos da marca */}
+    <div className="dark relative flex min-h-svh flex-col items-center justify-center overflow-hidden bg-background px-6 py-10 text-foreground">
+      {/* brilhos discretos da marca — só o ciano institucional */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -left-40 top-1/4 size-[32rem] rounded-full bg-primary/10 blur-3xl"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-40 bottom-0 size-[32rem] rounded-full bg-chart-2/10 blur-3xl"
+        className="pointer-events-none absolute -right-40 bottom-0 size-[28rem] rounded-full bg-primary/5 blur-3xl"
       />
 
-      <main className="relative flex w-full max-w-sm flex-col items-center gap-9 text-center">
-        <Logo variant="dark" wordmark className="h-28 w-auto" />
+      <main className="relative flex w-full max-w-sm flex-col items-center text-center">
+        <Logo variant="dark" wordmark className="h-16 w-auto sm:h-20" />
 
-        <div className="flex flex-col gap-2">
-          <h1 className="text-xl font-semibold tracking-tight">
-            Laboratório do Auditor
+        <div className="mt-8 flex flex-col gap-2 sm:mt-9">
+          <h1 className="text-balance text-2xl font-semibold tracking-tight">
+            Acesse o IAH Educacional
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Investigar, produzir e auditar a realidade — com método e uso
-            crítico da Inteligência Artificial.
+          <p className="text-balance text-sm leading-relaxed text-muted-foreground">
+            Entre com seu e-mail e senha para continuar.
           </p>
         </div>
 
+        {mode === "unavailable" ? (
+          <div className="mt-7 w-full rounded-[20px] border border-border bg-card/60 p-6 text-left sm:mt-8 sm:p-7">
+            <p
+              role="status"
+              className="text-sm leading-relaxed text-muted-foreground"
+            >
+              {UNAVAILABLE_MESSAGE}
+            </p>
+          </div>
+        ) : (
         <form
-          className="flex w-full flex-col gap-3"
+          className="mt-7 flex w-full flex-col gap-4 rounded-[20px] border border-border bg-card/60 p-6 text-left sm:mt-8 sm:p-7"
           action={realMode ? credentialsLoginAction : demoLoginAction}
         >
-          <label className="flex flex-col gap-1.5 text-left">
+          <label className="flex flex-col gap-2">
             <span className="text-xs font-medium text-muted-foreground">
               E-mail
             </span>
@@ -90,14 +123,11 @@ export default async function EntrarPage({
               name="email"
               required
               autoComplete="email"
-              placeholder={
-                realMode
-                  ? "voce@suaescola.edu.br"
-                  : `voce@${WORKSPACE_INSTITUTION.domain}`
-              }
+              className="h-11 rounded-xl px-3.5"
+              placeholder="voce@suaescola.edu.br"
             />
           </label>
-          <label className="flex flex-col gap-1.5 text-left">
+          <label className="flex flex-col gap-2">
             <span className="text-xs font-medium text-muted-foreground">
               Senha
             </span>
@@ -106,36 +136,51 @@ export default async function EntrarPage({
               name="password"
               required
               autoComplete="current-password"
+              className="h-11 rounded-xl px-3.5"
               placeholder="••••••••"
             />
           </label>
           {errorMessage ? (
-            <p role="alert" className="text-sm text-destructive">
+            <p
+              role="alert"
+              className="rounded-xl border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-sm leading-relaxed text-destructive"
+            >
               {errorMessage}
             </p>
           ) : null}
-          <Button type="submit" size="lg" className="mt-1 w-full">
+          <Button
+            type="submit"
+            size="lg"
+            className="mt-1 h-11 w-full rounded-xl font-semibold"
+          >
             Entrar
             <ArrowRight className="size-4" />
           </Button>
-          {realMode ? null : (
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              Ambiente de demonstração — contas simuladas do{" "}
-              {WORKSPACE_INSTITUTION.name} (ex.: {WORKSPACE_TEACHER.email}),
-              senha {WORKSPACE_DEMO_PASSWORD}.
+          {demoMode ? (
+            // Selo apenas — nenhuma conta de exemplo, nenhuma senha. As
+            // contas fictícias seguem existindo no seed, para os testes e
+            // para quem apresenta a demonstração.
+            <p className="border-t border-border pt-4 text-xs leading-relaxed text-muted-foreground">
+              Ambiente de demonstração
             </p>
-          )}
+          ) : null}
         </form>
+        )}
 
         {realMode && isGoogleAuthConfigured() ? (
           <form
-            className="w-full"
+            className="mt-5 w-full"
             action={async () => {
               "use server";
               await signIn("google", { redirectTo: "/entrar" });
             }}
           >
-            <Button type="submit" variant="outline" size="lg" className="w-full">
+            <Button
+              type="submit"
+              variant="outline"
+              size="lg"
+              className="h-11 w-full rounded-xl"
+            >
               Entrar com Google
             </Button>
             <p className="mt-3 text-xs text-muted-foreground">
@@ -154,6 +199,9 @@ export default async function EntrarPage({
  */
 async function credentialsLoginAction(formData: FormData) {
   "use server";
+  // A Server Action é um endpoint próprio: o modo é reconferido aqui,
+  // não basta a tela não ter renderizado o formulário.
+  if (getAuthMode() !== "supabase") redirect("/entrar?erro=indisponivel");
   try {
     await signIn("credentials", {
       email: String(formData.get("email") ?? ""),
@@ -176,6 +224,9 @@ async function credentialsLoginAction(formData: FormData) {
 /** Login do modo demonstração (Workspace local, M15). */
 async function demoLoginAction(formData: FormData) {
   "use server";
+  // Só com `IAH_AUTH_MODE=demo` declarado. Sem esta reconferência, um
+  // POST direto reabriria o provider simulado numa instalação comercial.
+  if (getAuthMode() !== "demo") redirect("/entrar?erro=indisponivel");
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
 

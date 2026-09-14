@@ -1,5 +1,5 @@
 import { localMissionRepository } from "@/modules/library";
-import { isAuthConfigured } from "@/lib/auth-flags";
+import { requirePlatformDataMode } from "@/lib/platform-access";
 import { getWorkspaceContext } from "@/modules/workspace";
 import { createLearningCycleService, getDefaultRepositories } from "@/modules/platform";
 import type { StudentWork } from "@/modules/classroom";
@@ -18,6 +18,10 @@ import { DashboardHome, type DashboardMission, type DashboardSource } from "./da
  * Lesson publicada para ela.
  */
 export default async function DashboardPage() {
+  // Primeira instrução: nenhuma consulta a seed, sessão ou repositório
+  // pode acontecer antes da recusa no estado indisponível.
+  const mode = requirePlatformDataMode();
+
   const missions = await localMissionRepository.list();
 
   const items: DashboardMission[] = missions.map((mission) => ({
@@ -41,7 +45,7 @@ export default async function DashboardPage() {
       : [];
 
   let source: DashboardSource;
-  if (isAuthConfigured()) {
+  if (mode === "supabase") {
     if (workspace?.role === "student" && workspace.user.studentId && classroomId) {
       const service = createLearningCycleService(getDefaultRepositories());
       const availableMissionIds = new Set(

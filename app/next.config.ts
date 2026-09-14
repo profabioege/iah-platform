@@ -11,8 +11,13 @@ const nextConfig: NextConfig = {
     // "use client" que precisam saber real×demonstração (ex.: Lesson,
     // modules/lesson) não têm acesso a AUTH_SECRET/SUPABASE_SERVICE_ROLE_KEY
     // (não prefixados com NEXT_PUBLIC_, corretamente fora do bundle).
+    //
+    // Espelha a MESMA regra do servidor: modo `supabase` declarado E
+    // configuração completa. Escolher FONTE DE DADOS é o único uso deste
+    // espelho — autenticação nunca é decidida no navegador.
     NEXT_PUBLIC_IAH_REAL_MODE: String(
-      Boolean(process.env.AUTH_SECRET) &&
+      (process.env.IAH_AUTH_MODE ?? "").trim().toLowerCase() === "supabase" &&
+        Boolean(process.env.AUTH_SECRET) &&
         Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
         Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
     ),

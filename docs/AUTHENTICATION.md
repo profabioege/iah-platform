@@ -4,20 +4,26 @@ Login institucional, sessão, gates por papel e os dois modos de operação da i
 
 > **Documento reescrito.** A versão anterior descrevia apenas o login Google e o provisionamento automático do professor do Colégio Beryon, como se fosse o único caminho. Desde a M22 o caminho principal é **e-mail + senha (Auth.js Credentials) contra o banco**; o Google é opcional e pode nunca ser configurado.
 
-## Dois modos, uma única flag
+## Modos de autenticação
 
-`isAuthConfigured()` ([auth-flags.ts](../app/src/lib/auth-flags.ts)) decide o modo da instância inteira — autenticação **e** persistência juntas, nunca uma sem a outra:
+O modo é **declarado** em `IAH_AUTH_MODE` e resolvido por `getAuthMode()` ([auth-flags.ts](../app/src/lib/auth-flags.ts)) — nunca inferido da presença ou ausência de variáveis. Ele decide a instância inteira: autenticação **e** persistência juntas, nunca uma sem a outra.
 
-| | Modo REAL | Modo DEMONSTRAÇÃO |
-|---|---|---|
-| Ativa quando | `AUTH_SECRET` + `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` definidas | nenhuma das três definida |
-| Login | Auth.js Credentials contra `users.password_hash` (scrypt) | seed em memória, senha única |
-| Senha na tela `/entrar` | **não aparece** | aparece (é uma barreira de demonstração, não segurança) |
-| Sessão | JWT assinado (`platformUserId`, `institutionId`, `role`) | cookie httpOnly com o id do usuário |
-| Dados | Supabase/PostgreSQL, server-side, service role | seeds em memória + `localStorage` |
-| Entre navegadores | ✅ sincroniza | ❌ cada navegador é uma ilha |
+| | `IAH_AUTH_MODE=supabase` | `IAH_AUTH_MODE=demo` | INDISPONÍVEL |
+|---|---|---|---|
+| Destino | instalação **comercial** | ambiente **controlado** (apresentação, avaliação interna) | ausente, valor inválido, ou `supabase` incompleto |
+| Exige | `AUTH_SECRET` + `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` | nada além da declaração | — |
+| Login | Auth.js Credentials contra `users.password_hash` (scrypt) | seed em memória, senha única | **nenhum** — sem formulário |
+| Senha na tela `/entrar` | **não aparece** | **não aparece** (só o selo "Ambiente de demonstração") | não há formulário |
+| Login Google | só se `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` | **nunca** | **nunca** |
+| Sessão | JWT assinado (`platformUserId`, `institutionId`, `role`) | cookie httpOnly com o id do usuário | nenhuma; rota privada volta a `/entrar` |
+| Dados | Supabase/PostgreSQL, server-side, service role | seeds em memória + `localStorage` | — |
+| Entre navegadores | ✅ sincroniza | ❌ cada navegador é uma ilha | — |
 
-Configuração **parcial** nunca é aceita: `getPlatformConfigError()` devolve um diagnóstico nomeando o que falta, e as telas o exibem. Nunca há fallback silencioso para seed.
+**Regra que nenhuma mudança pode quebrar:** configuração ausente, parcial ou inválida **nunca** habilita o modo demonstração, e o modo real **nunca** volta ao provider local depois de uma falha. Nesses casos a tela mostra apenas a mensagem neutra "A plataforma está temporariamente indisponível. Tente novamente mais tarde.", sem citar variável alguma; `getPlatformConfigError()` nomeia o que falta **somente no log do servidor**.
+
+As contas fictícias do modo demonstração continuam no seed — para os testes e para quem apresenta —, mas nenhuma aparece na tela.
+
+Falha de **infraestrutura** (banco fora do ar) não é apresentada como credencial incorreta: `authorize()` lança em vez de devolver `null`, e a tela mostra a mensagem de indisponibilidade.
 
 ## Arquitetura
 

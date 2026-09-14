@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { auth } from "@/auth";
-import { isAuthConfigured } from "@/lib/auth-flags";
+import { requirePlatformDataMode } from "@/lib/platform-access";
 import { getWorkspaceUser } from "@/modules/workspace";
 
 import { LessonList } from "./lesson-list";
@@ -42,7 +42,7 @@ export default async function AulasPage() {
 }
 
 async function resolveAuthor(): Promise<string> {
-  if (isAuthConfigured()) {
+  if (requirePlatformDataMode() === "supabase") {
     const session = await auth();
     if (session?.user?.name) return session.user.name;
     if (session?.user?.email) return session.user.email;

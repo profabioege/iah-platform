@@ -88,10 +88,16 @@ export const authConfig = {
     },
 
     /**
-     * Porta das rotas privadas. Sem o modo real configurado, a barreira
-     * do Institutional Workspace (middleware) cuida do acesso; com ele,
-     * exige sessão E aplica o gate por papel, sempre lido do vínculo
-     * persistido (token), nunca do cliente.
+     * Porta das rotas privadas do modo real: exige sessão E aplica o
+     * gate por papel, sempre lido do vínculo persistido (token), nunca
+     * do cliente.
+     *
+     * Fora do modo `supabase` esta porta NEGA. Ela só é alcançada pelo
+     * middleware, que hoje invoca o Auth.js apenas nesse modo — mas uma
+     * fronteira de autorização não pode ficar permissiva apoiada em
+     * quem a chama: `return true` aqui liberaria toda rota privada se
+     * um roteamento futuro passasse por ela em demonstração ou com a
+     * instância indisponível.
      *
      * A decisão de acesso é uma ALLOWLIST: um papel só entra numa área
      * se estiver escrito em `AREA_ROLES`. Papel ausente, desconhecido,
@@ -101,7 +107,7 @@ export const authConfig = {
      * e teria dado acesso silencioso a papéis administrativos novos.
      */
     authorized({ auth, request }) {
-      if (!isAuthConfigured()) return true;
+      if (!isAuthConfigured()) return false;
       const user = auth?.user as
         | { role?: string }
         | undefined;
