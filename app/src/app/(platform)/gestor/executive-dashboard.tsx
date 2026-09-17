@@ -42,7 +42,7 @@ import {
   type MissionAssignment,
 } from "@/modules/platform";
 
-type ExecutiveView =
+export type ExecutiveView =
   | "overview"
   | "implementation"
   | "teachers"
@@ -59,6 +59,8 @@ interface ClassroomRow {
 }
 
 interface ExecutiveDashboardProps {
+  /** Visão aberta ao carregar — permite chegar a "Professores" e "Missões" pelo menu. */
+  initialView?: ExecutiveView;
   institutionId: string;
   institutionName: string;
   academicYear: string;
@@ -114,6 +116,7 @@ const VIEW_ICON: Record<ExecutiveView, typeof LayoutDashboard> = {
 };
 
 export function ExecutiveDashboard({
+  initialView = "overview",
   institutionId,
   institutionName,
   academicYear,
@@ -125,7 +128,7 @@ export function ExecutiveDashboard({
   students,
   assignments,
 }: ExecutiveDashboardProps) {
-  const [view, setView] = useState<ExecutiveView>("overview");
+  const [view, setView] = useState<ExecutiveView>(initialView);
   const [liveCycle, setLiveCycle] = useState<{
     totals: ExecutiveDashboardProps["totals"];
     classrooms: ClassroomRow[];
@@ -525,8 +528,8 @@ function Overview({
               <CardTitle className="mt-1">Como estão os alunos</CardTitle>
               <CardDescription>Leitura agregada do ciclo atual, sem exposição individual.</CardDescription>
             </div>
-            <Link href="/professor/turmas" className={buttonVariants({ variant: "ghost", size: "sm" })}>
-              Abrir acompanhamento <ArrowRight className="size-4" />
+            <Link href="/gestor/sondagens" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+              Ver sondagem diagnóstica <ArrowRight className="size-4" />
             </Link>
           </CardHeader>
           <CardContent className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
@@ -612,8 +615,8 @@ function FocusedView({
         ["Disciplina", subjectName],
         ["Situação", "Em operação"],
       ],
-      href: "/professor",
-      action: "Abrir Painel do Professor",
+      href: null,
+      action: null,
     },
     students: {
       badge: `Alunos · ${totals.activeStudents} ativos`,
@@ -627,8 +630,8 @@ function FocusedView({
         ["Avaliações registradas", String(cycleStats.reviewedStudents)],
         ["Ciclo completo", `${completionRate}%`],
       ],
-      href: "/professor/turmas",
-      action: "Abrir acompanhamento pedagógico",
+      href: "/gestor/sondagens",
+      action: "Ver sondagem diagnóstica",
     },
     classes: {
       badge: `Turmas · ${classrooms.length} configuradas`,
@@ -639,8 +642,8 @@ function FocusedView({
         classroom.name,
         `${classroom.engagement}% · ${classroom.activeCount} de ${classroom.studentCount} ativos`,
       ]),
-      href: "/professor/turmas",
-      action: "Abrir turmas",
+      href: null,
+      action: null,
     },
     discipline: {
       badge: "Disciplina · Em operação",
@@ -653,8 +656,8 @@ function FocusedView({
         ["Missions em andamento", String(cycleStats.missionsInProgress)],
         ["Turmas alcançadas", String(classrooms.length)],
       ],
-      href: "/professor/curriculo",
-      action: "Abrir Currículo Vivo",
+      href: null,
+      action: null,
     },
   }[view];
 
@@ -665,9 +668,12 @@ function FocusedView({
           <Badge className="bg-primary/15 text-primary" variant="secondary">{content.badge}</Badge>
           <div><CardTitle className="text-xl md:text-2xl">{content.title}</CardTitle><CardDescription className="mt-1 max-w-3xl">{content.description}</CardDescription></div>
         </div>
-        <Link href={content.href} className={buttonVariants({ variant: "outline" })}>
-          {content.action} <ArrowRight className="size-4" />
-        </Link>
+        {/* Só destinos da área do gestor: as telas do professor não são acessíveis a este papel. */}
+        {content.href ? (
+          <Link href={content.href} className={buttonVariants({ variant: "outline" })}>
+            {content.action} <ArrowRight className="size-4" />
+          </Link>
+        ) : null}
       </CardHeader>
       <CardContent className="divide-y divide-border">
         {content.rows.map(([label, value]) => (

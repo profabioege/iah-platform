@@ -60,12 +60,19 @@ export const DEMO_ACADEMIC_YEAR: AcademicYear = {
   status: "active",
 };
 
-/** Professor principal da primeira implantação — usuário real do Instituto Horizonte. */
+/**
+ * Professor principal da demonstração. Candidata de apresentação: nenhuma
+ * tela do modo demo exibe nome ou sobrenome do fundador — o professor é
+ * rotulado como fictício, no mesmo padrão dos alunos. Os ids internos
+ * (`teacher-fabio`/`user-fabio`) não aparecem na interface e ficam como
+ * estão para não mexer nos testes de acesso. O seed do banco real
+ * (`db/seed/seed-demo.mjs`) não faz parte do modo demo e não foi alterado.
+ */
 export const DEMO_TEACHER: Teacher = {
   id: "teacher-fabio",
   institutionId: DEMO_INSTITUTION.id,
-  name: "Fabio Ege",
-  email: `fabio.ege@${DEMO_INSTITUTION.domain}`,
+  name: "Professor(a) de demonstração",
+  email: `professor@${DEMO_INSTITUTION.domain}`,
 };
 
 const CLASSROOM_LABELS = [

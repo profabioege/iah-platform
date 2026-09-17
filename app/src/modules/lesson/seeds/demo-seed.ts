@@ -15,7 +15,7 @@ import type { Lesson } from "../domain/lesson";
  */
 export const DEMO_LESSON: Lesson = {
   id: "lesson-horizonte-fabrica-noticias-1em-a",
-  author: "Fabio Ege",
+  author: "Professor(a) de demonstração",
   grade: "1º ano E.M.",
   classroomId: "class-1em-a",
   classroomLabel: "1º EM A",

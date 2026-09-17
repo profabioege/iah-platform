@@ -1,0 +1,16 @@
+/**
+ * Flags de funcionalidade em avaliação (independentes do modo real ×
+ * demonstração de `lib/auth-flags.ts`). `NEXT_PUBLIC_*` já é inlinado
+ * pelo Next.js tanto em componentes de servidor quanto de cliente —
+ * sem precisar do espelho via `next.config.ts` usado para segredos.
+ */
+
+/**
+ * DocentIAH — Planejador Conversacional. `false`/ausente: a home do
+ * DocentIAH continua a grade de tarefas atual. `true`: a entrada vira o
+ * chat guiado. Rollback é só desligar — nenhum código novo entra em
+ * produção quando ausente.
+ */
+export function isDocentiahConversationalPlannerEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_FEATURE_DOCENTIAH_CONVERSATIONAL_PLANNER === "true";
+}

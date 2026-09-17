@@ -6,6 +6,7 @@ import {
   Building2,
   CalendarDays,
   CircleUser,
+  ClipboardCheck,
   ClipboardList,
   FlaskConical,
   FolderKanban,
@@ -45,13 +46,17 @@ type MenuItem = { title: string; icon: typeof LayoutDashboard; href?: string };
  * (autenticação real ativa, sessão gerida pelo Auth.js), vale o menu
  * completo de sempre.
  */
+// Candidata de apresentação: o menu do professor aponta só para rotas da
+// área `/professor` — `/dashboard`, `/missoes` e `/diario` são do aluno e o
+// middleware devolveria o professor ao próprio painel.
 const TEACHER_MENU: MenuItem[] = [
-  { title: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-  { title: "Missões", icon: Rocket, href: "/missoes" },
-  { title: "Professor", icon: GraduationCap, href: "/professor" },
+  { title: "Painel do Professor", icon: LayoutDashboard, href: "/professor" },
+  { title: "Turmas", icon: GraduationCap, href: "/professor/turmas" },
+  { title: "Missões", icon: Rocket, href: "/professor/estudio" },
+  { title: "DocentIAH", icon: Sparkles, href: "/professor/docente-iah" },
+  { title: "Sondagens", icon: ClipboardList, href: "/professor/avaliacoes" },
   { title: "Laboratório", icon: FlaskConical },
   { title: "Biblioteca", icon: Library },
-  { title: "Diário do Auditor", icon: NotebookPen, href: "/diario" },
   { title: "Projetos", icon: FolderKanban },
   { title: "Mentor IAH", icon: Sparkles },
   { title: "Agenda", icon: CalendarDays },
@@ -62,6 +67,7 @@ const STUDENT_MENU: MenuItem[] = [
   { title: "Minha Aula", icon: LayoutDashboard, href: "/dashboard" },
   { title: "Minha Missão", icon: Rocket, href: "/missoes" },
   { title: "Diário do Auditor", icon: NotebookPen, href: "/diario" },
+  { title: "Sondagens", icon: ClipboardList, href: "/dashboard/sondagens" },
   { title: "Meu Portfólio", icon: FolderKanban },
   { title: "Meu Histórico", icon: History },
   { title: "Meu Feedback", icon: MessageSquareText },
@@ -74,8 +80,11 @@ const ADMIN_MENU: MenuItem[] = [
     icon: ClipboardList,
     href: "/gestor/implantacao",
   },
-  { title: "Professor", icon: GraduationCap, href: "/professor" },
-  { title: "Missões", icon: Rocket, href: "/missoes" },
+  // Visões do próprio Painel do Gestor — `/professor` e `/missoes` são de
+  // outros papéis e o middleware devolveria o gestor ao painel.
+  { title: "Professores", icon: GraduationCap, href: "/gestor?visao=professores" },
+  { title: "Missões", icon: Rocket, href: "/gestor?visao=missoes" },
+  { title: "Sondagens", icon: ClipboardCheck, href: "/gestor/sondagens" },
   { title: "Agenda", icon: CalendarDays },
   { title: "Perfil", icon: CircleUser },
 ];
@@ -116,7 +125,7 @@ export function AppSidebar({
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
         <Link
-          href={role === "admin" ? "/gestor" : "/dashboard"}
+          href={role === "admin" ? "/gestor" : role === "teacher" ? "/professor" : "/dashboard"}
           className="flex items-center gap-3 px-2 py-2.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
           aria-label="IAH Educacional — ir para a página inicial"
         >

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { getWorkspaceContext } from "@/modules/workspace";
 import { getDefaultRepositories } from "@/modules/platform";
 
-import { ExecutiveDashboard } from "./executive-dashboard";
+import { ExecutiveDashboard, type ExecutiveView } from "./executive-dashboard";
 import { computeExecutiveTotals } from "./executive-totals";
 
 export const metadata: Metadata = {
@@ -18,7 +18,19 @@ export const metadata: Metadata = {
  * pelos fluxos Professor e Aluno; o adapter local da M21 sobrepõe apenas as
  * transições realizadas no navegador demonstrativo.
  */
-export default async function GestorPage() {
+/** `?visao=` usado pelos itens "Professores" e "Missões" do menu do gestor. */
+const VIEW_BY_PARAM: Record<string, ExecutiveView> = {
+  professores: "teachers",
+  missoes: "discipline",
+};
+
+export default async function GestorPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ visao?: string }>;
+}) {
+  const { visao } = await searchParams;
+  const initialView = (visao && VIEW_BY_PARAM[visao]) || "overview";
   const context = await getWorkspaceContext();
   if (!context) return null; // middleware garante sessão; guarda defensiva
   const repositories = getDefaultRepositories();
@@ -83,6 +95,8 @@ export default async function GestorPage() {
 
   return (
     <ExecutiveDashboard
+      key={initialView}
+      initialView={initialView}
       institutionId={context.institution.id}
       institutionName={context.institution.name}
       academicYear={context.schoolYear.label}
