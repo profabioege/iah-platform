@@ -7,6 +7,7 @@ import { Copy, Plus } from "lucide-react";
 import {
   createEmptyStudioMission,
   getMissionStudioRepository,
+  seedLocalMissionStudio,
   STATUS_LABEL,
   type StudioMission,
   type StudioMissionStatus,
@@ -30,7 +31,14 @@ const STATUS_BADGE: Record<StudioMissionStatus, string> = {
  * dispositivo (rotulado), com filtros e pesquisa. Cada linha é UMA
  * versão (v1, v2…) de uma linhagem, transparente por design.
  */
-export function MissionLibrary({ author }: { author: string }) {
+export function MissionLibrary({
+  author,
+  demoSeed = [],
+}: {
+  author: string;
+  /** Missões semeadas pelo servidor — só no modo demo (vazio fora dele). */
+  demoSeed?: StudioMission[];
+}) {
   const router = useRouter();
   const repository = getMissionStudioRepository();
 
@@ -43,8 +51,10 @@ export function MissionLibrary({ author }: { author: string }) {
   const [status, setStatus] = React.useState("");
 
   const reload = React.useCallback(() => {
-    void repository.list().then(setMissions);
-  }, [repository]);
+    void seedLocalMissionStudio(demoSeed)
+      .then(() => repository.list())
+      .then(setMissions);
+  }, [repository, demoSeed]);
 
   React.useEffect(reload, [reload]);
 

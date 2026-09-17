@@ -35,6 +35,7 @@ import type {
   Student,
   Teacher,
 } from "../domain/entities";
+import type { MissionAssignment } from "../domain/mission-delivery";
 import type { StudentMissionStatus } from "@/modules/classroom";
 
 export const DEMO_INSTITUTION: Institution = {
@@ -164,6 +165,35 @@ export const DEMO_MISSION_PROGRESS: MissionProgress[] = DEMO_STUDENTS.map(
     lastAccessAt: DEMO_ROSTER[i].lastAccessAt,
   }),
 );
+
+/**
+ * Publicações da Missão 01 já em andamento no seed — derivadas de
+ * `DEMO_MISSION_PROGRESS`, não escritas à mão: uma por turma que tem algum
+ * aluno com progresso. É isso que dá coerência aos contadores do Painel do
+ * Gestor ("Missions em andamento") com o acompanhamento que já existe nessas
+ * turmas. A 1º EM A, turma da jornada, fica de fora (ninguém acessou): sua
+ * publicação acontece ao vivo, pelo professor. `lessonId` é nulo porque a
+ * única Lesson do seed é a da jornada (`modules/lesson/seeds/demo-seed.ts`).
+ */
+export const DEMO_MISSION_ASSIGNMENTS: MissionAssignment[] = [
+  ...new Set(
+    DEMO_MISSION_PROGRESS.filter((progress) => progress.status !== "nao_acessou").map(
+      (progress) => progress.classroomId,
+    ),
+  ),
+].map((classroomId) => ({
+  id: `assignment-horizonte-${classroomId}`,
+  institutionId: DEMO_INSTITUTION.id,
+  classroomId,
+  missionId: DEMO_MISSION_RECORD.id,
+  lessonId: null,
+  missionVersion: DEMO_MISSION_RECORD.version,
+  publishedAt: "2026-07-15T08:00:00-03:00",
+  dueAt: null,
+  status: "published",
+  closedAt: null,
+  externalAssignmentId: null,
+}));
 
 /**
  * Texto de Produção — só para quem já entregou (índices 2–5: 1º EM B e

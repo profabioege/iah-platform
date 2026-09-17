@@ -27,7 +27,12 @@ export {
   type IpeSuggestableField,
 } from "./domain/ipe";
 
-export { localMissionStudioRepository } from "./infrastructure/local-mission-studio-repository";
+export {
+  localMissionStudioRepository,
+  seedLocalMissionStudio,
+} from "./infrastructure/local-mission-studio-repository";
+
+export { buildDemoStudioMission, DEMO_STUDIO_MISSION_ID } from "./seeds/demo-studio-seed";
 
 /**
  * Repositório em uso pelo Estúdio. Hoje sempre o local (localStorage,

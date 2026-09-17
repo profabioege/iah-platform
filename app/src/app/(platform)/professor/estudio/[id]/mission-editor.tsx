@@ -9,6 +9,7 @@ import {
   DIFFICULTY_LABEL,
   getMissionStudioRepository,
   publishBlockers,
+  seedLocalMissionStudio,
   STATUS_LABEL,
   type StudioMission,
   type StudioMissionDifficulty,
@@ -36,7 +37,14 @@ const STEPS = [
  * publicação. Versão publicada é imutável: os campos travam e a edição
  * exige "Nova versão" (docs/MISSION_STUDIO.md).
  */
-export function MissionEditor({ missionId }: { missionId: string }) {
+export function MissionEditor({
+  missionId,
+  demoSeed = [],
+}: {
+  missionId: string;
+  /** Missões semeadas pelo servidor — só no modo demo (vazio fora dele). */
+  demoSeed?: StudioMission[];
+}) {
   const router = useRouter();
   const repository = getMissionStudioRepository();
 
@@ -49,8 +57,10 @@ export function MissionEditor({ missionId }: { missionId: string }) {
   const saveTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   React.useEffect(() => {
-    void repository.get(missionId).then((m) => setMission(m ?? null));
-  }, [repository, missionId]);
+    void seedLocalMissionStudio(demoSeed)
+      .then(() => repository.get(missionId))
+      .then((m) => setMission(m ?? null));
+  }, [repository, missionId, demoSeed]);
 
   const readOnly =
     mission?.status === "published" || mission?.status === "archived";

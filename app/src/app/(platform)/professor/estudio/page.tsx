@@ -5,6 +5,7 @@ import { requirePlatformDataMode } from "@/lib/platform-access";
 import { getWorkspaceUser } from "@/modules/workspace";
 
 import { MissionLibrary } from "./mission-library";
+import { loadDemoStudioSeed } from "./demo-studio-seed";
 
 export const metadata: Metadata = {
   title: "Estúdio de Missões",
@@ -18,6 +19,7 @@ export const metadata: Metadata = {
  */
 export default async function EstudioPage() {
   const author = await resolveAuthor();
+  const demoSeed = requirePlatformDataMode() === "demo" ? await loadDemoStudioSeed() : [];
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
@@ -33,7 +35,7 @@ export default async function EstudioPage() {
         </p>
       </header>
 
-      <MissionLibrary author={author} />
+      <MissionLibrary author={author} demoSeed={demoSeed} />
     </div>
   );
 }

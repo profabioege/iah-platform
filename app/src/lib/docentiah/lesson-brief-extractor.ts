@@ -60,10 +60,30 @@ function detectSubject(message: string): string | undefined {
   return undefined;
 }
 
-function detectGrade(message: string): { educationLevel: EducationLevel; grade: string } | undefined {
-  const explicitFormacaoDocente = /forma[cç][aã]o docente/i.test(message);
+/** Qualquer caractere que não continua uma palavra (letra, inclusive acentuada, ou dígito). */
+const NOT_WORD = "(^|[^\\dA-Za-zÀ-ÿ])";
+const NO_WORD_AFTER = "(?![A-Za-zÀ-ÿ])";
+
+/**
+ * Normaliza só as menções de série/ano/turma para a forma canônica do
+ * catálogo ("2ª série", "9º ano") antes da detecção — o resto da mensagem
+ * e o comportamento pedagógico do extrator não mudam. Aceita, entre outros:
+ * "2ª série", "2a série", "2a serie", "2º EM", "2º EM A", "2 E.M.",
+ * "9º ano", "9o ano", "9 ano". "EM" só vale em maiúsculas, para não ser
+ * confundido com a preposição "em".
+ */
+export function normalizeGradeMention(message: string): string {
+  return message
+    .replace(new RegExp(`${NOT_WORD}([1-3])\\s*[ºª°oa]?\\s*(?:EM|E\\.M\\.)(?:\\s+[A-Z]${NO_WORD_AFTER})?${NO_WORD_AFTER}`, "g"), "$1$2ª série")
+    .replace(new RegExp(`${NOT_WORD}(\\d)\\s*[ºª°oa]?\\s*s[ée]rie${NO_WORD_AFTER}`, "gi"), "$1$2ª série")
+    .replace(new RegExp(`${NOT_WORD}(\\d)\\s*[ºª°o]?\\s*ano${NO_WORD_AFTER}`, "gi"), "$1$2º ano");
+}
+
+function detectGrade(rawMessage: string): { educationLevel: EducationLevel; grade: string } | undefined {
+  const explicitFormacaoDocente = /forma[cç][aã]o docente/i.test(rawMessage);
   if (explicitFormacaoDocente) return undefined; // "Formação docente" não tem série — tratado como público, não turma.
 
+  const message = normalizeGradeMention(rawMessage);
   const serieMatch = message.match(/(\d)\s*[ºª°]?\s*s[ée]rie/i);
   if (serieMatch && MEDIO_SERIES.includes(serieMatch[1])) {
     const grade = GRADE_OPTIONS.ensino_medio[Number(serieMatch[1]) - 1];

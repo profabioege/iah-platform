@@ -44,12 +44,27 @@ IAH_AUTH_MODE=demo NEXT_PUBLIC_FEATURE_DOCENTIAH_CONVERSATIONAL_PLANNER=true npx
 Contas fictícias do seed: `diretor@`, `professor@` e `aluno01@`…`aluno10@`
 `institutohorizonte.edu.br`, com a senha demo do seed (não exibida na interface).
 
+## Estabilização (17/09/2026)
+
+- **Estúdio com a Missão 01:** no modo demo, as telas do Estúdio entregam uma
+  semente determinística (`modules/authoring/seeds/demo-studio-seed.ts`),
+  projetada do mesmo conteúdo que o aluno percorre. Ela é gravada no
+  armazenamento local do Estúdio só se ainda não existir — nunca sobrescreve
+  edições, versões ou arquivamento.
+- **Contadores do gestor:** `DEMO_MISSION_ASSIGNMENTS` deriva de
+  `DEMO_MISSION_PROGRESS` uma publicação por turma com progresso. Estado
+  inicial: 4 Missions em andamento, 0 Lessons publicadas; publicar a Missão 01
+  na 1º EM A atualiza para 5 e 1.
+- **Série no DocentIAH:** `normalizeGradeMention` aceita "2ª série", "2a série",
+  "2º EM", "2º EM A", "9º ano" e "9 ano" antes da detecção, sem mudar o resto do extrator.
+
 ## Limitações conhecidas
 
 - Estado da sondagem vive na memória do servidor: reiniciar apaga entregas e correções.
 - Publicação de Missão e Estúdio de Missões usam o armazenamento local do navegador (comportamento da base).
-- O extrator do DocentIAH reconhece séries no formato do catálogo ("2ª série", "9º ano").
+- Turmas abre na primeira turma com publicação ativa (regra da base): para publicar a jornada, clicar em "1º EM A".
+- O detector de ano da base continua aceitando "9 anos" como "9º ano" (comportamento anterior, mantido).
 - Publicar a sondagem para outra turma exige preencher datas no formulário.
-- A visão "Missões" do gestor mostra contadores de Lessons/Missions da base, que dependem do estado local.
 
-Garantias travadas em `app/tests/presentation-candidate.test.mjs`.
+Garantias travadas em `app/tests/presentation-candidate.test.mjs` e
+`app/tests/presentation-stabilization.test.mjs`.

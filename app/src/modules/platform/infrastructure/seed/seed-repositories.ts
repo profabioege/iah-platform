@@ -25,6 +25,7 @@ import {
   DEMO_CLASSROOMS,
   DEMO_ENROLLMENTS,
   DEMO_INSTITUTION,
+  DEMO_MISSION_ASSIGNMENTS,
   DEMO_MISSION_PROGRESS,
   DEMO_MISSION_RECORD,
   DEMO_PRODUCTIONS,
@@ -45,7 +46,7 @@ export function createSeedRepositories(): PlatformRepositories {
   const syncStates: ClassroomSyncState[] = [];
   // Nenhuma publicação pré-fabricada: a jornada demonstrativa começa com a
   // Mission ainda não publicada — quem publica é o Professor, ao vivo (M21).
-  const assignments: MissionAssignment[] = [];
+  const assignments: MissionAssignment[] = [...DEMO_MISSION_ASSIGNMENTS];
   const reviews: MissionReview[] = [];
 
   return {

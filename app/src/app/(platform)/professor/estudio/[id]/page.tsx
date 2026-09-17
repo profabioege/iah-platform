@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 
+import { requirePlatformDataMode } from "@/lib/platform-access";
+
+import { loadDemoStudioSeed } from "../demo-studio-seed";
 import { MissionEditor } from "./mission-editor";
 
 export const metadata: Metadata = {
@@ -13,11 +16,12 @@ export default async function EditorPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const demoSeed = requirePlatformDataMode() === "demo" ? await loadDemoStudioSeed() : [];
   const { id } = await params;
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
-      <MissionEditor missionId={id} />
+      <MissionEditor missionId={id} demoSeed={demoSeed} />
     </div>
   );
 }

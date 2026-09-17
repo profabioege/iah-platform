@@ -33,6 +33,19 @@ function mustGet(missions: StudioMission[], id: string): StudioMission {
   return found;
 }
 
+/**
+ * Semeia missões no armazenamento local, sem sobrescrever nada: só grava as
+ * que ainda não existem (por id). Idempotente — chamar a cada abertura do
+ * Estúdio não duplica e não desfaz edições, arquivamento ou novas versões.
+ * Quem decide se há semente (e só no modo demo) é a tela do servidor.
+ */
+export async function seedLocalMissionStudio(seed: StudioMission[]): Promise<void> {
+  if (typeof window === "undefined" || seed.length === 0) return;
+  const missions = readAll();
+  const missing = seed.filter((item) => !missions.some((m) => m.id === item.id));
+  if (missing.length > 0) writeAll([...missions, ...missing]);
+}
+
 export const localMissionStudioRepository: MissionStudioRepository = {
   async list() {
     return readAll();
