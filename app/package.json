@@ -11,7 +11,9 @@
     "test": "node --test --experimental-strip-types tests/*.test.mjs",
     "test:integration:postgres": "node scripts/run-postgres-integration-tests.mjs",
     "knowledge:official-reference:dry-run": "node --experimental-strip-types scripts/ingest-official-reference.mjs --dry-run",
-    "knowledge:official-reference:ingest": "node --experimental-strip-types scripts/ingest-official-reference.mjs --persist"
+    "knowledge:official-reference:ingest": "node --experimental-strip-types scripts/ingest-official-reference.mjs --persist",
+    "test:pilot": "node scripts/run-pilot-integration-tests.mjs",
+    "test:pilot:load": "node --experimental-strip-types scripts/pilot-load-test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
