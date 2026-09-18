@@ -100,13 +100,18 @@ test("modo demo é normalizado (espaços e caixa não invalidam)", async () => {
 test("configuração supabase parcial resulta em indisponibilidade", async () => {
   const { getAuthMode, isDemoMode, isAuthConfigured } = await import(FLAGS);
 
+  // A quarta variável (SUPABASE_JWT_SECRET) entrou com o acesso de menor
+  // privilégio ao banco (migration 0010): sem ela, o caminho pedagógico
+  // dependeria da service_role, então a instância fica indisponível.
   const combinacoes = [
     ["AUTH_SECRET"],
     ["NEXT_PUBLIC_SUPABASE_URL"],
     ["SUPABASE_SERVICE_ROLE_KEY"],
+    ["SUPABASE_JWT_SECRET"],
     ["AUTH_SECRET", "NEXT_PUBLIC_SUPABASE_URL"],
     ["AUTH_SECRET", "SUPABASE_SERVICE_ROLE_KEY"],
     ["NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
+    ["AUTH_SECRET", "NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"],
   ];
 
   for (const presentes of combinacoes) {
@@ -353,12 +358,26 @@ test("as Server Actions reconferem o modo declarado", () => {
 
 test("falha de infraestrutura não é apresentada como credencial incorreta", () => {
   const auth = sourceOf("auth.ts");
+  // A verificação de credencial mora em `verify-credentials.ts` (para ser
+  // exercitável contra banco real); a garantia é a mesma: erro de
+  // infraestrutura é LANÇADO, nunca devolvido como credencial inválida.
+  const verify = sourceOf("modules/identity/authentication/verify-credentials.ts");
   const page = sourceOf("app/entrar/page.tsx");
 
   assert.match(
-    auth,
-    /throw new Error\("auth_backend_unavailable"\)/,
+    verify,
+    /throw new AuthBackendUnavailableError\(\)/,
     "erro de banco é lançado, não devolvido como null",
+  );
+  assert.match(
+    verify,
+    /super\("auth_backend_unavailable"\)/,
+    "o motivo continua fora da família CredentialsSignin",
+  );
+  assert.match(
+    auth,
+    /verifyCredentials\(/,
+    "auth.ts delega a decisão ao módulo testável",
   );
   assert.match(
     page,

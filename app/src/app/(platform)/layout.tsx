@@ -2,6 +2,8 @@ import { AppHeader } from "@/components/layout/app-header";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { SessionControls } from "@/components/layout/session-controls";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { redirect } from "next/navigation";
+
 import { requirePlatformDataMode } from "@/lib/platform-access";
 import { getWorkspaceContext, ROLE_LABEL } from "@/modules/workspace";
 
@@ -31,7 +33,17 @@ export default async function PlatformLayout({
 }: {
   children: React.ReactNode;
 }) {
-  requirePlatformDataMode();
+  const mode = requirePlatformDataMode();
+
+  // Credencial temporária não abre a plataforma: enquanto o usuário não
+  // criar a própria senha, toda tela privada devolve para a troca
+  // (migration 0011). Esconder o aviso não bastaria — a porta é aqui.
+  if (mode === "supabase") {
+    const { auth } = await import("@/auth");
+    const session = await auth();
+    const user = session?.user as { mustChangePassword?: boolean } | undefined;
+    if (user?.mustChangePassword) redirect("/entrar/nova-senha");
+  }
 
   const context = await getWorkspaceContext();
 

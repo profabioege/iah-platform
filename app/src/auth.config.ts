@@ -50,7 +50,10 @@ function roleHome(role: string): string {
  */
 export const authConfig = {
   trustHost: true,
-  session: { strategy: "jwt" },
+  // Expiração explícita: uma aula dura horas, não semanas. O padrão do
+  // Auth.js (30 dias) é longo demais para conta de estudante em
+  // laboratório compartilhado.
+  session: { strategy: "jwt", maxAge: 60 * 60 * 8, updateAge: 60 * 30 },
   pages: { signIn: "/entrar" },
   providers: isGoogleAuthConfigured()
     ? [
@@ -67,10 +70,14 @@ export const authConfig = {
           platformUserId?: string;
           institutionId?: string;
           role?: string;
+          credentialsVersion?: number;
+          mustChangePassword?: boolean;
         };
         token.platformUserId = u.platformUserId;
         token.institutionId = u.institutionId;
         token.role = u.role;
+        token.credentialsVersion = u.credentialsVersion;
+        token.mustChangePassword = u.mustChangePassword;
       }
       return token;
     },
@@ -83,6 +90,8 @@ export const authConfig = {
           platformUserId: token.platformUserId as string | undefined,
           institutionId: token.institutionId as string | undefined,
           role: token.role as string | undefined,
+          credentialsVersion: token.credentialsVersion as number | undefined,
+          mustChangePassword: token.mustChangePassword as boolean | undefined,
         },
       };
     },

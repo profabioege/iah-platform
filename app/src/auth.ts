@@ -3,7 +3,6 @@ import Credentials from "next-auth/providers/credentials";
 
 import { authConfig } from "@/auth.config";
 import { isAuthConfigured, isGoogleAuthConfigured } from "@/lib/auth-flags";
-import { verifyPassword } from "@/lib/password";
 
 /**
  * Auth.js completo (Node) — M22: provider Credentials (e-mail + senha
@@ -24,61 +23,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: "E-mail", type: "email" },
         password: { label: "Senha", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         if (!isAuthConfigured()) return null;
-        const email = String(credentials?.email ?? "").trim().toLowerCase();
-        const password = String(credentials?.password ?? "");
-        if (!email || !password) return null;
-
-        // Import dinâmico: mantém o supabase-js fora do bundle edge.
-        const { getSupabaseAdminClient } = await import(
-          "@/modules/platform/infrastructure/database/admin-client"
+        // A decisão de deixar entrar vive em `verify-credentials.ts` —
+        // testável contra banco real, fora do runtime do Next.
+        const { verifyCredentials } = await import(
+          "@/modules/identity/authentication/verify-credentials"
         );
-        const db = getSupabaseAdminClient();
-
-        const { data: user, error } = await db
-          .from("users")
-          .select("id, institution_id, name, email, password_hash, status")
-          .eq("email", email)
-          .eq("status", "active")
-          .maybeSingle();
-        if (error) {
-          // Falha de INFRAESTRUTURA não é credencial inválida: devolver
-          // null aqui faria o banco fora do ar aparecer para o usuário
-          // como "e-mail ou senha incorretos". Lançar mantém o erro fora
-          // da família CredentialsSignin, e a tela mostra indisponível.
-          console.error("[auth] Falha ao consultar usuário.", error.message);
-          throw new Error("auth_backend_unavailable");
-        }
-        if (!user?.password_hash) return null;
-        if (!verifyPassword(password, user.password_hash as string)) {
-          return null;
-        }
-
-        const { data: profile } = await db
-          .from("profiles")
-          .select("role, institution_id")
-          .eq("user_id", user.id)
-          .eq("status", "active")
-          .limit(1)
-          .maybeSingle();
-        // Sem vínculo ativo com uma instituição, não há acesso (P1:
-        // permissões derivam do Perfil, nunca da identidade sozinha).
-        if (!profile) return null;
-
-        await db
-          .from("users")
-          .update({ last_login_at: new Date().toISOString() })
-          .eq("id", user.id);
-
-        return {
-          id: user.id as string,
-          name: user.name as string,
-          email: user.email as string,
-          platformUserId: user.id as string,
-          institutionId: (profile.institution_id ?? user.institution_id) as string,
-          role: profile.role as string,
-        };
+        return verifyCredentials(credentials?.email, credentials?.password, {
+          origin:
+            request?.headers?.get?.("x-forwarded-for")?.split(",")[0] ??
+            request?.headers?.get?.("x-real-ip") ??
+            null,
+        });
       },
     }),
     ...authConfig.providers,

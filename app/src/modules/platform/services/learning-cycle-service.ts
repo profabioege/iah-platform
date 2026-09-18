@@ -21,6 +21,10 @@ import {
   type StudentWorkReview,
 } from "@/modules/classroom";
 
+import {
+  assertProductionWithinLimit,
+  assertReflectionWithinLimit,
+} from "../domain/content-limits";
 import type { PlatformRepositories } from "../domain/repositories";
 
 export interface LearningCycleScope {
@@ -129,6 +133,7 @@ export function createLearningCycleService(repositories: PlatformRepositories) {
     scope: LearningCycleScope,
     content: string,
   ): Promise<StudentWork> {
+    assertProductionWithinLimit(content);
     const current = await getStudentWork(scope);
     if (current.productionDeliveredAt) {
       throw new Error("A produção já foi entregue — reabra antes de editar.");
@@ -183,6 +188,7 @@ export function createLearningCycleService(repositories: PlatformRepositories) {
     scope: LearningCycleScope,
     text: string,
   ): Promise<StudentWork> {
+    assertReflectionWithinLimit(text);
     const current = await getStudentWork(scope);
     if (current.reflectionRecordedAt) {
       throw new Error("A reflexão já foi registrada — reabra antes de editar.");
