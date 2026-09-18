@@ -9,11 +9,8 @@
 
 import { revalidatePath } from "next/cache";
 
-import {
-  createMissionPublishingService,
-  getDefaultRepositories,
-  type MissionAssignment,
-} from "@/modules/platform";
+import { createMissionPublishingService, type MissionAssignment } from "@/modules/platform";
+import { getRequestRepositories } from "@/modules/platform/infrastructure/request-repositories";
 import { getWorkspaceContext } from "@/modules/workspace";
 
 export async function publishLessonMission(params: {
@@ -32,7 +29,7 @@ export async function publishLessonMission(params: {
   ) {
     throw new Error("Turma fora do contexto institucional atual.");
   }
-  const service = createMissionPublishingService(getDefaultRepositories());
+  const service = createMissionPublishingService(await getRequestRepositories());
   const assignment = await service.publish(params);
   revalidatePath("/professor/turmas");
   revalidatePath("/dashboard");

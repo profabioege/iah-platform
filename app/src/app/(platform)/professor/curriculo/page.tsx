@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { getDefaultCurriculumRepositories, type CurriculumTheme } from "@/modules/curriculum";
-import { getDefaultRepositories } from "@/modules/platform";
+import { getRequestRepositories } from "@/modules/platform/infrastructure/request-repositories";
 import { localMissionRepository } from "@/modules/library";
 import { getDefaultKnowledgeRepositories } from "@/modules/knowledge";
 
@@ -34,7 +34,7 @@ export default async function CurriculoPage() {
   }
 
   // Instituição resolvida da fonte de dados, nunca fixa em código (M16).
-  const platformRepositories = getDefaultRepositories();
+  const platformRepositories = await getRequestRepositories();
   const institutionId = (await platformRepositories.institutions.list())[0]?.id;
   const academicYears = institutionId
     ? await platformRepositories.academicYears.listByInstitution(institutionId)

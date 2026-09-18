@@ -73,26 +73,17 @@ async function getRealSessionIdentity(): Promise<RealSessionIdentity | null> {
 async function getRealWorkspaceUser(): Promise<WorkspaceUser | null> {
   const identity = await getRealSessionIdentity();
   if (!identity) return null;
-  const { getSupabaseAdminClient } = await import(
-    "@/modules/platform/infrastructure/database/admin-client"
-  );
-  const db = getSupabaseAdminClient();
 
-  // Vínculos papel↔dados pedagógicos (P1: identidade ≠ papel).
-  const [{ data: teacher }, { data: student }] = await Promise.all([
-    db
-      .from("teachers")
-      .select("id")
-      .eq("user_id", identity.userId)
-      .eq("institution_id", identity.institutionId)
-      .maybeSingle(),
-    db
-      .from("students")
-      .select("id")
-      .eq("user_id", identity.userId)
-      .eq("institution_id", identity.institutionId)
-      .maybeSingle(),
-  ]);
+  // O ator é reconferido contra o banco a cada requisição: conta
+  // desativada, perfil inativo ou credencial redefinida derrubam o
+  // acesso na hora, sem esperar a sessão expirar. Os vínculos
+  // pedagógicos (professor/aluno) vêm dessa mesma conferência
+  // (P1: identidade ≠ papel).
+  const { getDatabaseActor } = await import(
+    "@/modules/platform/infrastructure/database/request-actor"
+  );
+  const actor = await getDatabaseActor();
+  if (!actor || actor.institutionId !== identity.institutionId) return null;
 
   return {
     id: identity.userId,
@@ -100,8 +91,8 @@ async function getRealWorkspaceUser(): Promise<WorkspaceUser | null> {
     name: identity.name,
     email: identity.email,
     role: identity.role,
-    teacherId: (teacher?.id as string | undefined) ?? null,
-    studentId: (student?.id as string | undefined) ?? null,
+    teacherId: actor.teacherId,
+    studentId: actor.studentId,
   };
 }
 
@@ -109,14 +100,22 @@ async function getRealWorkspaceContext(): Promise<WorkspaceContext | null> {
   const user = await getRealWorkspaceUser();
   if (!user) return null;
 
-  const { getDefaultRepositories } = await import(
-    "@/modules/platform/infrastructure/repository-factory"
+  const { getRequestRepositories } = await import(
+    "@/modules/platform/infrastructure/request-repositories"
   );
-  const { getSupabaseAdminClient } = await import(
-    "@/modules/platform/infrastructure/database/admin-client"
+  const { getScopedDatabaseClient } = await import(
+    "@/modules/platform/infrastructure/database/scoped-client"
   );
-  const repositories = getDefaultRepositories();
-  const db = getSupabaseAdminClient();
+  const { getDatabaseActor } = await import(
+    "@/modules/platform/infrastructure/database/request-actor"
+  );
+  const actor = await getDatabaseActor();
+  if (!actor) return null;
+
+  // Menor privilégio: as consultas do contexto passam pelas policies da
+  // migration 0010, no papel `iah_app`. A service_role fica fora daqui.
+  const repositories = await getRequestRepositories();
+  const db = await getScopedDatabaseClient(actor);
 
   const [institution, academicYears, allClassrooms, { data: subjectRows }] =
     await Promise.all([

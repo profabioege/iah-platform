@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { getWorkspaceContext } from "@/modules/workspace";
-import { getDefaultRepositories } from "@/modules/platform";
+import { getRequestRepositories } from "@/modules/platform/infrastructure/request-repositories";
 
 import { ExecutiveDashboard, type ExecutiveView } from "./executive-dashboard";
 import { computeExecutiveTotals } from "./executive-totals";
@@ -33,7 +33,7 @@ export default async function GestorPage({
   const initialView = (visao && VIEW_BY_PARAM[visao]) || "overview";
   const context = await getWorkspaceContext();
   if (!context) return null; // middleware garante sessão; guarda defensiva
-  const repositories = getDefaultRepositories();
+  const repositories = await getRequestRepositories();
   const [teachers, missionRecords] = await Promise.all([
     repositories.teachers.listByInstitution(context.institution.id),
     repositories.missions.list(),

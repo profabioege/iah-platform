@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { localMissionRepository } from "@/modules/library";
-import { getDefaultRepositories } from "@/modules/platform";
+import { getRequestRepositories } from "@/modules/platform/infrastructure/request-repositories";
 import { getWorkspaceContext } from "@/modules/workspace";
 import { Badge } from "@/components/ui/badge";
 
@@ -82,7 +82,7 @@ export default async function ProfessorPage() {
  * para o total de alunos da faixa de identidade.
  */
 async function listClassroomRows(): Promise<ClassroomRow[]> {
-  const repositories = getDefaultRepositories();
+  const repositories = await getRequestRepositories();
   // Instituição resolvida da fonte de dados, nunca fixa em código (M16) —
   // hoje o seed tem só o Instituto Horizonte (D-039); multi-instituição
   // chega com a autenticação real amarrando o usuário ao tenant.

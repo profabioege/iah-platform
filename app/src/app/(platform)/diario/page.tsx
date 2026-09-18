@@ -1,6 +1,6 @@
 import { localMissionRepository } from "@/modules/library";
 import { requirePlatformDataMode } from "@/lib/platform-access";
-import { getDefaultRepositories } from "@/modules/platform";
+import { getRequestRepositories } from "@/modules/platform/infrastructure/request-repositories";
 import { getWorkspaceContext } from "@/modules/workspace";
 
 import { DiarioList, type DiarioSource, type MissionRef } from "./diario-list";
@@ -30,7 +30,7 @@ export default async function DiarioPage() {
     const studentId = workspace?.role === "student" ? workspace.user.studentId : null;
     const reflections =
       workspace && studentId
-        ? await getDefaultRepositories().reflections.listByStudent(
+        ? await (await getRequestRepositories()).reflections.listByStudent(
             workspace.institution.id,
             studentId,
           )

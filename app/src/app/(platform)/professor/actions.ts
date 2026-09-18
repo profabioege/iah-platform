@@ -10,10 +10,8 @@
 
 import { revalidatePath } from "next/cache";
 
-import {
-  createLearningCycleService,
-  getDefaultRepositories,
-} from "@/modules/platform";
+import { createLearningCycleService } from "@/modules/platform";
+import { getRequestRepositories } from "@/modules/platform/infrastructure/request-repositories";
 import { getWorkspaceContext } from "@/modules/workspace";
 import type { StudentWork } from "@/modules/classroom";
 
@@ -33,7 +31,7 @@ export async function reviewSubmissionAction(params: {
     throw new Error("Turma fora do contexto institucional atual.");
   }
 
-  const service = createLearningCycleService(getDefaultRepositories());
+  const service = createLearningCycleService(await getRequestRepositories());
   const work = await service.reviewSubmission(
     {
       institutionId: workspace.institution.id,

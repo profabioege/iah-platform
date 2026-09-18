@@ -38,7 +38,14 @@ export function isDatabaseReady(): boolean {
 
 /** Tudo que o modo `supabase` exige para autenticar de verdade. */
 function isSupabaseModeComplete(): boolean {
-  return Boolean(process.env.AUTH_SECRET) && isDatabaseReady();
+  return (
+    Boolean(process.env.AUTH_SECRET) &&
+    isDatabaseReady() &&
+    // Sem o segredo do JWT não existe acesso de menor privilégio ao banco
+    // (migration 0010): a instância ficaria dependente da service_role
+    // para o caminho pedagógico. Configuração incompleta bloqueia.
+    Boolean(process.env.SUPABASE_JWT_SECRET)
+  );
 }
 
 /** Valor declarado, normalizado — nunca o valor bruto. */
@@ -136,6 +143,7 @@ export function getPlatformConfigError(): string | null {
       SUPABASE_SERVICE_ROLE_KEY: Boolean(
         process.env.SUPABASE_SERVICE_ROLE_KEY,
       ),
+      SUPABASE_JWT_SECRET: Boolean(process.env.SUPABASE_JWT_SECRET),
     };
     const missing = Object.entries(flags)
       .filter(([, present]) => !present)

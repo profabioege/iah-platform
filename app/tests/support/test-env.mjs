@@ -42,6 +42,9 @@ export function enableRealMode() {
   process.env.AUTH_SECRET = "test-auth-secret";
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.invalid";
   process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key";
+  // Menor privilégio (migration 0010): o modo real exige o segredo do
+  // JWT que assina o acesso `iah_app`.
+  process.env.SUPABASE_JWT_SECRET = "test-jwt-secret-descartavel";
 }
 
 /**
@@ -53,6 +56,7 @@ export function enableDemoMode() {
   delete process.env.AUTH_SECRET;
   delete process.env.NEXT_PUBLIC_SUPABASE_URL;
   delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+  delete process.env.SUPABASE_JWT_SECRET;
   delete process.env.GOOGLE_CLIENT_ID;
   delete process.env.GOOGLE_CLIENT_SECRET;
 }
@@ -63,6 +67,7 @@ export function enableUnavailableMode() {
   delete process.env.AUTH_SECRET;
   delete process.env.NEXT_PUBLIC_SUPABASE_URL;
   delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+  delete process.env.SUPABASE_JWT_SECRET;
   delete process.env.GOOGLE_CLIENT_ID;
   delete process.env.GOOGLE_CLIENT_SECRET;
 }

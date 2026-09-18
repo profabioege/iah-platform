@@ -16,6 +16,8 @@ import {
   isAuthConfigured,
 } from "@/lib/auth-flags";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import type { PlatformRepositories } from "../domain/repositories";
 import { createSeedRepositories } from "./seed/seed-repositories";
 import { createDatabaseRepositories } from "./database/database-repositories";
@@ -35,8 +37,9 @@ declare global {
 
 export function createRepositories(
   source: RepositorySource,
+  client?: SupabaseClient,
 ): PlatformRepositories {
-  if (source === "database") return createDatabaseRepositories();
+  if (source === "database") return createDatabaseRepositories(client);
   globalThis.__iahPlatformSeedRepositories ??= createSeedRepositories();
   return globalThis.__iahPlatformSeedRepositories;
 }
@@ -45,6 +48,12 @@ export function createRepositories(
  * Fonte padrão da instância: banco real quando o modo real está
  * completamente configurado; seeds de demonstração quando nada está
  * configurado. Nenhum consumidor decide isso sozinho.
+ */
+/**
+ * ATENÇÃO — privilégio: no modo real isto devolve repositórios com a
+ * `service_role`, que ignora RLS. Só o caminho ADMINISTRATIVO deve usar
+ * (autenticação, provisionamento, recuperação assistida). Telas e ações
+ * pedagógicas usam `getRequestRepositories()`, escopado pelo ator.
  */
 export function getDefaultRepositories(): PlatformRepositories {
   const configError = getPlatformConfigError();

@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 
 import { localMissionRepository } from "@/modules/library";
 import { requirePlatformDataMode } from "@/lib/platform-access";
-import { createLearningCycleService, getDefaultRepositories } from "@/modules/platform";
+import { createLearningCycleService } from "@/modules/platform";
+import { getRequestRepositories } from "@/modules/platform/infrastructure/request-repositories";
 import { getWorkspaceContext } from "@/modules/workspace";
 import { emptyStudentWork } from "@/modules/classroom";
 
@@ -40,7 +41,7 @@ export default async function MissaoDetalhePage({
     const classroomId = workspace?.classrooms[0]?.id;
     const initialWork =
       workspace?.role === "student" && workspace.user.studentId && classroomId
-        ? await createLearningCycleService(getDefaultRepositories()).getStudentWork({
+        ? await createLearningCycleService(await getRequestRepositories()).getStudentWork({
             institutionId: workspace.institution.id,
             classroomId,
             studentId: workspace.user.studentId,

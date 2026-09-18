@@ -202,8 +202,16 @@ const toSyncState = (r: Row): ClassroomSyncState => ({
   lastError: (r.last_error as string | null) ?? null,
 });
 
-export function createDatabaseRepositories(): PlatformRepositories {
-  const db = getSupabaseAdminClient();
+/**
+ * `client` é obrigatório no caminho pedagógico: quem chama decide com
+ * qual privilégio o banco será consultado (migration 0010). Sem cliente,
+ * cai na `service_role` — reservado ao caminho administrativo
+ * (autenticação, provisionamento, recuperação assistida).
+ */
+export function createDatabaseRepositories(
+  client?: SupabaseClient,
+): PlatformRepositories {
+  const db = client ?? getSupabaseAdminClient();
 
   return {
     institutions: {

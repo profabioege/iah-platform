@@ -1,7 +1,8 @@
 import { localMissionRepository } from "@/modules/library";
 import { requirePlatformDataMode } from "@/lib/platform-access";
 import { getWorkspaceContext } from "@/modules/workspace";
-import { createLearningCycleService, getDefaultRepositories } from "@/modules/platform";
+import { createLearningCycleService } from "@/modules/platform";
+import { getRequestRepositories } from "@/modules/platform/infrastructure/request-repositories";
 import type { StudentWork } from "@/modules/classroom";
 
 import { DashboardHome, type DashboardMission, type DashboardSource } from "./dashboard-home";
@@ -38,7 +39,7 @@ export default async function DashboardPage() {
 
   const initialAssignments =
     workspace?.role === "student" && classroomId
-      ? await getDefaultRepositories().missionAssignments.listByClassroom(
+      ? await (await getRequestRepositories()).missionAssignments.listByClassroom(
           workspace.institution.id,
           classroomId,
         )
@@ -47,7 +48,7 @@ export default async function DashboardPage() {
   let source: DashboardSource;
   if (mode === "supabase") {
     if (workspace?.role === "student" && workspace.user.studentId && classroomId) {
-      const service = createLearningCycleService(getDefaultRepositories());
+      const service = createLearningCycleService(await getRequestRepositories());
       const availableMissionIds = new Set(
         initialAssignments
           .filter((assignment) => assignment.status !== "draft")

@@ -36,6 +36,12 @@ register("./resolve-hooks.mjs", {
         stub("admin-client.mjs"),
       [source("modules/platform/infrastructure/repository-factory.ts")]:
         stub("repository-factory.mjs"),
+      [source("modules/platform/infrastructure/request-repositories.ts")]:
+        stub("repository-factory.mjs"),
+      [source("modules/platform/infrastructure/database/scoped-client.ts")]:
+        stub("scoped-client.mjs"),
+      [source("modules/platform/infrastructure/database/request-actor.ts")]:
+        stub("request-actor.mjs"),
     },
   },
 });

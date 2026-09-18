@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { getClassroomService } from "@/modules/integrations/google-classroom";
-import { getDefaultRepositories } from "@/modules/platform";
+import { getRequestRepositories } from "@/modules/platform/infrastructure/request-repositories";
 
 import { ImportWizard, type WizardCourse } from "./import-wizard";
 
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
  */
 export default async function ImportarPage() {
   const service = getClassroomService();
-  const repositories = getDefaultRepositories();
+  const repositories = await getRequestRepositories();
   const institutions = await repositories.institutions.list();
 
   const courses: WizardCourse[] = await listCourses();

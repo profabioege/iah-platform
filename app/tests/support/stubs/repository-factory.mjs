@@ -24,3 +24,13 @@ export function createRepositories() {
 export function getDefaultRepositories() {
   return required();
 }
+
+/**
+ * Fábrica escopada pela requisição (migration 0010). No teste unitário o
+ * que importa é que as Server Actions passem a obtê-la aqui — o escopo
+ * real (papel `iah_app` + policies) é exercitado nos testes do piloto,
+ * contra banco de verdade.
+ */
+export async function getRequestRepositories() {
+  return required();
+}

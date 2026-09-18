@@ -19,7 +19,11 @@ const nextConfig: NextConfig = {
       (process.env.IAH_AUTH_MODE ?? "").trim().toLowerCase() === "supabase" &&
         Boolean(process.env.AUTH_SECRET) &&
         Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL) &&
-        Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
+        Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY) &&
+        // Mesma regra do servidor (lib/auth-flags.ts): sem o segredo do
+        // JWT não há acesso de menor privilégio ao banco, e a instância
+        // não entra em modo real.
+        Boolean(process.env.SUPABASE_JWT_SECRET),
     ),
   },
 };

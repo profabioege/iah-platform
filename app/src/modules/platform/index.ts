@@ -76,6 +76,13 @@ export {
   type LearningCycleService,
 } from "./services/learning-cycle-service";
 
+/**
+ * `getRequestRepositories` NÃO é reexportado aqui de propósito: ela
+ * alcança a sessão do Auth.js (e, por ela, `node:crypto`), e este barril
+ * é importado também por componentes de cliente. Quem precisa dela é
+ * código de servidor e importa pelo caminho direto
+ * (`@/modules/platform/infrastructure/repository-factory`).
+ */
 export {
   createRepositories,
   getDefaultRepositories,

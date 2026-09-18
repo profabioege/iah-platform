@@ -2,11 +2,8 @@ import type { Metadata } from "next";
 
 import { localMissionRepository } from "@/modules/library";
 import { getDefaultKnowledgeRepositories } from "@/modules/knowledge";
-import {
-  createInstitutionalClassMonitor,
-  createMissionPublishingService,
-  getDefaultRepositories,
-} from "@/modules/platform";
+import { createInstitutionalClassMonitor, createMissionPublishingService } from "@/modules/platform";
+import { getRequestRepositories } from "@/modules/platform/infrastructure/request-repositories";
 import { getWorkspaceContext } from "@/modules/workspace";
 import type { StudentMissionSnapshot } from "@/modules/classroom";
 
@@ -28,7 +25,7 @@ export default async function TurmasPage() {
   const workspace = await getWorkspaceContext();
   if (!workspace) return null; // middleware garante sessão; guarda defensiva
 
-  const repositories = getDefaultRepositories();
+  const repositories = await getRequestRepositories();
   const publishingService = createMissionPublishingService(repositories);
 
   const missions = await localMissionRepository.list();

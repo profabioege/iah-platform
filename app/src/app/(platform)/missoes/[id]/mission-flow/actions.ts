@@ -9,11 +9,8 @@
  * papel/tenant é aplicada aqui, não só na interface.
  */
 
-import {
-  createLearningCycleService,
-  getDefaultRepositories,
-  type LearningCycleScope,
-} from "@/modules/platform";
+import { createLearningCycleService, type LearningCycleScope } from "@/modules/platform";
+import { getRequestRepositories } from "@/modules/platform/infrastructure/request-repositories";
 import { getWorkspaceContext } from "@/modules/workspace";
 import type { StudentWork } from "@/modules/classroom";
 
@@ -35,18 +32,18 @@ async function requireStudentScope(missionId: string): Promise<LearningCycleScop
   };
 }
 
-function service() {
-  return createLearningCycleService(getDefaultRepositories());
+async function service() {
+  return createLearningCycleService(await getRequestRepositories());
 }
 
 export async function getStudentWorkAction(missionId: string): Promise<StudentWork> {
   const scope = await requireStudentScope(missionId);
-  return service().getStudentWork(scope);
+  return (await service()).getStudentWork(scope);
 }
 
 export async function startMissionAction(missionId: string): Promise<StudentWork> {
   const scope = await requireStudentScope(missionId);
-  return service().startMission(scope);
+  return (await service()).startMission(scope);
 }
 
 export async function saveProductionDraftAction(
@@ -54,7 +51,7 @@ export async function saveProductionDraftAction(
   content: string,
 ): Promise<StudentWork> {
   const scope = await requireStudentScope(missionId);
-  return service().saveProductionDraft(scope, content);
+  return (await service()).saveProductionDraft(scope, content);
 }
 
 export async function setProductionDeliveredAction(
@@ -62,7 +59,7 @@ export async function setProductionDeliveredAction(
   delivered: boolean,
 ): Promise<StudentWork> {
   const scope = await requireStudentScope(missionId);
-  return service().setProductionDelivered(scope, delivered);
+  return (await service()).setProductionDelivered(scope, delivered);
 }
 
 export async function saveReflectionDraftAction(
@@ -70,7 +67,7 @@ export async function saveReflectionDraftAction(
   text: string,
 ): Promise<StudentWork> {
   const scope = await requireStudentScope(missionId);
-  return service().saveReflectionDraft(scope, text);
+  return (await service()).saveReflectionDraft(scope, text);
 }
 
 export async function setReflectionRecordedAction(
@@ -78,5 +75,5 @@ export async function setReflectionRecordedAction(
   recorded: boolean,
 ): Promise<StudentWork> {
   const scope = await requireStudentScope(missionId);
-  return service().setReflectionRecorded(scope, recorded);
+  return (await service()).setReflectionRecorded(scope, recorded);
 }

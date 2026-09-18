@@ -45,7 +45,7 @@ function arquivos(dirRel) {
 }
 
 function modo(valor, extras = {}) {
-  for (const v of ["IAH_AUTH_MODE", "AUTH_SECRET", "NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]) {
+  for (const v of ["IAH_AUTH_MODE", "AUTH_SECRET", "NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_JWT_SECRET"]) {
     delete process.env[v];
   }
   if (valor) process.env.IAH_AUTH_MODE = valor;
@@ -56,6 +56,7 @@ const SUPABASE_COMPLETO = {
   AUTH_SECRET: "secret-ficticio-de-teste",
   NEXT_PUBLIC_SUPABASE_URL: "https://ficticio.supabase.invalid",
   SUPABASE_SERVICE_ROLE_KEY: "service-role-ficticia-de-teste",
+  SUPABASE_JWT_SECRET: "jwt-secret-ficticio-de-teste",
 };
 
 const TELAS_NOVAS = [
