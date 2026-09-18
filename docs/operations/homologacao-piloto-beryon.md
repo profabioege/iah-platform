@@ -142,10 +142,15 @@ sintéticas, todas saindo do mesmo IP.
 | Cenário | Login p50/p95 | Gravações p50/p95 | Erros | Integridade |
 |---|---|---|---|---|
 | 45 alunos, entrada em 60s | 76 / 104 ms | 267 / 589 ms | 0 | 45 entregas, 45 reflexões, sem duplicata nem mistura |
+| 45 alunos, entrada em 60s (repetido após a refatoração) | 141 / 188 ms | 534 / 715 ms | 0 | 45 entregas, 45 reflexões, íntegras |
 | 65 alunos, entrada em 60s | 74 / 110 ms | 452 / 721 ms | 0 | 65 entregas, 65 reflexões, sem duplicata nem mistura |
 | 45 alunos, todos no mesmo instante | 2115 / 2163 ms | 120 / 493 ms | 0 | 45 entregas, 45 reflexões, íntegras |
 
-O terceiro cenário **reprovou** no limite declarado de p95 de login (2000 ms). A
+A repetição do primeiro cenário, já com o token assinado por Web Crypto, ficou
+mais lenta em números absolutos e continuou folgada diante dos limites
+declarados (login p95 2000 ms, gravação p95 1500 ms).
+
+O último cenário **reprovou** no limite declarado de p95 de login (2000 ms). A
 causa é conhecida e não é o banco: o `scrypt` das 45 senhas concorre pela CPU de
 uma única máquina. Em hospedagem com instâncias paralelas o comportamento tende a
 ser melhor, mas isso **precisa ser medido lá** — é uma das condições abaixo.
