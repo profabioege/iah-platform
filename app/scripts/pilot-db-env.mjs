@@ -238,13 +238,17 @@ function startRestProxy(postgrestPort, port) {
  * apontar para ele: a URL "Supabase" (proxy) e a conexão direta ao
  * Postgres (migrations e verificações do próprio teste).
  */
-export async function startPilotDatabase() {
+export async function startPilotDatabase(options = {}) {
+  // A porta do proxy pode ser fixada: o build do Next assa
+  // NEXT_PUBLIC_SUPABASE_URL, então o ensaio por HTTP precisa que a URL
+  // do build e a do servidor coincidam.
+  const { proxyPort: fixedProxyPort = null, dbPool = 20 } = options;
   const network = `iah-pilot-net-${process.pid}-${Date.now()}`;
   const pgName = `iah-pilot-pg-${process.pid}-${Date.now()}`;
   const restName = `iah-pilot-rest-${process.pid}-${Date.now()}`;
   const pgPort = await findFreePort();
   const restPort = await findFreePort();
-  const proxyPort = await findFreePort();
+  const proxyPort = fixedProxyPort ?? (await findFreePort());
 
   await podman(["network", "create", network]);
   await podman([
@@ -276,7 +280,7 @@ export async function startPilotDatabase() {
     "-e", "PGRST_DB_SCHEMAS=public",
     "-e", "PGRST_DB_ANON_ROLE=anon",
     "-e", `PGRST_JWT_SECRET=${TEST_JWT_SECRET}`,
-    "-e", "PGRST_DB_POOL=20",
+    "-e", `PGRST_DB_POOL=${dbPool}`,
     POSTGREST_IMAGE,
   ]);
   await waitForPostgrest(restPort);

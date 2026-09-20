@@ -20,6 +20,8 @@
 
 import { createClient } from "@supabase/supabase-js";
 
+import { assertAuthorizedTarget } from "./pilot-target-guard.mjs";
+
 import { resetPilotCredential } from "../src/modules/identity/provisioning/pilot-provisioning.ts";
 
 function arg(name, fallback = null) {
@@ -43,18 +45,20 @@ const email = arg("email");
 const execute = arg("execute", false) === true;
 const actor = String(arg("actor", "cli:operador-nao-identificado"));
 const reason = String(arg("reason", "solicitação da escola"));
-const allowNonLocal = arg("i-know-this-is-not-production", false) === true;
+const confirmProject = arg("confirm-project");
 
 if (!email) fail("Informe --email=<conta>.");
 
-const host = new URL(url).hostname.toLowerCase();
-const local = host === "127.0.0.1" || host === "localhost" || host === "::1";
-if (!local && !allowNonLocal) {
-  fail(
-    `Destino remoto recusado (${host}). Repita com --i-know-this-is-not-production ` +
-      "apenas em ambiente de homologação dedicado.",
-  );
+let alvo;
+try {
+  alvo = assertAuthorizedTarget(url, {
+    confirmProject,
+    operation: "redefinir uma credencial",
+  });
+} catch (error) {
+  fail(error instanceof Error ? error.message : String(error));
 }
+console.log(`Destino confirmado: ${alvo.descricao}.`);
 
 if (!execute) {
   console.log(

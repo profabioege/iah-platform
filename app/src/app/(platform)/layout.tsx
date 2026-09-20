@@ -47,6 +47,14 @@ export default async function PlatformLayout({
 
   const context = await getWorkspaceContext();
 
+  // Sessão que o banco não reconhece mais não abre tela privada nenhuma.
+  // Depois de uma recuperação assistida, de uma conta desativada ou de um
+  // perfil removido, o cookie continua íntegro — quem sabe que ele perdeu
+  // a validade é o banco (`credentials_version`, status da conta e do
+  // perfil). Sem esta porta, a casca privada ainda era renderizada com
+  // papel nulo, e só as telas com dados recusavam.
+  if (mode === "supabase" && !context) redirect("/entrar?erro=sessao");
+
   return (
     <div className="dark bg-background text-foreground font-sans">
       <SidebarProvider>

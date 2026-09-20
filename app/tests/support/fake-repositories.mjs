@@ -14,6 +14,8 @@ export function createFakeRepositories({
   productions = [],
   reflections = [],
   missionReviews = [],
+  missionAssignments = null,
+  publishedMissionId = "01-a-fabrica-de-noticias",
 } = {}) {
   const calls = [];
   const record = (method, institutionId, extra = {}) => {
@@ -25,6 +27,7 @@ export function createFakeRepositories({
     reflections: [...reflections],
     missionReviews: [...missionReviews],
     missionProgress: [],
+    missionAssignments: [],
   };
 
   const byClassroomMission = (collection) =>
@@ -105,6 +108,34 @@ export function createFakeRepositories({
     },
     missionProgress: {
       save: upsert("missionProgress"),
+    },
+    /**
+     * O ciclo do aluno exige Atividade publicada na turma dele. O padrão
+     * aqui é "a Missão está publicada para a turma consultada", porque é
+     * a situação normal da aula; quem quer provar a recusa passa
+     * `missionAssignments: []`.
+     */
+    missionAssignments: {
+      async listByClassroom(institutionId, classroomId) {
+        record("missionAssignments.listByClassroom", institutionId, { classroomId });
+        if (missionAssignments) {
+          return missionAssignments.filter(
+            (atividade) =>
+              atividade.institutionId === institutionId &&
+              atividade.classroomId === classroomId,
+          );
+        }
+        return [
+          {
+            id: "atividade-" + classroomId,
+            institutionId,
+            classroomId,
+            missionId: publishedMissionId,
+            status: "published",
+          },
+        ];
+      },
+      save: upsert("missionAssignments"),
     },
   };
 }

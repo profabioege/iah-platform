@@ -39,15 +39,30 @@ export default async function MissaoDetalhePage({
   let source: StudentWorkSource;
   if (mode === "supabase") {
     const classroomId = workspace?.classrooms[0]?.id;
-    const initialWork =
-      workspace?.role === "student" && workspace.user.studentId && classroomId
-        ? await createLearningCycleService(await getRequestRepositories()).getStudentWork({
-            institutionId: workspace.institution.id,
-            classroomId,
-            studentId: workspace.user.studentId,
-            missionId: mission.id,
-          })
-        : emptyStudentWork(mission.id);
+    let initialWork = emptyStudentWork(mission.id);
+    if (workspace?.role === "student" && workspace.user.studentId && classroomId) {
+      const repositories = await getRequestRepositories();
+
+      // Para o Aluno, a Missão só existe se a Turma dele a recebeu. Sem
+      // esta conferência, trocar o id na URL mostrava o conteúdo de uma
+      // Missão que o professor ainda não publicou. As Server Actions do
+      // ciclo aplicam a mesma regra.
+      const atividades = await repositories.missionAssignments.listByClassroom(
+        workspace.institution.id,
+        classroomId,
+      );
+      const disponivel = atividades.some(
+        (atividade) => atividade.missionId === mission.id && atividade.status === "published",
+      );
+      if (!disponivel) notFound();
+
+      initialWork = await createLearningCycleService(repositories).getStudentWork({
+        institutionId: workspace.institution.id,
+        classroomId,
+        studentId: workspace.user.studentId,
+        missionId: mission.id,
+      });
+    }
     source = { kind: "real", initialWork };
   } else {
     const scope = workspace

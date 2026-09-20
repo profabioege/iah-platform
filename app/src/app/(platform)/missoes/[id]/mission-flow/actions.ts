@@ -24,6 +24,23 @@ async function requireStudentScope(missionId: string): Promise<LearningCycleScop
   if (!classroomId) {
     throw new Error("Nenhuma Turma vinculada à sua matrícula.");
   }
+
+  // O catálogo de Missões é global — quem decide o que a Turma faz é a
+  // Atividade publicada pelo professor. Sem esta conferência, trocar o
+  // id na URL abria (e começava a registrar) uma Missão que a Turma
+  // nunca recebeu, inclusive de conteúdo ainda não publicado.
+  const repositories = await getRequestRepositories();
+  const atividades = await repositories.missionAssignments.listByClassroom(
+    workspace.institution.id,
+    classroomId,
+  );
+  const disponivel = atividades.some(
+    (atividade) => atividade.missionId === missionId && atividade.status === "published",
+  );
+  if (!disponivel) {
+    throw new Error("Esta Missão não está disponível para a sua Turma.");
+  }
+
   return {
     institutionId: workspace.institution.id,
     classroomId,

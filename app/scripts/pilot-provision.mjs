@@ -14,8 +14,10 @@
  *
  * Regras que o script aplica, não negocia:
  *  - simulação é o padrão; escrever exige `--execute` E o id da instituição;
- *  - o destino é conferido antes de qualquer escrita: URL de banco que
- *    pareça produção é recusada sem `--i-know-this-is-not-production`;
+ *  - o destino é conferido antes de qualquer escrita: banco local passa;
+ *    destino remoto exige o identificador do projeto de homologação
+ *    confirmado no comando (`--confirm-project=<ref>`) E no ambiente
+ *    (`IAH_HOMOLOGATION_PROJECT_REF`), e nunca um ref protegido;
  *  - as credenciais iniciais são individuais e só existem na saída desta
  *    execução (arquivo fora do Git, entregue pela escola). Nunca vão para
  *    o banco em texto, nem para a trilha administrativa, nem para o log;
@@ -30,6 +32,8 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
 
 import { provisionPilotClass } from "../src/modules/identity/provisioning/pilot-provisioning.ts";
+
+import { assertAuthorizedTarget } from "./pilot-target-guard.mjs";
 
 function arg(name, fallback = null) {
   const hit = process.argv.find((a) => a.startsWith(`--${name}=`));
@@ -55,24 +59,26 @@ const execute = arg("execute", false) === true;
 const rosterPath = arg("roster");
 const confirmInstitution = arg("confirm-institution");
 const credentialsOut = arg("credentials-out");
-const allowNonLocal = arg("i-know-this-is-not-production", false) === true;
+const confirmProject = arg("confirm-project");
 const actor = String(arg("actor", "cli:operador-nao-identificado"));
 
 if (!rosterPath) fail("Informe --roster=<arquivo.json> com a turma.");
 
 /**
- * Trava de destino. Sem a confirmação explícita, só banco local passa —
- * o procedimento precisa recusar produção por padrão.
+ * Trava de destino: local passa; remoto só com o projeto de homologação
+ * confirmado em duas fontes. O alvo é registrado antes de qualquer
+ * escrita, para que o operador veja onde vai gravar.
  */
-const host = new URL(url).hostname.toLowerCase();
-const local = host === "127.0.0.1" || host === "localhost" || host === "::1";
-if (!local && !allowNonLocal) {
-  fail(
-    `Destino remoto recusado (${host}). Este script só escreve em banco local por padrão. ` +
-      "Para um ambiente de homologação dedicado, repita com " +
-      "--i-know-this-is-not-production (e nunca aponte para produção).",
-  );
+let alvo;
+try {
+  alvo = assertAuthorizedTarget(url, {
+    confirmProject,
+    operation: "provisionar contas",
+  });
+} catch (error) {
+  fail(error instanceof Error ? error.message : String(error));
 }
+console.log(`Destino confirmado: ${alvo.descricao}.`);
 
 let roster;
 try {

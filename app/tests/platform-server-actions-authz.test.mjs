@@ -282,3 +282,21 @@ test("nenhuma Server Action do aluno aceita mais de dois argumentos", async () =
     assert.ok(actions[name].length <= 2, `${name} recebe dados demais`);
   }
 });
+
+test("aluno não realiza Missão que a turma dele não recebeu", async () => {
+  signedInAs(`user-${ALUNO_01.id}`, "aluno");
+  // Nenhuma Atividade publicada: o catálogo é global, mas a aula é da
+  // turma. Trocar o id na URL não abre conteúdo que o professor não
+  // liberou (achado da homologação por HTTP).
+  testEnv.repositories = createFakeRepositories({
+    institution: INSTITUTION,
+    academicYears: [seed.DEMO_ACADEMIC_YEAR],
+    classrooms: CLASSROOMS,
+    missionAssignments: [],
+  });
+  const { startMissionAction } = await alunoActions();
+  await assert.rejects(
+    () => startMissionAction(MISSION),
+    /não está disponível para a sua Turma/,
+  );
+});
