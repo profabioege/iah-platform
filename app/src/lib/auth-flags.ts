@@ -44,7 +44,12 @@ function isSupabaseModeComplete(): boolean {
     // Sem o segredo do JWT não existe acesso de menor privilégio ao banco
     // (migration 0010): a instância ficaria dependente da service_role
     // para o caminho pedagógico. Configuração incompleta bloqueia.
-    Boolean(process.env.SUPABASE_JWT_SECRET)
+    Boolean(process.env.SUPABASE_JWT_SECRET) &&
+    // O cliente de menor privilégio também precisa da anon key: no
+    // Supabase hospedado, o gateway (Kong) exige essa chave no cabeçalho
+    // `apikey` — sem ela o caminho pedagógico falha em runtime com um
+    // erro opaco em vez de recusar a configuração aqui.
+    Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
   );
 }
 
@@ -144,6 +149,9 @@ export function getPlatformConfigError(): string | null {
         process.env.SUPABASE_SERVICE_ROLE_KEY,
       ),
       SUPABASE_JWT_SECRET: Boolean(process.env.SUPABASE_JWT_SECRET),
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: Boolean(
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      ),
     };
     const missing = Object.entries(flags)
       .filter(([, present]) => !present)

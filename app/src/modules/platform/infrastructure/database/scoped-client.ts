@@ -42,7 +42,9 @@ const TOKEN_TTL_SECONDS = 300;
 
 export function isScopedDatabaseConfigured(): boolean {
   return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_JWT_SECRET,
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
+      process.env.SUPABASE_JWT_SECRET,
   );
 }
 
@@ -108,15 +110,25 @@ export async function getScopedDatabaseClient(
   actor: DatabaseActor,
 ): Promise<SupabaseClient> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!url || !process.env.SUPABASE_JWT_SECRET) {
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anonKey || !process.env.SUPABASE_JWT_SECRET) {
     throw new Error(
       "Banco de menor privilégio não configurado — defina " +
-        "NEXT_PUBLIC_SUPABASE_URL e SUPABASE_JWT_SECRET (ver docs/SUPABASE.md).",
+        "NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY e " +
+        "SUPABASE_JWT_SECRET (ver docs/SUPABASE.md).",
     );
   }
   const token = await mintScopedToken(actor);
-  return createClient(url, token, {
+  // O gateway do Supabase hospedado (Kong) exige que o cabeçalho `apikey`
+  // seja uma das chaves do projeto (anon/service_role) — um JWT de
+  // propósito próprio como este (role `iah_app`, vida curta) não é aceito
+  // ali, mesmo assinado com o segredo correto; isso só passa despercebido
+  // no PostgREST local de teste, que não tem essa camada de gateway.
+  // `Authorization: Bearer` continua carregando o token de menor
+  // privilégio — é dali que o PostgREST lê `request.jwt.claims` e assume
+  // o papel `iah_app`. `apikey` só identifica o projeto perante o Kong.
+  return createClient(url, anonKey, {
     auth: { persistSession: false, autoRefreshToken: false },
-    global: { headers: { Authorization: `Bearer ${token}`, apikey: token } },
+    global: { headers: { Authorization: `Bearer ${token}`, apikey: anonKey } },
   });
 }
