@@ -413,14 +413,19 @@ def widest_gap(lo: float, hi: float, x0: float, x1: float, rects: list[pymupdf.R
     alternativas empilhadas (gráficos altos, rótulos de eixo)."""
     occ = sorted((max(r.y0, lo), min(r.y1, hi)) for r in rects
                  if r.x1 > x0 and r.x0 < x1 and r.y1 > lo and r.y0 < hi)
-    best, best_mid, cursor = -1.0, (lo + hi) / 2, lo
+    gaps, cursor = [], lo
     for a, b in occ:
-        if a - cursor > best:
-            best, best_mid = a - cursor, (cursor + a) / 2
+        if a > cursor:
+            gaps.append((a - cursor, (cursor + a) / 2))
         cursor = max(cursor, b)
-    if hi - cursor > best:
-        best_mid = (cursor + hi) / 2
-    return best_mid
+    if hi > cursor:
+        gaps.append((hi - cursor, (cursor + hi) / 2))
+    if not gaps:
+        return (lo + hi) / 2
+    best = max(g for g, _ in gaps)
+    # Empate (entrelinhas iguais): fica o vão MAIS BAIXO — a linha de
+    # continuação pertence à alternativa de cima.
+    return [mid for g, mid in gaps if g >= best - 1.5][-1]
 
 
 def option_bands(glyphs: list[Line], it: Item, zones: list[Zone]) -> dict[str, tuple[int, int, pymupdf.Rect]]:
@@ -463,10 +468,29 @@ def option_bands(glyphs: list[Line], it: Item, zones: list[Zone]) -> dict[str, t
     return bands
 
 
-def crop(doc, pno: int, rect: pymupdf.Rect, path: Path, zoom: float = RENDER_ZOOM, pad_left: float = 3) -> list[float]:
+def crop(doc, pno: int, rect: pymupdf.Rect, path: Path, zoom: float = RENDER_ZOOM, pad_left: float = 3,
+         mask: list[pymupdf.Rect] | None = None) -> list[float]:
+    """Recorta a região; linhas de texto que NÃO pertencem ao recorte mas
+    invadem a moldura (vizinhas de uma fração no parágrafo, crédito logo
+    abaixo de uma figura) são pintadas de branco."""
     clip = (pymupdf.Rect(rect) + (-pad_left, -3, 3, 3)) & doc[pno].rect
-    doc[pno].get_pixmap(matrix=pymupdf.Matrix(zoom, zoom), clip=clip).save(path)
+    pix = doc[pno].get_pixmap(matrix=pymupdf.Matrix(zoom, zoom), clip=clip)
+    for m in mask or []:
+        r = (pymupdf.Rect(m) - (0.5, 0.5, -0.5, -0.5)) & clip
+        if r.is_empty:
+            continue
+        # Coordenadas ABSOLUTAS do pixmap (pix.irect começa em clip × zoom).
+        full = pymupdf.IRect(pix.irect)
+        ox, oy = full.x0, full.y0
+        ir = pymupdf.IRect(ox + int((r.x0 - clip.x0) * zoom), oy + int((r.y0 - clip.y0) * zoom),
+                           ox + int((r.x1 - clip.x0) * zoom) + 1, oy + int((r.y1 - clip.y0) * zoom) + 1) & full
+        if not ir.is_empty:
+            pix.set_rect(ir, (255, 255, 255))
+    pix.save(path)
     return [round(v, 1) for v in clip]
+
+
+page_text_lines: dict[int, list[Line]] = {}
 
 
 def build_item(doc: pymupdf.Document, it: Item, out_dir: Path, area: str, col_left) -> dict:
@@ -502,11 +526,24 @@ def build_item(doc: pymupdf.Document, it: Item, out_dir: Path, area: str, col_le
         return any((z.page, z.col) == (l.page, l.col) and (lb & (pymupdf.Rect(z.rect) + (-2, -2, 2, 2))).get_area() / area >= 0.6
                    for z in stem_zones)
 
+    def foreign_lines(page: int, rect: pymupdf.Rect, own) -> list[pymupdf.Rect]:
+        """Linhas de texto desta página que tocam a moldura e não são do recorte."""
+        frame = pymupdf.Rect(rect) + (-3, -3, 3, 3)
+        out = []
+        for l in page_text_lines.get(page, []):
+            lb = pymupdf.Rect(l.bbox)
+            if lb.intersects(frame) and not own(l):
+                out.append(lb)
+        return out
+
     figures: list[dict] = []
     for z in stem_zones:
         n = len(figures) + 1
         name = f"q{it.number:03d}-fig{n}.png"
-        figures.append({"n": n, "arquivo": name, "pagina": z.page + 1, "bbox": crop(doc, z.page, z.rect, out_dir / name), "_zone": z})
+        zr = pymupdf.Rect(z.rect)
+        own = lambda l, zr=zr: (pymupdf.Rect(l.bbox) & (zr + (-2, -2, 2, 2))).get_area() / max(pymupdf.Rect(l.bbox).get_area(), 1e-6) >= 0.6
+        figures.append({"n": n, "arquivo": name, "pagina": z.page + 1,
+                        "bbox": crop(doc, z.page, z.rect, out_dir / name, mask=foreign_lines(z.page, z.rect, own)), "_zone": z})
 
     # ------------------------------------------------------------ enunciado
     stem_lines = [l for l in it.lines[1:]
@@ -585,8 +622,11 @@ def build_item(doc: pymupdf.Document, it: Item, out_dir: Path, area: str, col_le
             n = len(figures) + 1
             name = f"q{it.number:03d}-fig{n}.png"
             area_r.x0 = max(area_r.x0, g.spans[0]["bbox"][2] + 1.5)
+            own_ids = {id(l) for l in band_lines}
+            mask = foreign_lines(bp, area_r, lambda l: id(l) in own_ids or
+                                 (pymupdf.Rect(l.bbox) & br).get_area() / max(pymupdf.Rect(l.bbox).get_area(), 1e-6) >= 0.6)
             figures.append({"n": n, "arquivo": name, "pagina": bp + 1,
-                            "bbox": crop(doc, bp, area_r, out_dir / name, pad_left=0), "alternativa": key})
+                            "bbox": crop(doc, bp, area_r, out_dir / name, pad_left=0, mask=mask), "alternativa": key})
             options.append({"key": key, "text": f"{{{{figura:{n}}}}}"})
         else:
             parts = []
@@ -755,6 +795,8 @@ def main() -> int:
     args.saida.mkdir(parents=True, exist_ok=True)
     doc = pymupdf.open(args.prova)
     raw = segment(doc)
+    for pno in range(len(doc)):
+        page_text_lines[pno] = page_lines(doc[pno], pno)[0]
 
     # Margem esquerda de cada coluna (para detectar recuo de parágrafo).
     col_left: dict[tuple[int, int], float] = {}
