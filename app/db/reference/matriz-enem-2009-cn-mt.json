@@ -1,0 +1,396 @@
+{
+ "documento": "Matriz de Referência para o ENEM 2009 (MEC/INEP)",
+ "fonte": "Documento oficial do INEP (download.inep.gov.br) inacessível desta sessão; texto transcrito de cópias públicas (sites.google.com/site/pccbioufam — CN; estudarcomquestoes.com.br — MT) e conferido com o conhecimento do texto oficial. CONFERIR com o PDF oficial antes de produção. Cópias públicas divergem em MT-H1 e MT-H27 (versões truncadas); adotada a redação completa do documento oficial — conferir.",
+ "pendente": "Linguagens (LC) e Ciências Humanas (CH) — necessárias para o 1º dia.",
+ "areas": {
+  "cnt": {
+   "sigla_enem": "CN",
+   "competencias": {
+    "1": "Compreender as ciências naturais e as tecnologias a elas associadas como construções humanas, percebendo seus papéis nos processos de produção e no desenvolvimento econômico e social da humanidade.",
+    "2": "Identificar a presença e aplicar as tecnologias associadas às ciências naturais em diferentes contextos.",
+    "3": "Associar intervenções que resultam em degradação ou conservação ambiental a processos produtivos e sociais e a instrumentos ou ações científico-tecnológicos.",
+    "4": "Compreender interações entre organismos e ambiente, em particular aquelas relacionadas à saúde humana, relacionando conhecimentos científicos, aspectos culturais e características individuais.",
+    "5": "Entender métodos e procedimentos próprios das ciências naturais e aplicá-los em diferentes contextos.",
+    "6": "Apropriar-se de conhecimentos da física para, em situações problema, interpretar, avaliar ou planejar intervenções científico-tecnológicas.",
+    "7": "Apropriar-se de conhecimentos da química para, em situações problema, interpretar, avaliar ou planejar intervenções científico-tecnológicas.",
+    "8": "Apropriar-se de conhecimentos da biologia para, em situações problema, interpretar, avaliar ou planejar intervenções científico-tecnológicas."
+   },
+   "habilidades": [
+    {
+     "codigo": "ENEM-CN-H1",
+     "numero": 1,
+     "competencia": 1,
+     "texto": "Reconhecer características ou propriedades de fenômenos ondulatórios ou oscilatórios, relacionando-os a seus usos em diferentes contextos."
+    },
+    {
+     "codigo": "ENEM-CN-H2",
+     "numero": 2,
+     "competencia": 1,
+     "texto": "Associar a solução de problemas de comunicação, transporte, saúde ou outro, com o correspondente desenvolvimento científico e tecnológico."
+    },
+    {
+     "codigo": "ENEM-CN-H3",
+     "numero": 3,
+     "competencia": 1,
+     "texto": "Confrontar interpretações científicas com interpretações baseadas no senso comum, ao longo do tempo ou em diferentes culturas."
+    },
+    {
+     "codigo": "ENEM-CN-H4",
+     "numero": 4,
+     "competencia": 1,
+     "texto": "Avaliar propostas de intervenção no ambiente, considerando a qualidade da vida humana ou medidas de conservação, recuperação ou utilização sustentável da biodiversidade."
+    },
+    {
+     "codigo": "ENEM-CN-H5",
+     "numero": 5,
+     "competencia": 2,
+     "texto": "Dimensionar circuitos ou dispositivos elétricos de uso cotidiano."
+    },
+    {
+     "codigo": "ENEM-CN-H6",
+     "numero": 6,
+     "competencia": 2,
+     "texto": "Relacionar informações para compreender manuais de instalação ou utilização de aparelhos, ou sistemas tecnológicos de uso comum."
+    },
+    {
+     "codigo": "ENEM-CN-H7",
+     "numero": 7,
+     "competencia": 2,
+     "texto": "Selecionar testes de controle, parâmetros ou critérios para a comparação de materiais e produtos, tendo em vista a defesa do consumidor, a saúde do trabalhador ou a qualidade de vida."
+    },
+    {
+     "codigo": "ENEM-CN-H8",
+     "numero": 8,
+     "competencia": 3,
+     "texto": "Identificar etapas em processos de obtenção, transformação, utilização ou reciclagem de recursos naturais, energéticos ou matérias-primas, considerando processos biológicos, químicos ou físicos neles envolvidos."
+    },
+    {
+     "codigo": "ENEM-CN-H9",
+     "numero": 9,
+     "competencia": 3,
+     "texto": "Compreender a importância dos ciclos biogeoquímicos ou do fluxo energia para a vida, ou da ação de agentes ou fenômenos que podem causar alterações nesses processos."
+    },
+    {
+     "codigo": "ENEM-CN-H10",
+     "numero": 10,
+     "competencia": 3,
+     "texto": "Analisar perturbações ambientais, identificando fontes, transporte e(ou) destino dos poluentes ou prevendo efeitos em sistemas naturais, produtivos ou sociais."
+    },
+    {
+     "codigo": "ENEM-CN-H11",
+     "numero": 11,
+     "competencia": 3,
+     "texto": "Reconhecer benefícios, limitações e aspectos éticos da biotecnologia, considerando estruturas e processos biológicos envolvidos em produtos biotecnológicos."
+    },
+    {
+     "codigo": "ENEM-CN-H12",
+     "numero": 12,
+     "competencia": 3,
+     "texto": "Avaliar impactos em ambientes naturais decorrentes de atividades sociais ou econômicas, considerando interesses contraditórios."
+    },
+    {
+     "codigo": "ENEM-CN-H13",
+     "numero": 13,
+     "competencia": 4,
+     "texto": "Reconhecer mecanismos de transmissão da vida, prevendo ou explicando a manifestação de características dos seres vivos."
+    },
+    {
+     "codigo": "ENEM-CN-H14",
+     "numero": 14,
+     "competencia": 4,
+     "texto": "Identificar padrões em fenômenos e processos vitais dos organismos, como manutenção do equilíbrio interno, defesa, relações com o ambiente, sexualidade, entre outros."
+    },
+    {
+     "codigo": "ENEM-CN-H15",
+     "numero": 15,
+     "competencia": 4,
+     "texto": "Interpretar modelos e experimentos para explicar fenômenos ou processos biológicos em qualquer nível de organização dos sistemas biológicos."
+    },
+    {
+     "codigo": "ENEM-CN-H16",
+     "numero": 16,
+     "competencia": 4,
+     "texto": "Compreender o papel da evolução na produção de padrões, processos biológicos ou na organização taxonômica dos seres vivos."
+    },
+    {
+     "codigo": "ENEM-CN-H17",
+     "numero": 17,
+     "competencia": 5,
+     "texto": "Relacionar informações apresentadas em diferentes formas de linguagem e representação usadas nas ciências físicas, químicas ou biológicas, como texto discursivo, gráficos, tabelas, relações matemáticas ou linguagem simbólica."
+    },
+    {
+     "codigo": "ENEM-CN-H18",
+     "numero": 18,
+     "competencia": 5,
+     "texto": "Relacionar propriedades físicas, químicas ou biológicas de produtos, sistemas ou procedimentos tecnológicos às finalidades a que se destinam."
+    },
+    {
+     "codigo": "ENEM-CN-H19",
+     "numero": 19,
+     "competencia": 5,
+     "texto": "Avaliar métodos, processos ou procedimentos das ciências naturais que contribuam para diagnosticar ou solucionar problemas de ordem social, econômica ou ambiental."
+    },
+    {
+     "codigo": "ENEM-CN-H20",
+     "numero": 20,
+     "competencia": 6,
+     "texto": "Caracterizar causas ou efeitos dos movimentos de partículas, substâncias, objetos ou corpos celestes."
+    },
+    {
+     "codigo": "ENEM-CN-H21",
+     "numero": 21,
+     "competencia": 6,
+     "texto": "Utilizar leis físicas e (ou) químicas para interpretar processos naturais ou tecnológicos inseridos no contexto da termodinâmica e(ou) do eletromagnetismo."
+    },
+    {
+     "codigo": "ENEM-CN-H22",
+     "numero": 22,
+     "competencia": 6,
+     "texto": "Compreender fenômenos decorrentes da interação entre a radiação e a matéria em suas manifestações em processos naturais ou tecnológicos, ou em suas implicações biológicas, sociais, econômicas ou ambientais."
+    },
+    {
+     "codigo": "ENEM-CN-H23",
+     "numero": 23,
+     "competencia": 6,
+     "texto": "Avaliar possibilidades de geração, uso ou transformação de energia em ambientes específicos, considerando implicações éticas, ambientais, sociais e/ou econômicas."
+    },
+    {
+     "codigo": "ENEM-CN-H24",
+     "numero": 24,
+     "competencia": 7,
+     "texto": "Utilizar códigos e nomenclatura da química para caracterizar materiais, substâncias ou transformações químicas."
+    },
+    {
+     "codigo": "ENEM-CN-H25",
+     "numero": 25,
+     "competencia": 7,
+     "texto": "Caracterizar materiais ou substâncias, identificando etapas, rendimentos ou implicações biológicas, sociais, econômicas ou ambientais de sua obtenção ou produção."
+    },
+    {
+     "codigo": "ENEM-CN-H26",
+     "numero": 26,
+     "competencia": 7,
+     "texto": "Avaliar implicações sociais, ambientais e/ou econômicas na produção ou no consumo de recursos energéticos ou minerais, identificando transformações químicas ou de energia envolvidas nesses processos."
+    },
+    {
+     "codigo": "ENEM-CN-H27",
+     "numero": 27,
+     "competencia": 7,
+     "texto": "Avaliar propostas de intervenção no meio ambiente aplicando conhecimentos químicos, observando riscos ou benefícios."
+    },
+    {
+     "codigo": "ENEM-CN-H28",
+     "numero": 28,
+     "competencia": 8,
+     "texto": "Associar características adaptativas dos organismos com seu modo de vida ou com seus limites de distribuição em diferentes ambientes, em especial em ambientes brasileiros."
+    },
+    {
+     "codigo": "ENEM-CN-H29",
+     "numero": 29,
+     "competencia": 8,
+     "texto": "Interpretar experimentos ou técnicas que utilizam seres vivos, analisando implicações para o ambiente, a saúde, a produção de alimentos, matérias primas ou produtos industriais."
+    },
+    {
+     "codigo": "ENEM-CN-H30",
+     "numero": 30,
+     "competencia": 8,
+     "texto": "Avaliar propostas de alcance individual ou coletivo, identificando aquelas que visam à preservação e a implementação da saúde individual, coletiva ou do ambiente."
+    }
+   ]
+  },
+  "mat": {
+   "sigla_enem": "MT",
+   "competencias": {
+    "1": "Construir significados para os números naturais, inteiros, racionais e reais.",
+    "2": "Utilizar o conhecimento geométrico para realizar a leitura e a representação da realidade e agir sobre ela.",
+    "3": "Construir noções de grandezas e medidas para a compreensão da realidade e a solução de problemas do cotidiano.",
+    "4": "Construir noções de variação de grandezas para a compreensão da realidade e a solução de problemas do cotidiano.",
+    "5": "Modelar e resolver problemas que envolvem variáveis socioeconômicas ou técnico-científicas, usando representações algébricas.",
+    "6": "Interpretar informações de natureza científica e social obtidas da leitura de gráficos e tabelas, realizando previsão de tendência, extrapolação, interpolação e interpretação.",
+    "7": "Compreender o caráter aleatório e não-determinístico dos fenômenos naturais e sociais e utilizar instrumentos adequados para medidas, determinação de amostras e cálculos de probabilidade para interpretar informações de variáveis apresentadas em uma distribuição estatística."
+   },
+   "habilidades": [
+    {
+     "codigo": "ENEM-MT-H1",
+     "numero": 1,
+     "competencia": 1,
+     "texto": "Reconhecer, no contexto social, diferentes significados e representações dos números e operações - naturais, inteiros, racionais ou reais."
+    },
+    {
+     "codigo": "ENEM-MT-H2",
+     "numero": 2,
+     "competencia": 1,
+     "texto": "Identificar padrões numéricos ou princípios de contagem."
+    },
+    {
+     "codigo": "ENEM-MT-H3",
+     "numero": 3,
+     "competencia": 1,
+     "texto": "Resolver situação-problema envolvendo conhecimentos numéricos."
+    },
+    {
+     "codigo": "ENEM-MT-H4",
+     "numero": 4,
+     "competencia": 1,
+     "texto": "Avaliar a razoabilidade de um resultado numérico na construção de argumentos sobre afirmações quantitativas."
+    },
+    {
+     "codigo": "ENEM-MT-H5",
+     "numero": 5,
+     "competencia": 1,
+     "texto": "Avaliar propostas de intervenção na realidade utilizando conhecimentos numéricos."
+    },
+    {
+     "codigo": "ENEM-MT-H6",
+     "numero": 6,
+     "competencia": 2,
+     "texto": "Interpretar a localização e a movimentação de pessoas/objetos no espaço tridimensional e sua representação no espaço bidimensional."
+    },
+    {
+     "codigo": "ENEM-MT-H7",
+     "numero": 7,
+     "competencia": 2,
+     "texto": "Identificar características de figuras planas ou espaciais."
+    },
+    {
+     "codigo": "ENEM-MT-H8",
+     "numero": 8,
+     "competencia": 2,
+     "texto": "Resolver situação-problema que envolva conhecimentos geométricos de espaço e forma."
+    },
+    {
+     "codigo": "ENEM-MT-H9",
+     "numero": 9,
+     "competencia": 2,
+     "texto": "Utilizar conhecimentos geométricos de espaço e forma na seleção de argumentos propostos como solução de problemas do cotidiano."
+    },
+    {
+     "codigo": "ENEM-MT-H10",
+     "numero": 10,
+     "competencia": 3,
+     "texto": "Identificar relações entre grandezas e unidades de medida."
+    },
+    {
+     "codigo": "ENEM-MT-H11",
+     "numero": 11,
+     "competencia": 3,
+     "texto": "Utilizar a noção de escalas na leitura de representação de situação do cotidiano."
+    },
+    {
+     "codigo": "ENEM-MT-H12",
+     "numero": 12,
+     "competencia": 3,
+     "texto": "Resolver situação-problema que envolva medidas de grandezas."
+    },
+    {
+     "codigo": "ENEM-MT-H13",
+     "numero": 13,
+     "competencia": 3,
+     "texto": "Avaliar o resultado de uma medição na construção de um argumento consistente."
+    },
+    {
+     "codigo": "ENEM-MT-H14",
+     "numero": 14,
+     "competencia": 3,
+     "texto": "Avaliar proposta de intervenção na realidade utilizando conhecimentos geométricos relacionados a grandezas e medidas."
+    },
+    {
+     "codigo": "ENEM-MT-H15",
+     "numero": 15,
+     "competencia": 4,
+     "texto": "Identificar a relação de dependência entre grandezas."
+    },
+    {
+     "codigo": "ENEM-MT-H16",
+     "numero": 16,
+     "competencia": 4,
+     "texto": "Resolver situação-problema envolvendo a variação de grandezas, direta ou inversamente proporcionais."
+    },
+    {
+     "codigo": "ENEM-MT-H17",
+     "numero": 17,
+     "competencia": 4,
+     "texto": "Analisar informações envolvendo a variação de grandezas como recurso para a construção de argumentação."
+    },
+    {
+     "codigo": "ENEM-MT-H18",
+     "numero": 18,
+     "competencia": 4,
+     "texto": "Avaliar propostas de intervenção na realidade envolvendo variação de grandezas."
+    },
+    {
+     "codigo": "ENEM-MT-H19",
+     "numero": 19,
+     "competencia": 5,
+     "texto": "Identificar representações algébricas que expressem a relação entre grandezas."
+    },
+    {
+     "codigo": "ENEM-MT-H20",
+     "numero": 20,
+     "competencia": 5,
+     "texto": "Interpretar gráfico cartesiano que represente relações entre grandezas."
+    },
+    {
+     "codigo": "ENEM-MT-H21",
+     "numero": 21,
+     "competencia": 5,
+     "texto": "Resolver situação-problema cuja modelagem envolva conhecimentos algébricos."
+    },
+    {
+     "codigo": "ENEM-MT-H22",
+     "numero": 22,
+     "competencia": 5,
+     "texto": "Utilizar conhecimentos algébricos/geométricos como recurso para a construção de argumentação."
+    },
+    {
+     "codigo": "ENEM-MT-H23",
+     "numero": 23,
+     "competencia": 5,
+     "texto": "Avaliar propostas de intervenção na realidade utilizando conhecimentos algébricos."
+    },
+    {
+     "codigo": "ENEM-MT-H24",
+     "numero": 24,
+     "competencia": 6,
+     "texto": "Utilizar informações expressas em gráficos ou tabelas para fazer inferências."
+    },
+    {
+     "codigo": "ENEM-MT-H25",
+     "numero": 25,
+     "competencia": 6,
+     "texto": "Resolver problema com dados apresentados em tabelas ou gráficos."
+    },
+    {
+     "codigo": "ENEM-MT-H26",
+     "numero": 26,
+     "competencia": 6,
+     "texto": "Analisar informações expressas em gráficos ou tabelas como recurso para a construção de argumentos."
+    },
+    {
+     "codigo": "ENEM-MT-H27",
+     "numero": 27,
+     "competencia": 7,
+     "texto": "Calcular medidas de tendência central ou de dispersão de um conjunto de dados expressos em uma tabela de frequências de dados agrupados (não em classes) ou em gráficos."
+    },
+    {
+     "codigo": "ENEM-MT-H28",
+     "numero": 28,
+     "competencia": 7,
+     "texto": "Resolver situação-problema que envolva conhecimentos de estatística e probabilidade."
+    },
+    {
+     "codigo": "ENEM-MT-H29",
+     "numero": 29,
+     "competencia": 7,
+     "texto": "Utilizar conhecimentos de estatística e probabilidade como recurso para a construção de argumentação."
+    },
+    {
+     "codigo": "ENEM-MT-H30",
+     "numero": 30,
+     "competencia": 7,
+     "texto": "Avaliar propostas de intervenção na realidade utilizando conhecimentos de estatística e probabilidade."
+    }
+   ]
+  }
+ }
+}

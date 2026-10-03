@@ -35,9 +35,9 @@ export interface CurriculumComponent {
 
 export interface CurriculumSkill {
   id: string;
-  /** `null` = habilidade da BNCC. */
+  /** `null` = referência comum (BNCC ou Matriz do Enem). */
   institutionId: string | null;
-  framework: "bncc" | "escola";
+  framework: "bncc" | "enem_matriz" | "escola";
   areaId: string;
   componentId: string | null;
   code: string;
@@ -113,6 +113,32 @@ export interface Question {
   componentId: string;
   skillId: string;
   createdBy: string;
+  /** Procedência externa (ex.: Enem: ano, dia, caderno, posição, parâmetros TRI oficiais). */
+  externalRef?: Record<string, unknown> | null;
+}
+
+/** Texto puro ou marcação mínima (sub/sup/em/strong/small + {{figura:N}}). */
+export type ContentFormat = "texto" | "marcacao_v1";
+
+export interface QuestionAssetMeta {
+  versionId: string;
+  n: number;
+  width: number | null;
+  height: number | null;
+  altText: string | null;
+}
+
+export type SuggestionStatus = "sugerida" | "confirmada" | "rejeitada";
+
+/** Correspondência proposta (IA ou equipe) entre questão e habilidade — não é a habilidade oficial. */
+export interface SkillSuggestion {
+  id: string;
+  questionId: string;
+  skillId: string;
+  origin: "ia" | "equipe";
+  confidence: "alta" | "media" | "baixa";
+  rationale: string;
+  status: SuggestionStatus;
 }
 
 export interface QuestionVersion {
@@ -129,13 +155,15 @@ export interface QuestionVersion {
   createdBy: string;
   decidedBy: string | null;
   decidedAt: string | null;
+  contentFormat: ContentFormat;
 }
 
 /** Gabarito e resolução — o aluno só recebe depois de entregar. */
 export interface QuestionKey {
   versionId: string;
   answerKey: string;
-  resolution: string;
+  /** Pode faltar em rascunho importado; a aprovação exige. */
+  resolution: string | null;
 }
 
 export interface ReviewChecklist {

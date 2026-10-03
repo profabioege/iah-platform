@@ -1,0 +1,547 @@
+{
+ "fonte_itens": "Enem 2024 · 2º dia · caderno 5 (INEP)",
+ "origem": "sugestao_ia",
+ "aviso": "Correspondência SUGERIDA por IA a partir do enunciado; não é classificação oficial. Exige revisão pedagógica antes de valer para listas por habilidade BNCC.",
+ "sugestoes": [
+  {
+   "numero": 91,
+   "bncc": "EM13CNT202",
+   "confianca": "alta",
+   "motivo": "organização celular: citoesqueleto (microfilamentos)"
+  },
+  {
+   "numero": 92,
+   "bncc": "EM13CNT307",
+   "confianca": "media",
+   "motivo": "propriedades dos materiais na separação de mistura (filtração)"
+  },
+  {
+   "numero": 93,
+   "bncc": "EM13CNT202",
+   "confianca": "media",
+   "motivo": "comportamento reprodutivo de anfíbios"
+  },
+  {
+   "numero": 94,
+   "bncc": "EM13CNT104",
+   "confianca": "media",
+   "motivo": "composição/reatividade de produto (creme dental) e saúde; equilíbrio químico"
+  },
+  {
+   "numero": 95,
+   "bncc": "EM13CNT102",
+   "confianca": "alta",
+   "motivo": "sistema térmico: isolamento do iglu"
+  },
+  {
+   "numero": 96,
+   "bncc": "EM13CNT104",
+   "confianca": "baixa",
+   "motivo": "grupo funcional de pesticidas naturais (nomenclatura química)"
+  },
+  {
+   "numero": 97,
+   "bncc": "EM13CNT202",
+   "confianca": "alta",
+   "motivo": "metabolismo energético bacteriano (aeróbio/anaeróbio)"
+  },
+  {
+   "numero": 98,
+   "bncc": "EM13CNT103",
+   "confianca": "alta",
+   "motivo": "radiação: fosforescência por transições eletrônicas"
+  },
+  {
+   "numero": 99,
+   "bncc": "EM13CNT202",
+   "confianca": "baixa",
+   "motivo": "resposta imune a vacina (BNCC EM não tem habilidade específica de imunologia)"
+  },
+  {
+   "numero": 100,
+   "bncc": "EM13CNT301",
+   "confianca": "baixa",
+   "motivo": "modelo explicativo de campo elétrico/blindagem"
+  },
+  {
+   "numero": 101,
+   "bncc": "EM13CNT106",
+   "confianca": "media",
+   "motivo": "geração de energia elétrica (grafeno e chuva)"
+  },
+  {
+   "numero": 102,
+   "bncc": "EM13CNT102",
+   "confianca": "media",
+   "motivo": "eficiência de sistema térmico (questão anulada)"
+  },
+  {
+   "numero": 103,
+   "bncc": "EM13CNT102",
+   "confianca": "alta",
+   "motivo": "máquina térmica: ciclo de Otto"
+  },
+  {
+   "numero": 104,
+   "bncc": "EM13CNT204",
+   "confianca": "alta",
+   "motivo": "composição de movimentos (nadador e correnteza)"
+  },
+  {
+   "numero": 105,
+   "bncc": "EM13CNT207",
+   "confianca": "media",
+   "motivo": "IST/HTLV e vulnerabilidades em saúde"
+  },
+  {
+   "numero": 106,
+   "bncc": "EM13CNT204",
+   "confianca": "alta",
+   "motivo": "força resultante e movimento"
+  },
+  {
+   "numero": 107,
+   "bncc": "EM13CNT203",
+   "confianca": "media",
+   "motivo": "intervenção no ecossistema: fitorremediação e cadeia alimentar"
+  },
+  {
+   "numero": 108,
+   "bncc": "EM13CNT309",
+   "confianca": "media",
+   "motivo": "recursos não renováveis e reciclagem (proporção de massa)"
+  },
+  {
+   "numero": 109,
+   "bncc": "EM13CNT308",
+   "confianca": "alta",
+   "motivo": "funcionamento de dispositivo eletrônico (LED) em circuito"
+  },
+  {
+   "numero": 110,
+   "bncc": "EM13CNT107",
+   "confianca": "alta",
+   "motivo": "previsões sobre circuito com lâmpadas e bateria"
+  },
+  {
+   "numero": 111,
+   "bncc": "EM13CNT106",
+   "confianca": "media",
+   "motivo": "alternativa energética: biogás x etanol"
+  },
+  {
+   "numero": 112,
+   "bncc": "EM13CNT307",
+   "confianca": "baixa",
+   "motivo": "propriedade ácido-base de grupo funcional em fármaco"
+  },
+  {
+   "numero": 113,
+   "bncc": "EM13CNT304",
+   "confianca": "media",
+   "motivo": "tecnologia do DNA: RT-PCR"
+  },
+  {
+   "numero": 114,
+   "bncc": "EM13CNT204",
+   "confianca": "media",
+   "motivo": "centro de massa em corpo em rotação"
+  },
+  {
+   "numero": 115,
+   "bncc": "EM13CNT301",
+   "confianca": "baixa",
+   "motivo": "estimativa quantitativa (massa molar, concentração)"
+  },
+  {
+   "numero": 116,
+   "bncc": "EM13CNT202",
+   "confianca": "baixa",
+   "motivo": "padrões reprodutivos em cladograma (evolução)"
+  },
+  {
+   "numero": 117,
+   "bncc": "EM13CNT301",
+   "confianca": "baixa",
+   "motivo": "modelo explicativo do efeito Doppler"
+  },
+  {
+   "numero": 118,
+   "bncc": "EM13CNT301",
+   "confianca": "baixa",
+   "motivo": "modelo de formação de imagem em espelhos côncavos"
+  },
+  {
+   "numero": 119,
+   "bncc": "EM13CNT306",
+   "confianca": "alta",
+   "motivo": "riscos e equipamentos de segurança (zona de deformação)"
+  },
+  {
+   "numero": 120,
+   "bncc": "EM13CNT106",
+   "confianca": "media",
+   "motivo": "geração de eletricidade em célula a combustível microbiana"
+  },
+  {
+   "numero": 121,
+   "bncc": "EM13CNT201",
+   "confianca": "baixa",
+   "motivo": "concepções históricas de 'compostos orgânicos'"
+  },
+  {
+   "numero": 122,
+   "bncc": "EM13CNT105",
+   "confianca": "alta",
+   "motivo": "ciclos biogeoquímicos (nitrogênio e carbono)"
+  },
+  {
+   "numero": 123,
+   "bncc": "EM13CNT104",
+   "confianca": "media",
+   "motivo": "poluentes de combustão e saúde/ambiente"
+  },
+  {
+   "numero": 124,
+   "bncc": "EM13CNT301",
+   "confianca": "baixa",
+   "motivo": "nível sonoro e distância (modelo/medição)"
+  },
+  {
+   "numero": 125,
+   "bncc": "EM13CNT202",
+   "confianca": "media",
+   "motivo": "enzimas e desnaturação pelo calor"
+  },
+  {
+   "numero": 126,
+   "bncc": "EM13CNT102",
+   "confianca": "alta",
+   "motivo": "transferência de calor em aquecedor solar (convecção)"
+  },
+  {
+   "numero": 127,
+   "bncc": "EM13CNT310",
+   "confianca": "alta",
+   "motivo": "urbanização, saneamento e doenças transmitidas por mosquitos"
+  },
+  {
+   "numero": 128,
+   "bncc": "EM13CNT203",
+   "confianca": "media",
+   "motivo": "bioacumulação de poluentes no corpo de vertebrados"
+  },
+  {
+   "numero": 129,
+   "bncc": "EM13CNT103",
+   "confianca": "alta",
+   "motivo": "raios X: interação com a matéria"
+  },
+  {
+   "numero": 130,
+   "bncc": "EM13CNT104",
+   "confianca": "alta",
+   "motivo": "toxicidade de compostos nitrosos (conservantes)"
+  },
+  {
+   "numero": 131,
+   "bncc": "EM13CNT206",
+   "confianca": "media",
+   "motivo": "recuperação de áreas degradadas e sucessão ecológica"
+  },
+  {
+   "numero": 132,
+   "bncc": "EM13CNT202",
+   "confianca": "media",
+   "motivo": "tipos de fibras musculares e metabolismo"
+  },
+  {
+   "numero": 133,
+   "bncc": "EM13CNT202",
+   "confianca": "media",
+   "motivo": "mimetismo como adaptação"
+  },
+  {
+   "numero": 134,
+   "bncc": "EM13CNT202",
+   "confianca": "media",
+   "motivo": "exoesqueleto e muda em crustáceos"
+  },
+  {
+   "numero": 135,
+   "bncc": "EM13CNT205",
+   "confianca": "alta",
+   "motivo": "probabilidade em herança ligada ao X (heredograma)"
+  },
+  {
+   "numero": 136,
+   "bncc": "EM13MAT302",
+   "confianca": "alta",
+   "motivo": "modelo de função afim (custo fixo + variável)"
+  },
+  {
+   "numero": 137,
+   "bncc": "EM13MAT316",
+   "confianca": "alta",
+   "motivo": "mediana"
+  },
+  {
+   "numero": 138,
+   "bncc": "EM13MAT314",
+   "confianca": "baixa",
+   "motivo": "divisão proporcional a horas trabalhadas"
+  },
+  {
+   "numero": 139,
+   "bncc": "EM13MAT310",
+   "confianca": "alta",
+   "motivo": "contagem: combinações"
+  },
+  {
+   "numero": 140,
+   "bncc": "EM13MAT312",
+   "confianca": "alta",
+   "motivo": "probabilidade de eventos independentes sucessivos"
+  },
+  {
+   "numero": 141,
+   "bncc": "EM13MAT314",
+   "confianca": "alta",
+   "motivo": "densidade demográfica (razão entre grandezas)"
+  },
+  {
+   "numero": 142,
+   "bncc": "EM13MAT103",
+   "confianca": "media",
+   "motivo": "medidas em polegadas com frações"
+  },
+  {
+   "numero": 143,
+   "bncc": "EM13MAT507",
+   "confianca": "baixa",
+   "motivo": "sequência de parcelas (progressão)"
+  },
+  {
+   "numero": 144,
+   "bncc": "EM13MAT308",
+   "confianca": "media",
+   "motivo": "relações métricas: comprimento de correia em polias"
+  },
+  {
+   "numero": 145,
+   "bncc": "EM13MAT308",
+   "confianca": "media",
+   "motivo": "relações métricas em triângulo equilátero (circuncentro)"
+  },
+  {
+   "numero": 146,
+   "bncc": "EM13MAT306",
+   "confianca": "alta",
+   "motivo": "fenômeno periódico: senoide de amortecedor"
+  },
+  {
+   "numero": 147,
+   "bncc": "EM13MAT506",
+   "confianca": "alta",
+   "motivo": "área de polígonos regulares de mesmo perímetro"
+  },
+  {
+   "numero": 148,
+   "bncc": "EM13MAT314",
+   "confianca": "alta",
+   "motivo": "velocidade e encontro (razão entre grandezas)"
+  },
+  {
+   "numero": 149,
+   "bncc": "EM13MAT312",
+   "confianca": "alta",
+   "motivo": "probabilidade sem reposição em tentativas sucessivas"
+  },
+  {
+   "numero": 150,
+   "bncc": "EM13MAT305",
+   "confianca": "alta",
+   "motivo": "função logarítmica: escala Richter"
+  },
+  {
+   "numero": 151,
+   "bncc": "EM13MAT309",
+   "confianca": "alta",
+   "motivo": "volume de cilindros"
+  },
+  {
+   "numero": 152,
+   "bncc": "EM13MAT510",
+   "confianca": "alta",
+   "motivo": "reta de tendência entre duas variáveis"
+  },
+  {
+   "numero": 153,
+   "bncc": "EM13MAT101",
+   "confianca": "alta",
+   "motivo": "variação de grandezas por análise de gráficos"
+  },
+  {
+   "numero": 154,
+   "bncc": "EM13MAT316",
+   "confianca": "alta",
+   "motivo": "média aritmética"
+  },
+  {
+   "numero": 155,
+   "bncc": "EM13MAT307",
+   "confianca": "media",
+   "motivo": "área de setor circular"
+  },
+  {
+   "numero": 156,
+   "bncc": "EM13MAT302",
+   "confianca": "media",
+   "motivo": "modelo algébrico linear de preço de corrida"
+  },
+  {
+   "numero": 157,
+   "bncc": "EM13MAT314",
+   "confianca": "alta",
+   "motivo": "vazão (razão entre grandezas)"
+  },
+  {
+   "numero": 158,
+   "bncc": "EM13MAT103",
+   "confianca": "alta",
+   "motivo": "unidades de medida compostas (fluxo)"
+  },
+  {
+   "numero": 159,
+   "bncc": "EM13MAT203",
+   "confianca": "baixa",
+   "motivo": "otimização de custo em compra (orçamento)"
+  },
+  {
+   "numero": 160,
+   "bncc": "EM13MAT301",
+   "confianca": "media",
+   "motivo": "equação do 1º grau em situação de preço"
+  },
+  {
+   "numero": 161,
+   "bncc": "EM13MAT102",
+   "confianca": "media",
+   "motivo": "análise de gráfico e probabilidade"
+  },
+  {
+   "numero": 162,
+   "bncc": "EM13MAT105",
+   "confianca": "baixa",
+   "motivo": "projeção ortogonal (BNCC EM sem habilidade específica)"
+  },
+  {
+   "numero": 163,
+   "bncc": "EM13MAT313",
+   "confianca": "media",
+   "motivo": "ordens de grandeza e notação científica (microscópio)"
+  },
+  {
+   "numero": 164,
+   "bncc": "EM13MAT316",
+   "confianca": "alta",
+   "motivo": "média aritmética"
+  },
+  {
+   "numero": 165,
+   "bncc": "EM13MAT310",
+   "confianca": "alta",
+   "motivo": "princípio multiplicativo (senhas)"
+  },
+  {
+   "numero": 166,
+   "bncc": "EM13MAT203",
+   "confianca": "baixa",
+   "motivo": "comparação de orçamentos"
+  },
+  {
+   "numero": 167,
+   "bncc": "EM13MAT104",
+   "confianca": "baixa",
+   "motivo": "porcentagens e conceitos"
+  },
+  {
+   "numero": 168,
+   "bncc": "EM13MAT404",
+   "confianca": "media",
+   "motivo": "funções definidas por partes (gráficos de segmentos)"
+  },
+  {
+   "numero": 169,
+   "bncc": "EM13MAT508",
+   "confianca": "alta",
+   "motivo": "progressão geométrica e potências"
+  },
+  {
+   "numero": 170,
+   "bncc": "EM13MAT203",
+   "confianca": "baixa",
+   "motivo": "planejamento financeiro de evento (lucro)"
+  },
+  {
+   "numero": 171,
+   "bncc": "EM13MAT504",
+   "confianca": "baixa",
+   "motivo": "sólido de revolução (tronco de cone)"
+  },
+  {
+   "numero": 172,
+   "bncc": "EM13MAT307",
+   "confianca": "media",
+   "motivo": "área de retângulos"
+  },
+  {
+   "numero": 173,
+   "bncc": "EM13MAT201",
+   "confianca": "media",
+   "motivo": "medições e orçamento de obra"
+  },
+  {
+   "numero": 174,
+   "bncc": "EM13MAT308",
+   "confianca": "media",
+   "motivo": "escala e razão entre áreas (semelhança)"
+  },
+  {
+   "numero": 175,
+   "bncc": "EM13MAT102",
+   "confianca": "alta",
+   "motivo": "leitura de gráfico de séries (balança comercial)"
+  },
+  {
+   "numero": 176,
+   "bncc": "EM13MAT104",
+   "confianca": "baixa",
+   "motivo": "representação decimal de taxa percentual"
+  },
+  {
+   "numero": 177,
+   "bncc": "EM13MAT503",
+   "confianca": "alta",
+   "motivo": "máximo de função quadrática (área)"
+  },
+  {
+   "numero": 178,
+   "bncc": "EM13MAT103",
+   "confianca": "baixa",
+   "motivo": "representações de números racionais (habilidade do EF; sem correspondente direto no EM)"
+  },
+  {
+   "numero": 179,
+   "bncc": "EM13MAT304",
+   "confianca": "alta",
+   "motivo": "modelo exponencial (resfriamento)"
+  },
+  {
+   "numero": 180,
+   "bncc": "EM13MAT309",
+   "confianca": "alta",
+   "motivo": "volume de cilindro e cubo"
+  }
+ ]
+}

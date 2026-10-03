@@ -17,6 +17,8 @@ import type {
   QuestionKey,
   QuestionReview,
   QuestionVersion,
+  QuestionAssetMeta,
+  SkillSuggestion,
 } from "../domain/entities";
 import type { QuestionBankRepositories } from "../domain/repositories";
 
@@ -88,7 +90,30 @@ const toQuestion = (r: Row): Question => ({
   componentId: String(r.component_id),
   skillId: String(r.skill_id),
   createdBy: String(r.created_by),
+  externalRef: (r.external_ref as Record<string, unknown> | null) ?? null,
 });
+
+const toSuggestion = (r: Row): SkillSuggestion => ({
+  id: String(r.id),
+  questionId: String(r.question_id),
+  skillId: String(r.skill_id),
+  origin: r.origin as SkillSuggestion["origin"],
+  confidence: r.confidence as SkillSuggestion["confidence"],
+  rationale: String(r.rationale),
+  status: r.status as SkillSuggestion["status"],
+});
+
+/** bytea via PostgREST chega como texto hexadecimal "\\x89504e47…". */
+function decodeBytea(value: unknown): Uint8Array | null {
+  if (typeof value !== "string") return null;
+  const hex = value.startsWith("\\x") ? value.slice(2) : value;
+  if (!/^[0-9a-f]*$/i.test(hex) || hex.length % 2) return null;
+  const out = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  return out;
+}
+
+const QUESTION_COLS = "id, institution_id, component_id, skill_id, created_by, external_ref";
 
 const toVersion = (r: Row): QuestionVersion => ({
   id: String(r.id),
@@ -104,6 +129,7 @@ const toVersion = (r: Row): QuestionVersion => ({
   createdBy: String(r.created_by),
   decidedBy: str(r.decided_by),
   decidedAt: str(r.decided_at),
+  contentFormat: (r.content_format as QuestionVersion["contentFormat"]) ?? "texto",
 });
 
 const toKey = (r: Row): QuestionKey => ({
@@ -314,6 +340,7 @@ export function createDatabaseQuestionBankRepositories(
         source_id: v.sourceId,
         authorship: v.authorship,
         created_by: v.createdBy,
+        content_format: v.contentFormat ?? "texto",
       });
       fail("question_versions.insert", error);
     },
@@ -329,6 +356,64 @@ export function createDatabaseQuestionBankRepositories(
         { onConflict: "version_id" },
       );
       fail("question_version_keys.upsert", error);
+    },
+
+    async listAssets(versionIds) {
+      if (versionIds.length === 0) return [];
+      const { data, error } = await db
+        .from("question_assets")
+        .select("version_id, n, width, height, alt_text")
+        .in("version_id", versionIds)
+        .order("n");
+      fail("question_assets", error);
+      return (data ?? []).map((r: Row) => ({
+        versionId: String(r.version_id),
+        n: Number(r.n),
+        width: r.width == null ? null : Number(r.width),
+        height: r.height == null ? null : Number(r.height),
+        altText: str(r.alt_text),
+      })) satisfies QuestionAssetMeta[];
+    },
+
+    async getAssetContent(versionId, n) {
+      const { data, error } = await db
+        .from("question_assets")
+        .select("content")
+        .eq("version_id", versionId)
+        .eq("n", n)
+        .maybeSingle();
+      fail("question_assets.content", error);
+      return data ? decodeBytea((data as Row).content) : null;
+    },
+
+    async listSuggestionsBySkill(skillId, statuses) {
+      const { data, error } = await db
+        .from("question_skill_suggestions")
+        .select("id, question_id, skill_id, origin, confidence, rationale, status")
+        .eq("skill_id", skillId)
+        .in("status", statuses);
+      fail("question_skill_suggestions", error);
+      return (data ?? []).map(toSuggestion);
+    },
+
+    async listSuggestionsByQuestions(questionIds) {
+      if (questionIds.length === 0) return [];
+      const { data, error } = await db
+        .from("question_skill_suggestions")
+        .select("id, question_id, skill_id, origin, confidence, rationale, status")
+        .in("question_id", questionIds);
+      fail("question_skill_suggestions", error);
+      return (data ?? []).map(toSuggestion);
+    },
+
+    async setSuggestionStatus(id, status, reviewedBy) {
+      const { data, error } = await db
+        .from("question_skill_suggestions")
+        .update({ status, reviewed_by: reviewedBy, reviewed_at: new Date().toISOString() })
+        .eq("id", id)
+        .select("id");
+      fail("question_skill_suggestions.status", error);
+      if (!data?.length) throw new Error("Sugestão não encontrada ou fora do seu alcance.");
     },
 
     async submitVersion(versionId) {
@@ -367,7 +452,7 @@ export function createDatabaseQuestionBankRepositories(
     async listQuestionsBySkill(skillId) {
       const { data, error } = await db
         .from("questions")
-        .select("id, institution_id, component_id, skill_id, created_by")
+        .select(QUESTION_COLS)
         .eq("skill_id", skillId)
         .is("retired_at", null);
       fail("questions", error);
@@ -378,7 +463,7 @@ export function createDatabaseQuestionBankRepositories(
       if (ids.length === 0) return [];
       const { data, error } = await db
         .from("questions")
-        .select("id, institution_id, component_id, skill_id, created_by")
+        .select(QUESTION_COLS)
         .in("id", ids);
       fail("questions", error);
       return (data ?? []).map(toQuestion);
@@ -387,7 +472,7 @@ export function createDatabaseQuestionBankRepositories(
     async listVersions({ ids, questionIds, status }) {
       let query = db
         .from("question_versions")
-        .select("id, institution_id, question_id, version, stem, options, editorial_difficulty, source_id, authorship, status, created_by, decided_by, decided_at");
+        .select("id, institution_id, question_id, version, stem, options, editorial_difficulty, source_id, authorship, status, created_by, decided_by, decided_at, content_format");
       if (ids) {
         if (ids.length === 0) return [];
         query = query.in("id", ids);

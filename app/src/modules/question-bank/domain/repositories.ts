@@ -17,7 +17,11 @@ import type {
   QuestionOption,
   QuestionReview,
   QuestionVersion,
+  QuestionAssetMeta,
   ReviewChecklist,
+  SkillSuggestion,
+  SuggestionStatus,
+  ContentFormat,
   SourceKind,
   StudentRef,
   EditorialDifficulty,
@@ -70,8 +74,16 @@ export interface QuestionBankRepositories {
     sourceId: string;
     authorship: string;
     createdBy: string;
+    contentFormat?: ContentFormat;
   }): Promise<void>;
   upsertKey(input: QuestionKey & { institutionId: string }): Promise<void>;
+  /** Metadados das figuras (sem o conteúdo binário). */
+  listAssets(versionIds: string[]): Promise<QuestionAssetMeta[]>;
+  /** Conteúdo PNG de uma figura — sob a mesma RLS da versão. */
+  getAssetContent(versionId: string, n: number): Promise<Uint8Array | null>;
+  listSuggestionsBySkill(skillId: string, statuses: SuggestionStatus[]): Promise<SkillSuggestion[]>;
+  listSuggestionsByQuestions(questionIds: string[]): Promise<SkillSuggestion[]>;
+  setSuggestionStatus(id: string, status: "confirmada" | "rejeitada", reviewedBy: string): Promise<void>;
   submitVersion(versionId: string): Promise<void>;
   insertReview(input: {
     id: string;
