@@ -591,3 +591,23 @@ atualizados.
 **Alternativas descartadas:** *Usar os PNGs via `next/image`* (rejeitado — fundo chapado sem transparência, sem escalabilidade, ruim para favicon e OG); *calibrar a reconstrução com as medições do artwork* (rejeitado assim que o vetor foi entregue — continuaria sendo interpretação de um ativo protegido); *alterar `--iah-cyan-400` para `#0093b0`* (rejeitado nesta entrega — mudaria a interface inteira e exigiria revalidação visual de todo o produto, escopo alheio ao logotipo).
 
 **Impacto futuro:** A API pública de `<Logo>` e `<BrandSymbol>` não muda, então os cinco pontos de uso seguem intactos. O wordmark deixa de depender de fonte carregada. Substituir o logotipo no futuro passa a ser editar um arquivo de dados e regenerar as cópias, conforme o checklist de `BRAND_GUIDELINES.md`. Pendência aberta: alinhar (ou justificar) a diferença entre o acento da marca e a cor primária da interface.
+
+## D-049 — Reformulação EM: matriz curricular por escola e banco de questões versionado com revisão humana, isolado por RLS (03/10/2026)
+
+**Status:** Proposto para revisão do Founder (branch `reform/em-curriculo-banco-questoes`, não publicada). Detalhes em `docs/reformulacao/01-matriz-e-banco-de-questoes.md`.
+
+**Contexto e problema:** O IAH escolar deixa de se limitar à disciplina IA & Humanidades e passa a atender as quatro áreas do Ensino Médio (1ª–3ª séries). A jornada planejada (diagnóstico por etapas, plano semanal, listas periódicas, simulados formativos) depende de duas fundações que não existiam: uma matriz curricular que respeite o planejamento de cada escola e um banco de questões com procedência, direitos e revisão. `modules/assessment` só roda em modo demo, sem persistência, com questões embutidas na avaliação; `modules/curriculum` é seed + stub.
+
+**Decisão:**
+
+1. **Habilidade ≠ série.** A BNCC fornece as habilidades do EM por área; a série, o período e o componente vêm de `school_curriculum_plans`, por escola e ano letivo. Habilidades e componentes têm `institution_id` nulo (referência comum, BNCC) ou da escola (próprios).
+2. **Questão versionada e imutável após envio.** Corrigir cria nova versão; a lista aponta para a versão exata. Gabarito e resolução ficam em tabela separada, legível pelo aluno só depois da entrega.
+3. **Revisão humana obrigatória antes de publicar**, com autor ≠ revisor, checklist completo e fonte com direitos verificados pela gestão. Itens do Enem ou de material didático de terceiros (COC/Arco etc.) não são importados por presunção de licença: só entram como `licenciado`, com evidência.
+4. **Dificuldade é rótulo editorial**, nunca apresentada como TRI.
+5. **O banco impõe as regras**, no padrão já adotado em D-041/0010: `iah_app` + claims + RLS, triggers `security definer` contra referência cruzada entre escolas (valem até para a service_role), correção calculada no banco na entrega, nenhum DELETE para a aplicação.
+6. **Sem modo demonstração** para o banco de questões: só existe com persistência e RLS reais.
+7. **Recorte provisório** (1 habilidade por área, 1ª série, 1º bimestre, 8 itens sintéticos originais) marcado em dados (`status = 'provisional'`, `curriculum_provisional`) e em tela até a escola entregar o currículo.
+
+**Alternativas descartadas:** *estender `modules/assessment`* (questões embutidas na avaliação, sem versão nem procedência, só demo); *série como atributo da habilidade* (contradiz a BNCC do EM e engessa a escola); *controle só na aplicação, com service_role* (repetiria a fragilidade corrigida na 0010); *gabarito como coluna da versão* (RLS por linha não esconde coluna do aluno).
+
+**Impacto futuro:** Telas de autoria/revisão/planejamento, diagnóstico por etapas e plano semanal constroem sobre estas tabelas. Tutor, geração adaptativa e apoio à correção (fases posteriores, com supervisão docente) devem consumir só versões aprovadas e fontes verificadas. Capacidade (45/65 alunos) e desempenho na Vercel seguem **não comprovados** e precisam de ensaio próprio.

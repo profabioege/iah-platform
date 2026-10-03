@@ -2,6 +2,21 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 03/10/2026 — Reformulação EM, incremento 1: matriz curricular e banco de questões (branch não publicada)
+
+- Inventário verificável da candidata, dos projetos Supabase e da Vercel
+  (`docs/reformulacao/00-inventario-2026-10-03.md`).
+- Corrige fixtures de teste quebrados desde `ee2c9d1` (101 unitários e 23 de
+  integração falhavam) e versiona a migration 0015 já aplicada na homologação.
+- Migrations 0016 (matriz curricular por escola) e 0017 (banco de questões
+  versionado, revisão editorial, listas, tentativas e devolutivas) com RLS no
+  padrão `iah_app` — D-049.
+- Módulo `question-bank`, telas `/professor/banco-de-questoes` e
+  `/dashboard/listas`, recorte curricular PROVISÓRIO com 8 itens sintéticos.
+- Testes: 390 unitários, 41 de integração com banco real (7 novos), 59 da
+  fila, 4 mutações detectadas, percurso HTTP com navegador. Capacidade e
+  Vercel não medidas.
+
 ## 20/07/2026 — Continuação operacional da M22: renomeação do Mentor + bloqueio de provisionamento
 
 Tarefa pedia ativar o modo real (M22) em infraestrutura real: criar/conectar
