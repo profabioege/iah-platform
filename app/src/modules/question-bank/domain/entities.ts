@@ -164,6 +164,12 @@ export const PRACTICE_LIST_KIND_LABEL: Record<PracticeListKind, string> = {
   revisao: "Revisão",
 };
 
+export const PRACTICE_LIST_STATUS_LABEL: Record<PracticeListStatus, string> = {
+  rascunho: "Rascunho",
+  publicada: "Publicada",
+  encerrada: "Encerrada",
+};
+
 export interface PracticeList {
   id: string;
   institutionId: string;
