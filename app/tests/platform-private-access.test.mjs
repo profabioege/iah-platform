@@ -58,6 +58,7 @@ function modo(valor, extras = {}) {
     "NEXT_PUBLIC_SUPABASE_URL",
     "SUPABASE_SERVICE_ROLE_KEY",
     "SUPABASE_JWT_SECRET",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
   ]) {
     delete process.env[v];
   }
@@ -70,6 +71,7 @@ const SUPABASE_COMPLETO = {
   NEXT_PUBLIC_SUPABASE_URL: "https://ficticio.supabase.invalid",
   SUPABASE_SERVICE_ROLE_KEY: "service-role-ficticia-de-teste",
   SUPABASE_JWT_SECRET: "jwt-secret-ficticio-de-teste",
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: "anon-key-ficticia-de-teste",
 };
 
 /** Captura o destino de um `redirect()` (o stub lança com digest). */

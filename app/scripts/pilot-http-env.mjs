@@ -159,6 +159,7 @@ export async function startHttpHomologation(options = {}) {
       NEXT_PUBLIC_SUPABASE_URL: database.supabaseUrl,
       SUPABASE_SERVICE_ROLE_KEY: mintRoleToken("service_role", database.jwtSecret),
       SUPABASE_JWT_SECRET: database.jwtSecret,
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: mintRoleToken("anon", database.jwtSecret),
       PILOT_TEST_DATABASE_URL: database.databaseUrl,
       NEXT_PUBLIC_BUILD_COMMIT: process.env.E2E_COMMIT ?? "local",
       NEXT_PUBLIC_BUILD_BRANCH: "pilot/beryon-40-alunos",

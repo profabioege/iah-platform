@@ -114,6 +114,7 @@ async function main() {
     process.env.NEXT_PUBLIC_SUPABASE_URL = db.supabaseUrl;
     process.env.SUPABASE_SERVICE_ROLE_KEY = mintRoleToken("service_role", db.jwtSecret);
     process.env.SUPABASE_JWT_SECRET = db.jwtSecret;
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = mintRoleToken("anon", db.jwtSecret);
 
     const admin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,

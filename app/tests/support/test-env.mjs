@@ -45,6 +45,9 @@ export function enableRealMode() {
   // Menor privilégio (migration 0010): o modo real exige o segredo do
   // JWT que assina o acesso `iah_app`.
   process.env.SUPABASE_JWT_SECRET = "test-jwt-secret-descartavel";
+  // Exigida desde ee2c9d1: o gateway do Supabase hospedado (Kong) pede a
+  // anon key no cabeçalho `apikey` do cliente de menor privilégio.
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "test-anon-key-descartavel";
 }
 
 /**
@@ -57,6 +60,7 @@ export function enableDemoMode() {
   delete process.env.NEXT_PUBLIC_SUPABASE_URL;
   delete process.env.SUPABASE_SERVICE_ROLE_KEY;
   delete process.env.SUPABASE_JWT_SECRET;
+  delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   delete process.env.GOOGLE_CLIENT_ID;
   delete process.env.GOOGLE_CLIENT_SECRET;
 }
@@ -68,6 +72,7 @@ export function enableUnavailableMode() {
   delete process.env.NEXT_PUBLIC_SUPABASE_URL;
   delete process.env.SUPABASE_SERVICE_ROLE_KEY;
   delete process.env.SUPABASE_JWT_SECRET;
+  delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   delete process.env.GOOGLE_CLIENT_ID;
   delete process.env.GOOGLE_CLIENT_SECRET;
 }

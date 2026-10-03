@@ -92,6 +92,7 @@ async function main() {
       NEXT_PUBLIC_SUPABASE_URL: database.supabaseUrl,
       SUPABASE_SERVICE_ROLE_KEY: mintRoleToken("service_role", database.jwtSecret),
       SUPABASE_JWT_SECRET: database.jwtSecret,
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: mintRoleToken("anon", database.jwtSecret),
       PILOT_TEST_DATABASE_URL: database.databaseUrl,
     };
 
