@@ -2,6 +2,23 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 03/10/2026 — Reformulação EM, incremento 2: Catálogo IAH e carga do Enem (branch não publicada)
+
+- Inventário do acervo Enem local (`docs/reformulacao/02-inventario-enem-2026-10-03.md`)
+  e reorganização da pasta (nada apagado; duplicata em `_to_delete/`).
+- Ferramenta offline de extração dos PDFs (`tools/enem-extracao/`): caderno
+  2024 · 2º dia · CD5 com 90/90 itens em formato híbrido, para revisão humana.
+- Migration 0018: Catálogo IAH comum às escolas, figuras, marcação mínima,
+  Matriz do Enem, BNCC sugerida, resolução exigida na aprovação — D-050.
+- Referências BNCC EM (183) e Matriz do Enem CN/MT (60); sugestões BNCC do
+  caderno piloto marcadas como sugestão de IA.
+- Biblioteca e script de carga (simulação por padrão, trava de destino),
+  rota autenticada de figuras, renderização por lista de permissão, rótulos de
+  origem e de vínculo nas telas do professor e do aluno.
+- Testes: 401 unitários, 48 de integração com banco real (7 novos), 59 da
+  fila, 3 mutações detectadas, percurso HTTP 12/12. Nada carregado fora de
+  banco descartável: faltam microdados do INEP e a verificação da licença.
+
 ## 03/10/2026 — Reformulação EM, incremento 1: matriz curricular e banco de questões (branch não publicada)
 
 - Inventário verificável da candidata, dos projetos Supabase e da Vercel

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { QuestionContent } from "@/components/question-bank/question-content";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -81,7 +82,9 @@ export default async function StudentListPage({
                     {item.isCorrect ? "Correta" : "Incorreta"}
                   </Badge>
                 </div>
-                <CardTitle className="text-base font-normal leading-snug">{item.stem}</CardTitle>
+                <CardTitle className="text-base font-normal leading-snug">
+                  <QuestionContent text={item.stem} format={item.contentFormat} versionId={item.versionId} />
+                </CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-2 text-sm">
                 <ol className="flex flex-col gap-1">
@@ -93,13 +96,14 @@ export default async function StudentListPage({
                         o.key === item.selectedKey && o.key !== item.answerKey && "text-destructive line-through",
                       )}
                     >
-                      {o.key}) {o.text}
+                      {o.key}){" "}
+                      <QuestionContent text={o.text} format={item.contentFormat} versionId={item.versionId} inline />
                       {o.key === item.selectedKey ? " — sua resposta" : ""}
                       {o.key === item.answerKey ? " — gabarito" : ""}
                     </li>
                   ))}
                 </ol>
-                <p className="text-muted-foreground"><strong>Resolução:</strong> {item.resolution}</p>
+                <p className="whitespace-pre-line text-muted-foreground"><strong>Resolução:</strong> {item.resolution}</p>
               </CardContent>
             </Card>
           ))}
@@ -114,7 +118,9 @@ export default async function StudentListPage({
                   <span className="font-medium">Questão {item.position}</span>
                   <Badge variant="secondary" className="font-mono">{skillCode.get(item.skillId)}</Badge>
                 </div>
-                <CardTitle className="text-base font-normal leading-snug">{item.stem}</CardTitle>
+                <CardTitle className="text-base font-normal leading-snug">
+                  <QuestionContent text={item.stem} format={item.contentFormat} versionId={item.versionId} />
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <fieldset className="flex flex-col gap-2" disabled={!open}>
@@ -128,7 +134,10 @@ export default async function StudentListPage({
                         defaultChecked={answers[item.id] === o.key}
                         className="mt-0.5 accent-primary"
                       />
-                      <span>{o.key}) {o.text}</span>
+                      <span>
+                        {o.key}){" "}
+                        <QuestionContent text={o.text} format={item.contentFormat} versionId={item.versionId} inline />
+                      </span>
                     </label>
                   ))}
                 </fieldset>

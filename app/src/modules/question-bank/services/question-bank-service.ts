@@ -1,5 +1,6 @@
 import type {
   ClassroomRef,
+  ContentFormat,
   ContentSource,
   CurriculumComponent,
   CurriculumPlanEntry,
@@ -13,6 +14,7 @@ import type {
   QuestionOption,
   QuestionVersion,
   ReviewChecklist,
+  SkillSuggestion,
   SourceKind,
   StudentRef,
   AttemptFeedback,
@@ -56,17 +58,44 @@ export interface PlannedSkill {
   component: CurriculumComponent;
 }
 
+/** Como a questão chegou à habilidade consultada. */
+export type BankItemLink =
+  | { kind: "oficial" }
+  | {
+      kind: "sugerida" | "confirmada";
+      confidence: SkillSuggestion["confidence"];
+      rationale: string;
+      suggestedBy: SkillSuggestion["origin"];
+    };
+
 export interface BankItem {
   question: Question;
   version: QuestionVersion;
   source: ContentSource | null;
   key: QuestionKey | null;
+  /** "catalogo" = questão comum do Catálogo IAH (só leitura para a escola). */
+  origin: "escola" | "catalogo";
+  /** Habilidade oficial da questão (no catálogo Enem, a da Matriz). */
+  officialSkill: CurriculumSkill | null;
+  link: BankItemLink;
+}
+
+const CONFIDENCE_RANK: Record<SkillSuggestion["confidence"], number> = { alta: 0, media: 1, baixa: 2 };
+
+export interface StudentListItem {
+  id: string;
+  position: number;
+  skillId: string;
+  versionId: string;
+  contentFormat: ContentFormat;
+  stem: string;
+  options: QuestionOption[];
 }
 
 export interface StudentListView {
   list: PracticeList;
   attempt: ListAttempt | null;
-  items: Array<{ id: string; position: number; skillId: string; stem: string; options: QuestionOption[] }>;
+  items: StudentListItem[];
   answers: Record<string, string>;
   /** Só existe depois da entrega. */
   report: AttemptReport | null;
@@ -126,27 +155,75 @@ export function createQuestionBankService(repos: QuestionBankRepositories, actor
     // ------------------------------------------------------------------
     // Banco: consulta
     // ------------------------------------------------------------------
-    /** Questões com versão APROVADA para a habilidade (o que pode ir para lista). */
+    /**
+     * Questões com versão APROVADA para a habilidade (o que pode ir para
+     * lista): as da escola e as do catálogo IAH (a RLS da 0018 só deixa
+     * passar versões aprovadas do catálogo). Entram por dois caminhos,
+     * sempre rotulados: habilidade OFICIAL da questão, ou correspondência
+     * BNCC SUGERIDA/CONFIRMADA (`question_skill_suggestions`). Sugestão
+     * rejeitada nunca aparece.
+     */
     async approvedForSkill(skillId: string): Promise<BankItem[]> {
       requireRole(actor, ["professor", "administrador", "admin_iah"], "Apenas a equipe consulta o banco.");
-      const questions = await repos.listQuestionsBySkill(skillId);
+      const [official, suggestions] = await Promise.all([
+        repos.listQuestionsBySkill(skillId),
+        repos.listSuggestionsBySkill(skillId, ["sugerida", "confirmada"]),
+      ]);
+      const officialIds = new Set(official.map((q) => q.id));
+      const suggestionByQuestion = new Map(
+        suggestions.filter((s) => !officialIds.has(s.questionId)).map((s) => [s.questionId, s]),
+      );
+      const suggested = await repos.listQuestionsByIds([...suggestionByQuestion.keys()]);
+      const questions = [...official, ...suggested];
       const versions = await repos.listVersions({
         questionIds: questions.map((q) => q.id),
         status: "aprovada",
       });
-      const [sources, keys] = await Promise.all([
+      const [sources, keys, skills] = await Promise.all([
         repos.listSources([...new Set(versions.map((v) => v.sourceId))]),
         repos.listKeys(versions.map((v) => v.id)),
+        repos.listSkills([...new Set(questions.map((q) => q.skillId))]),
       ]);
       const questionById = new Map(questions.map((q) => [q.id, q]));
       const sourceById = new Map(sources.map((s) => [s.id, s]));
       const keyById = new Map(keys.map((k) => [k.versionId, k]));
-      return versions.map((version) => ({
-        question: questionById.get(version.questionId)!,
-        version,
-        source: sourceById.get(version.sourceId) ?? null,
-        key: keyById.get(version.id) ?? null,
-      }));
+      const skillById = new Map(skills.map((s) => [s.id, s]));
+      const items = versions.map((version): BankItem => {
+        const question = questionById.get(version.questionId)!;
+        const suggestion = suggestionByQuestion.get(question.id);
+        return {
+          question,
+          version,
+          source: sourceById.get(version.sourceId) ?? null,
+          key: keyById.get(version.id) ?? null,
+          origin: question.institutionId === actor.institutionId ? "escola" : "catalogo",
+          officialSkill: skillById.get(question.skillId) ?? null,
+          link: suggestion
+            ? {
+                kind: suggestion.status === "confirmada" ? "confirmada" : "sugerida",
+                confidence: suggestion.confidence,
+                rationale: suggestion.rationale,
+                suggestedBy: suggestion.origin,
+              }
+            : { kind: "oficial" },
+        };
+      });
+      // Oficial primeiro, depois confirmada, depois sugerida (por confiança).
+      const rank = (i: BankItem) =>
+        i.link.kind === "oficial" ? 0 : i.link.kind === "confirmada" ? 1 : 2 + CONFIDENCE_RANK[i.link.confidence];
+      return items.sort((a, b) => rank(a) - rank(b));
+    },
+
+    /** Gestão do inquilino dono confirma ou rejeita uma sugestão de habilidade. */
+    async decideSuggestion(suggestionId: string, decision: "confirmada" | "rejeitada"): Promise<void> {
+      requireRole(actor, ["professor", "administrador"], "Apenas a equipe confirma correspondências.");
+      await repos.setSuggestionStatus(suggestionId, decision, actor.userId);
+    },
+
+    /** Conteúdo de uma figura — a RLS decide se o ator alcança a versão. */
+    async figure(versionId: string, n: number): Promise<Uint8Array | null> {
+      if (!Number.isInteger(n) || n < 1 || n > 60) return null;
+      return repos.getAssetContent(versionId, n);
     },
 
     // ------------------------------------------------------------------
@@ -259,6 +336,27 @@ export function createQuestionBankService(repos: QuestionBankRepositories, actor
       return versionId;
     },
 
+    /**
+     * Escreve a resolução comentada de um rascunho que chegou sem ela
+     * (itens importados no catálogo). Só o autor da versão, só em
+     * rascunho — policy e trigger da 0017 conferem de novo.
+     */
+    async writeResolution(versionId: string, resolution: string): Promise<void> {
+      requireRole(actor, ["professor", "administrador", "admin_iah"], "Apenas a equipe escreve resoluções.");
+      if (!resolution.trim()) throw new Error("Escreva a resolução comentada.");
+      const [version] = await repos.listVersions({ ids: [versionId] });
+      if (!version || version.institutionId !== actor.institutionId) throw new Error("Versão fora do seu alcance.");
+      if (version.status !== "rascunho") throw new Error("Só rascunhos recebem resolução; crie uma nova versão.");
+      const [key] = await repos.listKeys([versionId]);
+      if (!key) throw new Error("Versão sem gabarito.");
+      await repos.upsertKey({
+        versionId,
+        institutionId: actor.institutionId,
+        answerKey: key.answerKey,
+        resolution: resolution.trim(),
+      });
+    },
+
     async submitForReview(versionId: string): Promise<void> {
       requireRole(actor, ["professor", "administrador", "admin_iah"], "Apenas a equipe envia questões à revisão.");
       await repos.submitVersion(versionId);
@@ -309,14 +407,23 @@ export function createQuestionBankService(repos: QuestionBankRepositories, actor
       if (versions.length !== versionIds.length || versions.some((v) => v.status !== "aprovada")) {
         throw new Error("Só questões com versão aprovada na revisão entram na lista.");
       }
-      const [{ entries }, questions] = await Promise.all([
+      const questionIds = [...new Set(versions.map((v) => v.questionId))];
+      const [{ entries }, questions, suggestions] = await Promise.all([
         service.plannedSkillsForClassroom(input.classroomId),
-        repos.listQuestionsByIds([...new Set(versions.map((v) => v.questionId))]),
+        repos.listQuestionsByIds(questionIds),
+        repos.listSuggestionsByQuestions(questionIds),
       ]);
       const approvedPlanSkills = new Set(
         entries.filter((e) => e.plan.status === "approved").map((e) => e.skill.id),
       );
-      const curriculumProvisional = questions.some((q) => !approvedPlanSkills.has(q.skillId));
+      // Conta a habilidade oficial ou uma correspondência CONFIRMADA por
+      // revisão humana — sugestão não revisada não tira o "provisório".
+      const covered = (q: Question) =>
+        approvedPlanSkills.has(q.skillId) ||
+        suggestions.some(
+          (s) => s.questionId === q.id && s.status === "confirmada" && approvedPlanSkills.has(s.skillId),
+        );
+      const curriculumProvisional = questions.some((q) => !covered(q));
 
       const listId = newId();
       await repos.insertList({
@@ -462,13 +569,18 @@ export function createQuestionBankService(repos: QuestionBankRepositories, actor
       return {
         list,
         attempt,
-        items: items.map((i) => ({
-          id: i.id,
-          position: i.position,
-          skillId: i.skillId,
-          stem: versionById.get(i.questionVersionId)?.stem ?? "",
-          options: versionById.get(i.questionVersionId)?.options ?? [],
-        })),
+        items: items.map((i) => {
+          const version = versionById.get(i.questionVersionId);
+          return {
+            id: i.id,
+            position: i.position,
+            skillId: i.skillId,
+            versionId: i.questionVersionId,
+            contentFormat: version?.contentFormat ?? "texto",
+            stem: version?.stem ?? "",
+            options: version?.options ?? [],
+          };
+        }),
         answers: Object.fromEntries(answers.map((a) => [a.listItemId, a.selectedKey])),
         report,
         feedback,

@@ -96,6 +96,11 @@ concentrados no 1º dia. Matemática e Ciências da Natureza dependem menos diss
 
 | Caminho | O que entra | Risco de direitos | Mudança no banco |
 |---|---|---|---|
-| 1. Catálogo de metadados | Ano, dia, caderno, posição, área, gabarito, anulado (+ habilidade e TRI dos microdados) e link para a página do PDF oficial; **sem enunciado** | Baixo | Camada "catálogo IAH" (itens sem `institution_id`, só leitura para escolas) — D-050 |
+| 1. Catálogo de metadados | Ano, dia, caderno, posição, área, gabarito, anulado (+ habilidade e TRI dos microdados) e link para a página do PDF oficial; **sem enunciado** | Baixo | Camada "catálogo IAH" (só leitura para escolas) |
 | 2. Importação completa como `licenciado` | Enunciado, alternativas, imagens, com fonte e evidência | Depende da base legal | Catálogo IAH + carga com revisão; começar pelo 2º dia |
 | 3. Referência para itens originais | Nada do Enem entra no banco | Nenhum | Nenhuma |
+
+> **Atualização (03/10/2026):** o Founder escolheu o caminho 2 (importação
+> completa como `licenciado`), formato híbrido, piloto 2024 · 2º dia. O
+> catálogo foi modelado como inquilino especial, não como itens sem
+> `institution_id` — ver D-050 e `03-catalogo-iah-e-enem.md`.

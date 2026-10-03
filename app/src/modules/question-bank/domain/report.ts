@@ -1,5 +1,6 @@
 import type {
   AttemptAnswer,
+  ContentFormat,
   CurriculumSkill,
   PracticeListItem,
   QuestionKey,
@@ -22,6 +23,8 @@ export interface ItemReport {
   itemId: string;
   position: number;
   skillId: string;
+  versionId: string;
+  contentFormat: ContentFormat;
   stem: string;
   options: QuestionOption[];
   selectedKey: string | null;
@@ -67,6 +70,8 @@ export function buildAttemptReport(input: {
         itemId: item.id,
         position: item.position,
         skillId: item.skillId,
+        versionId: item.questionVersionId,
+        contentFormat: version?.contentFormat ?? "texto",
         stem: version?.stem ?? "",
         options: version?.options ?? [],
         selectedKey: answer?.selectedKey ?? null,

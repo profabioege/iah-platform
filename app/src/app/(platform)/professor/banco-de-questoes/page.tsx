@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ProvisionalCurriculumNotice } from "@/components/question-bank/provisional-curriculum-notice";
+import { QuestionContent } from "@/components/question-bank/question-content";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requirePlatformDataMode } from "@/lib/platform-access";
 import { cn } from "@/lib/utils";
 import {
+  type BankItemLink,
   EDITORIAL_DIFFICULTY_LABEL,
   GRADE_LABEL,
   MAX_LIST_ITEMS,
@@ -156,7 +158,7 @@ export default async function QuestionBankTeacherPage({ searchParams }: { search
               <input type="hidden" name="classroomId" value={classroom.id} />
               <input type="hidden" name="componentId" value={selected.component.id} />
               <input type="hidden" name="skillId" value={selected.skill.id} />
-              {bank.map(({ version, source, key }) => (
+              {bank.map(({ version, source, key, origin, officialSkill, link }) => (
                 <Card key={version.id}>
                   <CardHeader>
                     <label className="flex cursor-pointer items-start gap-3">
@@ -164,11 +166,24 @@ export default async function QuestionBankTeacherPage({ searchParams }: { search
                         type="checkbox"
                         name="versionIds"
                         value={version.id}
-                        defaultChecked
+                        defaultChecked={origin === "escola" && link.kind === "oficial"}
                         className="mt-1 size-4 accent-primary"
                       />
-                      <span className="flex flex-col gap-1">
-                        <CardTitle className="text-base font-medium leading-snug">{version.stem}</CardTitle>
+                      <span className="flex flex-col gap-2">
+                        <span className="flex flex-wrap gap-2">
+                          <Badge variant={origin === "catalogo" ? "default" : "secondary"}>
+                            {origin === "catalogo" ? "Catálogo IAH" : "Questão da escola"}
+                          </Badge>
+                          <LinkBadge link={link} skillCode={selected.skill.code} />
+                          {origin === "catalogo" && officialSkill ? (
+                            <Badge variant="outline" title={officialSkill.description}>
+                              Matriz {officialSkill.code}
+                            </Badge>
+                          ) : null}
+                        </span>
+                        <CardTitle className="text-base font-medium leading-snug">
+                          <QuestionContent text={version.stem} format={version.contentFormat} versionId={version.id} />
+                        </CardTitle>
                         <CardDescription>
                           Versão {version.version} · revisada
                           {version.editorialDifficulty
@@ -176,6 +191,9 @@ export default async function QuestionBankTeacherPage({ searchParams }: { search
                             : ""}
                           {source ? ` · ${SOURCE_KIND_LABEL[source.kind]} (${source.rightsHolder})` : ""}
                         </CardDescription>
+                        {link.kind !== "oficial" ? (
+                          <span className="text-xs text-muted-foreground">Motivo da correspondência: {link.rationale}</span>
+                        ) : null}
                       </span>
                     </label>
                   </CardHeader>
@@ -183,15 +201,16 @@ export default async function QuestionBankTeacherPage({ searchParams }: { search
                     <ol className="flex flex-col gap-1 text-sm">
                       {version.options.map((o) => (
                         <li key={o.key} className={o.key === key?.answerKey ? "font-semibold text-primary" : ""}>
-                          {o.key}) {o.text}
+                          {o.key}){" "}
+                          <QuestionContent text={o.text} format={version.contentFormat} versionId={version.id} inline />
                           {o.key === key?.answerKey ? " — gabarito" : ""}
                         </li>
                       ))}
                     </ol>
-                    {key ? (
+                    {key?.resolution ? (
                       <details className="text-sm text-muted-foreground">
                         <summary className="cursor-pointer">Resolução comentada</summary>
-                        <p className="mt-1">{key.resolution}</p>
+                        <p className="mt-1 whitespace-pre-line">{key.resolution}</p>
                       </details>
                     ) : null}
                   </CardContent>
@@ -259,6 +278,19 @@ export default async function QuestionBankTeacherPage({ searchParams }: { search
         )}
       </section>
     </div>
+  );
+}
+
+const CONFIDENCE_LABEL = { alta: "confiança alta", media: "confiança média", baixa: "confiança baixa" } as const;
+
+/** Rótulo de como a questão chegou à habilidade: oficial, BNCC confirmada ou sugerida. */
+function LinkBadge({ link, skillCode }: { link: BankItemLink; skillCode: string }) {
+  if (link.kind === "oficial") return <Badge variant="outline">Habilidade oficial: {skillCode}</Badge>;
+  if (link.kind === "confirmada") return <Badge variant="outline">{skillCode} confirmada pela equipe</Badge>;
+  return (
+    <Badge variant="outline" className="border-amber-400 text-amber-800 dark:text-amber-200">
+      {skillCode} sugerida {link.suggestedBy === "ia" ? "por IA" : "pela equipe"} · {CONFIDENCE_LABEL[link.confidence]} · não revisada
+    </Badge>
   );
 }
 

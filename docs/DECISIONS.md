@@ -611,3 +611,22 @@ atualizados.
 **Alternativas descartadas:** *estender `modules/assessment`* (questões embutidas na avaliação, sem versão nem procedência, só demo); *série como atributo da habilidade* (contradiz a BNCC do EM e engessa a escola); *controle só na aplicação, com service_role* (repetiria a fragilidade corrigida na 0010); *gabarito como coluna da versão* (RLS por linha não esconde coluna do aluno).
 
 **Impacto futuro:** Telas de autoria/revisão/planejamento, diagnóstico por etapas e plano semanal constroem sobre estas tabelas. Tutor, geração adaptativa e apoio à correção (fases posteriores, com supervisão docente) devem consumir só versões aprovadas e fontes verificadas. Capacidade (45/65 alunos) e desempenho na Vercel seguem **não comprovados** e precisam de ensaio próprio.
+
+## D-050 — Catálogo IAH comum às escolas, formato híbrido e carga do Enem como `licenciado` (03/10/2026)
+
+**Status:** Proposto para revisão do Founder (branch `reform/em-curriculo-banco-questoes`, não publicada). Detalhes em `docs/reformulacao/03-catalogo-iah-e-enem.md`.
+
+**Contexto e problema:** O acervo de provas do Enem é compartilhado entre Aprova ENEM e IAH escolar (ambos IAH Educacional). O Founder escolheu importar os itens completos como `licenciado`, piloto Enem 2024 · 2º dia · caderno 5, em formato híbrido, com a Matriz do Enem como habilidade oficial e correspondência BNCC sugerida. O banco da D-049 era só por escola: não havia onde guardar questões comuns a todas, nem imagens, nem marcação de fórmulas.
+
+**Decisão:**
+
+1. **Catálogo = inquilino especial** (`institutions.kind = 'catalogo'`), reaproveitando todo o fluxo editorial da 0017. Escolas leem só versões aprovadas do catálogo e as usam em listas; nunca escrevem nele. Listas e respostas seguem da escola.
+2. **Formato híbrido**: marcação mínima por lista de permissão (`marcacao_v1`: sub, sup, em, strong, small, `{{figura:N}}`) e figuras PNG em `question_assets`, com a visibilidade da versão e servidas por rota autenticada que responde 404 a qualquer recusa.
+3. **Habilidade oficial do item Enem = Matriz** (`framework = 'enem_matriz'`); **BNCC como sugestão** rotulada (`question_skill_suggestions`), confirmável só pela equipe dona; sugestão não revisada não retira o status provisório da lista.
+4. **Resolução exigida na aprovação**, não na criação: itens importados entram em rascunho sem resolução e não chegam a aluno até a equipe escrevê-la, a revisão aprovar e a gestão verificar a licença.
+5. **Procedência em `external_ref`** com chave única (código INEP do item): carga idempotente. Parâmetros TRI guardados com procedência e **nunca** usados como dificuldade editorial.
+6. **Carga por script com simulação por padrão** e a mesma trava de destino do piloto; extração dos PDFs por ferramenta offline fora do aplicativo.
+
+**Alternativas descartadas:** *`institution_id` nulo para o catálogo* (quebraria as FKs compostas e todas as policies por inquilino); *copiar itens para cada escola* (duplicação, revisão repetida, sem correção central); *HTML livre ou LaTeX* (risco de injeção; LaTeX exigiria nova dependência e transcrição manual); *enunciado só como imagem* (inacessível e impossível de buscar); *BNCC como habilidade oficial* (o INEP classifica pela Matriz; a BNCC seria inferência apresentada como fato).
+
+**Impacto futuro:** O banco de questões inéditas IAH entra no mesmo catálogo como `autoral_iah`. Faltam: microdados do INEP (habilidade e TRI), base legal e evidência da licença, inquilino e contas do catálogo em homologação, telas editoriais do catálogo, Matriz LC/CH para o 1º dia e texto alternativo das figuras.
