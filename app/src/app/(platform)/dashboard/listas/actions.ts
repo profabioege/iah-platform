@@ -26,20 +26,20 @@ async function studentService() {
 export async function saveAnswersAction(formData: FormData): Promise<void> {
   const service = await studentService();
   const listId = String(formData.get("listId") ?? "");
-  for (const [field, value] of formData.entries()) {
-    if (field.startsWith("item:") && typeof value === "string" && value) {
-      await service.answer(listId, field.slice("item:".length), value);
-    }
-  }
   const path = `/dashboard/listas/${encodeURIComponent(listId)}`;
-  if (formData.get("intent") === "entregar") {
-    try {
-      await service.submit(listId);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Não foi possível entregar.";
-      redirect(`${path}?aviso=${encodeURIComponent(message)}`);
+  let aviso: string | null = null;
+  try {
+    for (const [field, value] of formData.entries()) {
+      if (field.startsWith("item:") && typeof value === "string" && value) {
+        await service.answer(listId, field.slice("item:".length), value);
+      }
     }
+    if (formData.get("intent") === "entregar") await service.submit(listId);
+  } catch (error) {
+    aviso = error instanceof Error ? error.message : "Não foi possível gravar.";
   }
+  // redirect() fora do try: ele interrompe a action lançando uma exceção própria do Next.
+  if (aviso) redirect(`${path}?aviso=${encodeURIComponent(aviso)}`);
   revalidatePath(path);
   revalidatePath("/dashboard/listas");
   redirect(path);

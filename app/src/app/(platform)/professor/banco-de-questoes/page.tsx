@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   description: "Escolha uma habilidade e questões revisadas para montar uma lista curta.",
 };
 
-type SearchParams = Promise<{ turma?: string; habilidade?: string }>;
+type SearchParams = Promise<{ turma?: string; habilidade?: string; aviso?: string }>;
 
 const AREA_ORDER = ["lgg", "mat", "cnt", "chs"];
 const AREA_LABEL: Record<string, string> = {
@@ -70,6 +70,11 @@ export default async function QuestionBankTeacherPage({ searchParams }: { search
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       <Header />
       {anyProvisional ? <ProvisionalCurriculumNotice /> : null}
+      {params.aviso ? (
+        <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm text-destructive">
+          {params.aviso}
+        </p>
+      ) : null}
 
       {/* 1. Turma */}
       <section aria-labelledby="turma" className="flex flex-col gap-2">
@@ -150,6 +155,7 @@ export default async function QuestionBankTeacherPage({ searchParams }: { search
             <form action={createListAction} className="flex flex-col gap-4">
               <input type="hidden" name="classroomId" value={classroom.id} />
               <input type="hidden" name="componentId" value={selected.component.id} />
+              <input type="hidden" name="skillId" value={selected.skill.id} />
               {bank.map(({ version, source, key }) => (
                 <Card key={version.id}>
                   <CardHeader>

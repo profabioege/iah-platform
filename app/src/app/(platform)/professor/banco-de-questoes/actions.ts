@@ -28,15 +28,30 @@ async function teacherService() {
 export async function createListAction(formData: FormData): Promise<void> {
   const service = await teacherService();
   const kind = String(formData.get("kind") ?? "diagnostica") as PracticeListKind;
-  const listId = await service.createList({
-    classroomId: String(formData.get("classroomId") ?? ""),
-    componentId: String(formData.get("componentId") ?? ""),
-    kind: KINDS.includes(kind) ? kind : "diagnostica",
-    title: String(formData.get("title") ?? ""),
-    instructions: String(formData.get("instructions") ?? ""),
-    versionIds: formData.getAll("versionIds").map(String),
-    publish: true,
-  });
+  const classroomId = String(formData.get("classroomId") ?? "");
+  let listId: string | null = null;
+  let aviso: string | null = null;
+  try {
+    listId = await service.createList({
+      classroomId,
+      componentId: String(formData.get("componentId") ?? ""),
+      kind: KINDS.includes(kind) ? kind : "diagnostica",
+      title: String(formData.get("title") ?? ""),
+      instructions: String(formData.get("instructions") ?? ""),
+      versionIds: formData.getAll("versionIds").map(String),
+      publish: true,
+    });
+  } catch (error) {
+    aviso = error instanceof Error ? error.message : "Não foi possível publicar a lista.";
+  }
+  // redirect() fora do try: ele interrompe a action lançando uma exceção própria do Next.
+  if (aviso || !listId) {
+    const skill = String(formData.get("skillId") ?? "");
+    redirect(
+      `/professor/banco-de-questoes?turma=${encodeURIComponent(classroomId)}` +
+        `${skill ? `&habilidade=${encodeURIComponent(skill)}` : ""}&aviso=${encodeURIComponent(aviso ?? "")}`,
+    );
+  }
   revalidatePath("/professor/banco-de-questoes");
   revalidatePath("/dashboard/listas");
   redirect(`/professor/banco-de-questoes/listas/${encodeURIComponent(listId)}`);
