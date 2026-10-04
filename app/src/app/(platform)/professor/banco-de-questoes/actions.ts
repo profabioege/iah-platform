@@ -40,6 +40,7 @@ export async function createListAction(formData: FormData): Promise<void> {
       instructions: String(formData.get("instructions") ?? ""),
       versionIds: formData.getAll("versionIds").map(String),
       publish: true,
+      skillId: String(formData.get("skillId") ?? "") || null,
     });
   } catch (error) {
     aviso = error instanceof Error ? error.message : "Não foi possível publicar a lista.";

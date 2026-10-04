@@ -1,6 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type {
+  AdaptiveCircuit,
+  AdaptiveUnlock,
   AttemptAnswer,
   AttemptFeedback,
   ClassroomRef,
@@ -160,6 +162,31 @@ const toList = (r: Row): PracticeList => ({
   curriculumProvisional: Boolean(r.curriculum_provisional),
   createdBy: String(r.created_by),
   publishedAt: str(r.published_at),
+  targetStudentId: str(r.target_student_id),
+  targetSkillId: str(r.target_skill_id),
+  createdAt: String(r.created_at ?? ""),
+});
+
+const LIST_COLS =
+  "id, institution_id, classroom_id, component_id, kind, title, instructions, status, curriculum_provisional, created_by, published_at, target_student_id, target_skill_id, created_at";
+
+const toCircuit = (r: Row): AdaptiveCircuit => ({
+  id: String(r.id),
+  institutionId: String(r.institution_id),
+  classroomId: String(r.classroom_id),
+  roundSize: Number(r.round_size),
+  status: r.status as AdaptiveCircuit["status"],
+  createdBy: String(r.created_by),
+});
+
+const toUnlock = (r: Row): AdaptiveUnlock => ({
+  id: String(r.id),
+  circuitId: String(r.circuit_id),
+  studentId: String(r.student_id),
+  skillId: String(r.skill_id),
+  reason: r.reason as AdaptiveUnlock["reason"],
+  unlockedBy: String(r.unlocked_by),
+  unlockedAt: String(r.unlocked_at),
 });
 
 const toItem = (r: Row): PracticeListItem => ({
@@ -508,6 +535,7 @@ export function createDatabaseQuestionBankRepositories(
         instructions: l.instructions,
         curriculum_provisional: l.curriculumProvisional,
         created_by: l.createdBy,
+        target_skill_id: l.targetSkillId ?? null,
       });
       fail("practice_lists.insert", error);
     },
@@ -541,7 +569,7 @@ export function createDatabaseQuestionBankRepositories(
     async getList(listId) {
       const { data, error } = await db
         .from("practice_lists")
-        .select("id, institution_id, classroom_id, component_id, kind, title, instructions, status, curriculum_provisional, created_by, published_at")
+        .select(LIST_COLS)
         .eq("id", listId)
         .maybeSingle();
       fail("practice_lists", error);
@@ -551,7 +579,7 @@ export function createDatabaseQuestionBankRepositories(
     async listLists({ classroomIds, status }) {
       let query = db
         .from("practice_lists")
-        .select("id, institution_id, classroom_id, component_id, kind, title, instructions, status, curriculum_provisional, created_by, published_at");
+        .select(LIST_COLS);
       if (classroomIds) {
         if (classroomIds.length === 0) return [];
         query = query.in("classroom_id", classroomIds);
@@ -560,6 +588,16 @@ export function createDatabaseQuestionBankRepositories(
       const { data, error } = await query.order("created_at", { ascending: false });
       fail("practice_lists", error);
       return (data ?? []).map(toList);
+    },
+
+    async listItemsForLists(listIds) {
+      if (listIds.length === 0) return [];
+      const { data, error } = await db
+        .from("practice_list_items")
+        .select("id, list_id, position, question_version_id, skill_id")
+        .in("list_id", listIds);
+      fail("practice_list_items", error);
+      return (data ?? []).map(toItem);
     },
 
     async listItems(listId) {
@@ -588,6 +626,17 @@ export function createDatabaseQuestionBankRepositories(
         .from("list_attempts")
         .select("id, institution_id, classroom_id, list_id, student_id, status, started_at, submitted_at, score_correct, score_total")
         .eq("list_id", listId);
+      fail("list_attempts", error);
+      return (data ?? []).map(toAttempt);
+    },
+
+    async listSubmittedAttempts(listIds) {
+      if (listIds.length === 0) return [];
+      const { data, error } = await db
+        .from("list_attempts")
+        .select("id, institution_id, classroom_id, list_id, student_id, status, started_at, submitted_at, score_correct, score_total")
+        .in("list_id", listIds)
+        .eq("status", "entregue");
       fail("list_attempts", error);
       return (data ?? []).map(toAttempt);
     },
@@ -673,6 +722,74 @@ export function createDatabaseQuestionBankRepositories(
         .in("attempt_id", attemptIds);
       fail("attempt_feedback", error);
       return (data ?? []).map(toFeedback);
+    },
+
+    async getCircuit(classroomId) {
+      const { data, error } = await db
+        .from("adaptive_circuits")
+        .select("id, institution_id, classroom_id, round_size, status, created_by")
+        .eq("classroom_id", classroomId)
+        .maybeSingle();
+      fail("adaptive_circuits", error);
+      return data ? toCircuit(data) : null;
+    },
+
+    async insertCircuit(c) {
+      const { error } = await db.from("adaptive_circuits").insert({
+        id: c.id,
+        institution_id: c.institutionId,
+        classroom_id: c.classroomId,
+        round_size: c.roundSize,
+        created_by: c.createdBy,
+      });
+      fail("adaptive_circuits.insert", error);
+    },
+
+    async setCircuitStatus(circuitId, status) {
+      const { data, error } = await db
+        .from("adaptive_circuits")
+        .update({ status })
+        .eq("id", circuitId)
+        .select("id");
+      fail("adaptive_circuits.status", error);
+      if (!data?.length) throw new Error("Circuito não encontrado ou fora do seu alcance.");
+    },
+
+    async listUnlocks(circuitId) {
+      const { data, error } = await db
+        .from("adaptive_unlocks")
+        .select("id, circuit_id, student_id, skill_id, reason, unlocked_by, unlocked_at")
+        .eq("circuit_id", circuitId);
+      fail("adaptive_unlocks", error);
+      return (data ?? []).map(toUnlock);
+    },
+
+    async insertUnlocks(rows) {
+      if (rows.length === 0) return;
+      // Liberar de novo a mesma habilidade não cria segunda linha (unique no banco).
+      const { error } = await db.from("adaptive_unlocks").upsert(
+        rows.map((r) => ({
+          id: r.id,
+          institution_id: r.institutionId,
+          circuit_id: r.circuitId,
+          student_id: r.studentId,
+          skill_id: r.skillId,
+          reason: r.reason,
+          unlocked_by: r.unlockedBy,
+        })),
+        { onConflict: "circuit_id,student_id,skill_id", ignoreDuplicates: true },
+      );
+      fail("adaptive_unlocks.insert", error);
+    },
+
+    async nextCircuitRound(circuitId, skillId, level) {
+      const { data, error } = await db.rpc("iah_circuit_next_round", {
+        p_circuit: circuitId,
+        p_skill: skillId,
+        p_level: level,
+      });
+      if (error) throw new Error(error.message);
+      return String(data);
     },
   };
   return repositories;

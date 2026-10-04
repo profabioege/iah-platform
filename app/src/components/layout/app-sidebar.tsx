@@ -17,6 +17,7 @@ import {
   ListChecks,
   MessageSquareText,
   NotebookPen,
+  Route,
   Rocket,
   Sparkles,
 } from "lucide-react";
@@ -57,6 +58,7 @@ const TEACHER_MENU: MenuItem[] = [
   { title: "DocentIAH", icon: Sparkles, href: "/professor/docente-iah" },
   { title: "Sondagens", icon: ClipboardList, href: "/professor/avaliacoes" },
   { title: "Banco de questões", icon: ListChecks, href: "/professor/banco-de-questoes" },
+  { title: "Circuito", icon: Route, href: "/professor/circuito" },
   { title: "Laboratório", icon: FlaskConical },
   { title: "Biblioteca", icon: Library },
   { title: "Projetos", icon: FolderKanban },
@@ -71,6 +73,7 @@ const STUDENT_MENU: MenuItem[] = [
   { title: "Diário do Auditor", icon: NotebookPen, href: "/diario" },
   { title: "Sondagens", icon: ClipboardList, href: "/dashboard/sondagens" },
   { title: "Listas", icon: ListChecks, href: "/dashboard/listas" },
+  { title: "Circuito", icon: Route, href: "/dashboard/circuito" },
   { title: "Meu Portfólio", icon: FolderKanban },
   { title: "Meu Histórico", icon: History },
   { title: "Meu Feedback", icon: MessageSquareText },

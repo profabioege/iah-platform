@@ -391,6 +391,8 @@ export function createQuestionBankService(repos: QuestionBankRepositories, actor
       instructions?: string;
       versionIds: string[];
       publish: boolean;
+      /** Habilidade escolhida na tela — vira evidência do circuito adaptativo. */
+      skillId?: string | null;
     }): Promise<string> {
       requireRole(actor, ["professor"], "Apenas o professor da turma monta listas.");
       const versionIds = [...new Set(input.versionIds)];
@@ -436,6 +438,7 @@ export function createQuestionBankService(repos: QuestionBankRepositories, actor
         instructions: input.instructions?.trim() ?? "",
         curriculumProvisional,
         createdBy: actor.userId,
+        targetSkillId: input.skillId || null,
       });
       await repos.insertListItems(
         versionIds.map((questionVersionId, index) => ({
@@ -460,8 +463,9 @@ export function createQuestionBankService(repos: QuestionBankRepositories, actor
       await repos.setListStatus(listId, "encerrada");
     },
 
+    /** Listas montadas pelo professor (rodadas do circuito ficam no painel do circuito). */
     async listsForClassrooms(classroomIds: string[]): Promise<PracticeList[]> {
-      return repos.listLists({ classroomIds });
+      return (await repos.listLists({ classroomIds })).filter((l) => l.kind !== "circuito");
     },
 
     /** Respostas e devolutivas da turma numa lista (professor/gestão). */
@@ -490,7 +494,8 @@ export function createQuestionBankService(repos: QuestionBankRepositories, actor
         list,
         classroom: classrooms.find((c) => c.id === list.classroomId) ?? null,
         skills,
-        students: students.map((student) => {
+        // Rodada do circuito é de um aluno só.
+        students: students.filter((s) => !list.targetStudentId || s.id === list.targetStudentId).map((student) => {
           const attempt = attemptByStudent.get(student.id) ?? null;
           const report =
             attempt?.status === "entregue"
@@ -535,10 +540,10 @@ export function createQuestionBankService(repos: QuestionBankRepositories, actor
     async myLists(): Promise<Array<{ list: PracticeList; attempt: ListAttempt | null }>> {
       requireRole(actor, ["aluno"], "Apenas alunos respondem listas.");
       const classrooms = await repos.listClassrooms();
-      const lists = await repos.listLists({
+      const lists = (await repos.listLists({
         classroomIds: classrooms.map((c) => c.id),
         status: ["publicada", "encerrada"],
-      });
+      })).filter((l) => l.kind !== "circuito"); // rodadas ficam em /dashboard/circuito
       return Promise.all(
         lists.map(async (list) => ({ list, attempt: await repos.getAttempt(list.id, actor.studentId!) })),
       );

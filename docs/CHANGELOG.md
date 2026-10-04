@@ -2,6 +2,20 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 04/10/2026 — Reformulação EM, incremento 3: circuito adaptativo (branch não publicada)
+
+- Migration 0019: rodada do circuito como lista pessoal, circuito da turma,
+  liberações do professor e `iah_circuit_next_round` (o banco escolhe as
+  questões e confere as regras) — D-051.
+- Regras explícitas do estado por habilidade (`domain/adaptive.ts`, v1) e
+  nível da próxima rodada pelo rótulo editorial.
+- Telas `/professor/circuito` (sequência, banco disponível, alunos ×
+  habilidades, liberar avanço) e `/dashboard/circuito` (habilidade atual,
+  estado com evidência, rodadas); listas do professor guardam a
+  habilidade-alvo.
+- Testes: 409 unitários (8 novos), 57 de integração com banco real (9 novos),
+  4 mutações detectadas, 59 da fila, percurso HTTP 7/7.
+
 ## 03/10/2026 — Reformulação EM, incremento 2: Catálogo IAH e carga do Enem (branch não publicada)
 
 - Inventário do acervo Enem local (`docs/reformulacao/02-inventario-enem-2026-10-03.md`)

@@ -45,7 +45,11 @@ export default async function StudentListPage({
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
       <header className="flex flex-col gap-2">
-        <Link href="/dashboard/listas" className="text-xs text-primary hover:underline">← Listas</Link>
+        {list.kind === "circuito" ? (
+          <Link href="/dashboard/circuito" className="text-xs text-primary hover:underline">← Circuito</Link>
+        ) : (
+          <Link href="/dashboard/listas" className="text-xs text-primary hover:underline">← Listas</Link>
+        )}
         <h1 className="text-2xl font-semibold">{list.title}</h1>
         {report ? (
           <p className="text-sm">

@@ -1,4 +1,6 @@
 import type {
+  AdaptiveCircuit,
+  AdaptiveUnlock,
   AttemptAnswer,
   AttemptFeedback,
   ClassroomRef,
@@ -116,6 +118,7 @@ export interface QuestionBankRepositories {
     instructions: string;
     curriculumProvisional: boolean;
     createdBy: string;
+    targetSkillId?: string | null;
   }): Promise<void>;
   insertListItems(items: Array<{
     id: string;
@@ -128,10 +131,13 @@ export interface QuestionBankRepositories {
   getList(listId: string): Promise<PracticeList | null>;
   listLists(filter: { classroomIds?: string[]; status?: PracticeList["status"][] }): Promise<PracticeList[]>;
   listItems(listId: string): Promise<PracticeListItem[]>;
+  listItemsForLists(listIds: string[]): Promise<PracticeListItem[]>;
 
   // ----- tentativas, respostas, devolutivas -----
   getAttempt(listId: string, studentId: string): Promise<ListAttempt | null>;
   listAttempts(listId: string): Promise<ListAttempt[]>;
+  /** Tentativas ENTREGUES das listas (evidência do circuito). */
+  listSubmittedAttempts(listIds: string[]): Promise<ListAttempt[]>;
   /** Cria a tentativa se ainda não existir (idempotente; unique no banco). */
   ensureAttempt(input: {
     id: string;
@@ -160,4 +166,21 @@ export interface QuestionBankRepositories {
     comment: string;
   }): Promise<void>;
   listFeedback(attemptIds: string[]): Promise<AttemptFeedback[]>;
+
+  // ----- circuito adaptativo (0019) -----
+  getCircuit(classroomId: string): Promise<AdaptiveCircuit | null>;
+  insertCircuit(input: { id: string; institutionId: string; classroomId: string; roundSize: number; createdBy: string }): Promise<void>;
+  setCircuitStatus(circuitId: string, status: AdaptiveCircuit["status"]): Promise<void>;
+  listUnlocks(circuitId: string): Promise<AdaptiveUnlock[]>;
+  insertUnlocks(rows: Array<{
+    id: string;
+    institutionId: string;
+    circuitId: string;
+    studentId: string;
+    skillId: string;
+    reason: AdaptiveUnlock["reason"];
+    unlockedBy: string;
+  }>): Promise<void>;
+  /** Pede a rodada ao banco (`iah_circuit_next_round`): ele escolhe e confere. Devolve o id da lista. */
+  nextCircuitRound(circuitId: string, skillId: string, level: "apoio" | "regular" | "desafio"): Promise<string>;
 }

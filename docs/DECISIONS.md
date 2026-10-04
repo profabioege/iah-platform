@@ -630,3 +630,21 @@ atualizados.
 **Alternativas descartadas:** *`institution_id` nulo para o catálogo* (quebraria as FKs compostas e todas as policies por inquilino); *copiar itens para cada escola* (duplicação, revisão repetida, sem correção central); *HTML livre ou LaTeX* (risco de injeção; LaTeX exigiria nova dependência e transcrição manual); *enunciado só como imagem* (inacessível e impossível de buscar); *BNCC como habilidade oficial* (o INEP classifica pela Matriz; a BNCC seria inferência apresentada como fato).
 
 **Impacto futuro:** O banco de questões inéditas IAH entra no mesmo catálogo como `autoral_iah`. Faltam: microdados do INEP (habilidade e TRI), base legal e evidência da licença, inquilino e contas do catálogo em homologação, telas editoriais do catálogo, Matriz LC/CH para o 1º dia e texto alternativo das figuras.
+
+## D-051 — Circuito adaptativo por habilidade: reforço automático no banco, avanço pelo professor (04/10/2026)
+
+**Status:** Proposto para revisão do Founder (branch `reform/em-curriculo-banco-questoes`, não publicada). Detalhes em `docs/reformulacao/04-circuito-adaptativo.md`.
+
+**Contexto e problema:** A jornada do aluno prevista desde o início inclui aprendizagem adaptativa; a D-049 a deixou para fase posterior. O Founder escolheu o modo híbrido (reforço automático, avanço com o professor), ritmo contínuo e erro típico por alternativa para depois.
+
+**Decisão:**
+
+1. **Rodada = lista pessoal** (`practice_lists.kind = 'circuito'` + `target_student_id`/`target_skill_id`), reaproveitando correção no banco, gabarito pós-entrega, figuras e catálogo. Listas do professor passam a guardar a habilidade-alvo escolhida na tela.
+2. **O banco escolhe as questões** (`iah_circuit_next_round`, `security definer`): o aluno não enxerga o banco de questões, e a função confere liberação, planejamento, aprovação, vínculo oficial ou confirmado e ineditismo para o aluno. Rodada aberta é devolvida (idempotente); banco esgotado é avisado.
+3. **Avanço é registro do professor** (`adaptive_unlocks`, só inserção). O sistema apenas sinaliza "pronto para avançar".
+4. **Estado por regra explícita e versionada** (`MASTERY_RULES` v1), calculado na aplicação a partir das respostas entregues; nada de nota ou proficiência gravada; a tela sempre mostra a evidência junto do rótulo.
+5. **Automação só com vínculo confirmado por humano**: sugestão BNCC não revisada não entra em rodada automática nem conta como evidência.
+
+**Alternativas descartadas:** *tabelas próprias de rodada/resposta* (duplicaria correção, RLS e gabarito pós-entrega); *escolha das questões na aplicação com service_role* (quebraria o padrão de menor privilégio da D-041/0010); *TRI/proficiência com listas curtas* (estatisticamente insustentável com 3–5 itens); *avanço automático* (contraria a escolha do Founder e a supervisão docente da D-049); *IA escolhendo ou gerando itens agora* (regras transparentes primeiro; IA depois, sempre via revisão).
+
+**Impacto futuro:** Revisita para retenção, erro típico por alternativa, MentorIAH explicando o erro e geração de itens com IA constroem sobre estas tabelas. O circuito só é útil com banco amplo por habilidade: depende do Catálogo aprovado ou de itens inéditos IAH. Limites da regra v1 a calibrar com uso real.

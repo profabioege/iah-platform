@@ -183,13 +183,14 @@ export interface QuestionReview {
   createdAt: string;
 }
 
-export type PracticeListKind = "diagnostica" | "periodica" | "revisao";
+export type PracticeListKind = "diagnostica" | "periodica" | "revisao" | "circuito";
 export type PracticeListStatus = "rascunho" | "publicada" | "encerrada";
 
 export const PRACTICE_LIST_KIND_LABEL: Record<PracticeListKind, string> = {
   diagnostica: "Diagnóstica",
   periodica: "Periódica",
   revisao: "Revisão",
+  circuito: "Circuito adaptativo",
 };
 
 export const PRACTICE_LIST_STATUS_LABEL: Record<PracticeListStatus, string> = {
@@ -210,6 +211,32 @@ export interface PracticeList {
   curriculumProvisional: boolean;
   createdBy: string;
   publishedAt: string | null;
+  /** Rodada do circuito: o único aluno que a alcança. */
+  targetStudentId: string | null;
+  /** Habilidade-alvo (rodada do circuito ou escolhida pelo professor). */
+  targetSkillId: string | null;
+  createdAt: string;
+}
+
+/** Circuito adaptativo da turma (D-051). */
+export interface AdaptiveCircuit {
+  id: string;
+  institutionId: string;
+  classroomId: string;
+  roundSize: number;
+  status: "ativo" | "pausado";
+  createdBy: string;
+}
+
+/** Habilidade liberada pelo professor para um aluno no circuito. */
+export interface AdaptiveUnlock {
+  id: string;
+  circuitId: string;
+  studentId: string;
+  skillId: string;
+  reason: "inicio" | "avanco";
+  unlockedBy: string;
+  unlockedAt: string;
 }
 
 export interface PracticeListItem {

@@ -32,5 +32,24 @@ export {
   type StudentListItem,
   type StudentListView,
 } from "./services/question-bank-service";
+export {
+  MASTERY_LABEL,
+  MASTERY_RULES,
+  circuitPosition,
+  groupEvidence,
+  nextRoundLevel,
+  skillMastery,
+  type MasteryState,
+  type SkillMastery,
+  type StudentCircuitPosition,
+} from "./domain/adaptive";
+export {
+  DEFAULT_ROUND_SIZE,
+  createAdaptiveCircuitService,
+  type AdaptiveCircuitService,
+  type CircuitPanel,
+  type CircuitStudentRow,
+  type MyCircuit,
+} from "./services/adaptive-circuit-service";
 export { parseMarkup, decodeEntities, figureRefs, type MarkupNode } from "./domain/markup";
 export { createDatabaseQuestionBankRepositories } from "./infrastructure/database-repositories";
