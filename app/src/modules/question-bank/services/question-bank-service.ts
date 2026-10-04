@@ -310,8 +310,23 @@ export function createQuestionBankService(repos: QuestionBankRepositories, actor
       if (problem) throw new Error(problem);
       const existing = await repos.listVersions({ questionIds: [questionId] });
       if (existing.length === 0) throw new Error("Questão não encontrada.");
-      const next = Math.max(...existing.map((v) => v.version)) + 1;
-      return service.createVersion(questionId, next, input);
+      const previous = existing.reduce((a, b) => (b.version > a.version ? b : a));
+      const versionId = await service.createVersion(questionId, previous.version + 1, input);
+      // Figuras acompanham a nova versão (ainda rascunho): corrigir o texto não pode apagá-las.
+      for (const asset of await repos.listAssets([previous.id])) {
+        const content = await repos.getAssetContent(previous.id, asset.n);
+        if (!content) continue;
+        await repos.insertAsset({
+          institutionId: actor.institutionId,
+          versionId,
+          n: asset.n,
+          content,
+          width: asset.width,
+          height: asset.height,
+          altText: asset.altText,
+        });
+      }
+      return versionId;
     },
 
     async createVersion(questionId: string, version: number, input: {

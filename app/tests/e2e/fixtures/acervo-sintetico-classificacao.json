@@ -1,0 +1,15 @@
+{
+ "origem": "sugestao_ia",
+ "aviso": "Classificação SINTÉTICA para a homologação local.",
+ "itens": [
+  {
+   "codigo": "IAH-EM-CN-902",
+   "bncc": "EM13CNT301",
+   "confianca_bncc": "media",
+   "matriz": "CN-H17",
+   "confianca_matriz": "baixa",
+   "serie": "2ª",
+   "motivo": "proposta sintética"
+  }
+ ]
+}

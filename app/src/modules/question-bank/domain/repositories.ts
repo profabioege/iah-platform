@@ -85,6 +85,16 @@ export interface QuestionBankRepositories {
   listAssets(versionIds: string[]): Promise<QuestionAssetMeta[]>;
   /** Conteúdo PNG de uma figura — sob a mesma RLS da versão. */
   getAssetContent(versionId: string, n: number): Promise<Uint8Array | null>;
+  /** Grava figura em versão RASCUNHO do próprio autor (trigger/policy da 0018). */
+  insertAsset(input: {
+    institutionId: string;
+    versionId: string;
+    n: number;
+    content: Uint8Array;
+    width: number | null;
+    height: number | null;
+    altText: string | null;
+  }): Promise<void>;
   listSuggestionsBySkill(skillId: string, statuses: SuggestionStatus[]): Promise<SkillSuggestion[]>;
   listSuggestionsByQuestions(questionIds: string[]): Promise<SkillSuggestion[]>;
   setSuggestionStatus(id: string, status: "confirmada" | "rejeitada", reviewedBy: string): Promise<void>;

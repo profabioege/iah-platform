@@ -1,0 +1,51 @@
+{
+ "meta": {
+  "ano": 2099,
+  "dia": 2,
+  "caderno": 5,
+  "arquivo_prova": "sintetico.pdf",
+  "arquivo_gabarito": "sintetico-gb.pdf"
+ },
+ "itens": [
+  {
+   "numero": 91,
+   "area": "CN",
+   "gabarito": "C",
+   "anulada": false,
+   "paginas": [
+    1
+   ],
+   "alertas": [],
+   "enunciado": "Item sintético no formato do Enem, com H<sub>2</sub>O e figura.\n\n{{figura:1}}\n\n<small>Fonte sintética.</small>\n\nQual opção?",
+   "alternativas": [
+    {
+     "key": "A",
+     "text": "opção sintética 91A"
+    },
+    {
+     "key": "B",
+     "text": "opção sintética 91B"
+    },
+    {
+     "key": "C",
+     "text": "opção sintética 91C"
+    },
+    {
+     "key": "D",
+     "text": "opção sintética 91D"
+    },
+    {
+     "key": "E",
+     "text": "opção sintética 91E"
+    }
+   ],
+   "figuras": [
+    {
+     "n": 1,
+     "arquivo": "q091-fig1.png",
+     "pagina": 1
+    }
+   ]
+  }
+ ]
+}

@@ -26,6 +26,10 @@ export const TURMA = turmaPor("beryon");
 export const OUTRA_TURMA = turmaPor("outra");
 export const MISSAO_ID = ambiente.missionId;
 
+/** Banco de questões sintético semeado pelo arranque (catálogo, acervo, item Enem). */
+export const BANCO = ambiente.bancoDeQuestoes;
+export const CATALOGO = { prefixo: "catalogo", institutionId: BANCO?.institutionId, contas: BANCO?.contas ?? [] };
+
 /** Conta pelo papel e pela posição na lista do provisionamento. */
 export function conta(turma, perfil, indice = 0) {
   const candidatas = turma.contas.filter((c) => c.perfil === perfil);

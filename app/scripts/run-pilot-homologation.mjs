@@ -15,7 +15,7 @@
  */
 
 import { spawn } from "node:child_process";
-import { readdirSync, writeFileSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { startHttpHomologation, stopHttpHomologation } from "./pilot-http-env.mjs";
@@ -27,6 +27,19 @@ function listarSuites() {
     .filter((nome) => nome.endsWith(".test.mjs"))
     .sort()
     .map((nome) => join(TESTS_DIR, nome));
+}
+
+/** Banco de questões sintético (catálogo, acervo, item Enem, recorte) — ver o script. */
+function semearBancoDeQuestoes(env, saida) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(
+      process.execPath,
+      ["--experimental-strip-types", "scripts/homologacao-seed-banco-questoes.mjs", `--out=${saida}`],
+      { stdio: ["ignore", "inherit", "inherit"], env },
+    );
+    child.on("error", reject);
+    child.on("close", (code) => (code === 0 ? resolve() : reject(new Error(`semeadura do banco de questões falhou (${code})`))));
+  });
 }
 
 function rodar(arquivos, env) {
@@ -52,6 +65,9 @@ try {
   const alunos = Number(process.env.E2E_ALUNOS ?? 45);
   ambiente = await startHttpHomologation({ students: alunos });
 
+  const arquivoBanco = join(ambiente.workdir, "banco-de-questoes.json");
+  await semearBancoDeQuestoes(ambiente.env, arquivoBanco);
+
   const arquivoAmbiente = join(ambiente.workdir, "ambiente.json");
   writeFileSync(
     arquivoAmbiente,
@@ -63,6 +79,7 @@ try {
       supabaseUrl: ambiente.env.NEXT_PUBLIC_SUPABASE_URL,
       serviceRoleKey: ambiente.env.SUPABASE_SERVICE_ROLE_KEY,
       databaseUrl: ambiente.env.PILOT_TEST_DATABASE_URL,
+      bancoDeQuestoes: JSON.parse(readFileSync(arquivoBanco, "utf8")),
     }),
     "utf8",
   );

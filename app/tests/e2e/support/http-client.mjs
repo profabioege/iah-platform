@@ -130,6 +130,47 @@ export class SessaoHttp {
   }
 
   /**
+   * Como `enviarFormulario`, mas escolhe, entre os formulários da página,
+   * o primeiro cujo HTML contém `marcador` (ex.: `value="aprovada"`,
+   * `name="versionIds"`). Os campos ocultos desse formulário vão junto,
+   * como num navegador; `campos` acrescenta ou substitui. Listas de
+   * valores (checkboxes) vão repetidas.
+   */
+  async enviarFormularioCom(caminho, marcador, campos = {}) {
+    const pagina = await this.get(caminho);
+    const html = await pagina.text();
+    const formulario = html
+      .split(/<form\b/)
+      .slice(1)
+      .map((trecho) => trecho.split("</form>")[0])
+      .find((trecho) => trecho.includes(marcador));
+    const encontrado = formulario?.match(/\$ACTION_ID_([0-9a-f]+)/);
+    if (!encontrado) {
+      throw new Error(`Nenhum formulário com Server Action contendo ${marcador} em ${caminho}.`);
+    }
+    const ocultos = {};
+    for (const tag of formulario.match(/<input\b[^>]*>/g) ?? []) {
+      if (!/type="hidden"/.test(tag)) continue;
+      const nome = tag.match(/\bname="([^"]*)"/)?.[1];
+      if (!nome || nome.startsWith("$ACTION")) continue;
+      ocultos[nome] = decodificar(tag.match(/\bvalue="([^"]*)"/)?.[1] ?? "");
+    }
+    const corpo = new FormData();
+    corpo.append(`$ACTION_ID_${encontrado[1]}`, "");
+    for (const [nome, valor] of Object.entries({ ...ocultos, ...campos })) {
+      for (const v of Array.isArray(valor) ? valor : [valor]) corpo.append(nome, v);
+    }
+    const resposta = await this.requisitar(caminho, { method: "POST", body: corpo });
+    return { status: resposta.status, destino: resposta.headers.get("location"), resposta };
+  }
+
+  /** GET seguindo redirecionamentos e devolvendo o HTML final. */
+  async html(caminho) {
+    const { resposta, caminhoFinal } = await this.navegar(caminho);
+    return { status: resposta.status, caminhoFinal, html: await resposta.text() };
+  }
+
+  /**
    * Chama uma Server Action por HTTP, do mesmo jeito que o navegador:
    * POST na própria página, cabeçalho `Next-Action` com o id do build e
    * os argumentos serializados. A ação executada é a da aplicação, com
@@ -147,6 +188,25 @@ export class SessaoHttp {
     const texto = await resposta.text();
     return { status: resposta.status, texto, resposta };
   }
+}
+
+/** Entidades HTML básicas (valores de atributo e texto renderizado). */
+export function decodificar(texto) {
+  return texto
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;|&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
+}
+
+/**
+ * Texto da página como o leitor vê: sem os marcadores `<!-- -->` que o
+ * React põe entre trechos de texto e com entidades decodificadas — para
+ * procurar frases como "Em revisão · 3" sem depender da renderização.
+ */
+export function textoVisivel(html) {
+  return decodificar(html.replace(/<!-- -->/g, "").replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ");
 }
 
 /**

@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type {
@@ -425,6 +427,22 @@ export function createDatabaseQuestionBankRepositories(
         .maybeSingle();
       fail("question_assets.content", error);
       return data ? decodeBytea((data as Row).content) : null;
+    },
+
+    async insertAsset(a) {
+      const { error } = await db.from("question_assets").insert({
+        id: `qa:${a.versionId}:${a.n}`,
+        institution_id: a.institutionId,
+        version_id: a.versionId,
+        n: a.n,
+        mime: "image/png",
+        content: `\\x${Buffer.from(a.content).toString("hex")}`,
+        width: a.width,
+        height: a.height,
+        alt_text: a.altText,
+        sha256: createHash("sha256").update(a.content).digest("hex"),
+      });
+      fail("question_assets.insert", error);
     },
 
     async listSuggestionsBySkill(skillId, statuses) {

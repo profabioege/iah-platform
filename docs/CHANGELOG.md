@@ -2,6 +2,19 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 04/10/2026 — Suíte de homologação do banco de questões (branch não publicada)
+
+- Percursos do circuito adaptativo e do catálogo/revisão viram suítes de
+  `npm run test:homologacao` (`tests/e2e/circuito-adaptativo.test.mjs`,
+  `tests/e2e/catalogo-e-revisao.test.mjs`), com semeadura sintética
+  própria (`scripts/homologacao-seed-banco-questoes.mjs`, só banco local) e
+  fixtures em `tests/e2e/fixtures/`.
+- `SessaoHttp.enviarFormularioCom`: envia o formulário certo da página,
+  com os campos ocultos dele, como o navegador.
+- Corrige: nova versão de questão perdia as figuras da anterior.
+- Registra defeito anterior: `/professor/turmas` responde 500 no modo real
+  (repositório de conhecimento não ativado) — `docs/reformulacao/06-…`.
+
 ## 04/10/2026 — Reformulação EM, incremento 4: acervo autoral IAH e revisão editorial (branch não publicada)
 
 - Migration 0020: devolutiva por alternativa (liberada ao aluno com o

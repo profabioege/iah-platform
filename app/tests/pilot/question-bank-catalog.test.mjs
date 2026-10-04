@@ -330,3 +330,22 @@ test("sugestão BNCC: só o catálogo confirma; confirmada muda o rótulo para a
   const cat = (await service.approvedForSkill(CNT)).find((b) => b.version.id === catVersion91);
   assert.equal(cat.link.kind, "confirmada");
 });
+
+test("nova versão leva as figuras junto (corrigir o texto não apaga a imagem)", async () => {
+  const { editorial, service } = await as(autoria);
+  const item = await editorial.item(catVersion91);
+  const nova = await service.createNextVersion(catQuestion91, {
+    sourceId: item.version.sourceId,
+    stem: item.version.stem,
+    options: item.version.options,
+    answerKey: item.key.answerKey,
+    resolution: "Resolução revista.",
+    editorialDifficulty: null,
+    authorship: item.version.authorship,
+    contentFormat: "marcacao_v1",
+  });
+  const [copia] = await sql("select n, sha256, width, height from question_assets where version_id = $1", [nova]);
+  const [original] = await sql("select n, sha256, width, height from question_assets where version_id = $1", [catVersion91]);
+  assert.deepEqual(copia, original);
+  assert.deepEqual([...(await service.figure(nova, 1))], [...PNG], "o autor vê a figura do rascunho");
+});
