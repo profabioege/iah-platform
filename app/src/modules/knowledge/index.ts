@@ -49,5 +49,6 @@ export {
 export {
   createKnowledgeRepositories,
   getDefaultKnowledgeRepositories,
+  listKnowledgeDocumentsForDisplay,
   type KnowledgeRepositorySource,
 } from "./infrastructure/repository-factory";

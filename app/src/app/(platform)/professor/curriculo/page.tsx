@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 
 import { getDefaultCurriculumRepositories, type CurriculumTheme } from "@/modules/curriculum";
+import { requirePlatformDataMode } from "@/lib/platform-access";
 import { getRequestRepositories } from "@/modules/platform/infrastructure/request-repositories";
 import { localMissionRepository } from "@/modules/library";
-import { getDefaultKnowledgeRepositories } from "@/modules/knowledge";
+import { listKnowledgeDocumentsForDisplay } from "@/modules/knowledge";
 
 import { CurriculumExplorer } from "./curriculum-explorer";
 
@@ -20,6 +21,17 @@ export const metadata: Metadata = {
  * (que depende de Lessons salvas no dispositivo) é montada no cliente.
  */
 export default async function CurriculoPage() {
+  // O Curriculum Engine ainda não tem repositório de banco (stub, mesmo
+  // padrão do Knowledge Engine): no modo real a página avisa em vez de
+  // responder 500. O planejamento por série da reformulação EM está em
+  // /professor/banco-de-questoes e /professor/circuito.
+  if (requirePlatformDataMode() === "supabase") {
+    return (
+      <p className="mx-auto w-full max-w-4xl text-sm text-muted-foreground">
+        O Planejamento Anual do IAH ainda não está disponível na instalação com banco real.
+      </p>
+    );
+  }
   const curriculumRepositories = getDefaultCurriculumRepositories();
   const disciplines = await curriculumRepositories.disciplines.list();
   const discipline = disciplines[0] ?? null;
@@ -40,7 +52,7 @@ export default async function CurriculoPage() {
     ? await platformRepositories.academicYears.listByInstitution(institutionId)
     : [];
   const missions = await localMissionRepository.list();
-  const knowledgeDocuments = await getDefaultKnowledgeRepositories().documents.list();
+  const { documents: knowledgeDocuments } = await listKnowledgeDocumentsForDisplay();
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">

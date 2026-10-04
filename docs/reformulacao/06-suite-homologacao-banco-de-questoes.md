@@ -47,21 +47,25 @@ nenhum cookie é fabricado.
    imagens. O aluno via a imagem quebrada e a rota respondia 404. Agora a
    nova versão copia as figuras da anterior, e há um teste com banco real
    para isso (`question-bank-catalog.test.mjs`).
-2. **Defeito anterior à reformulação, não corrigido.** No modo real,
-   `/professor/turmas` responde **500**, porque a página chama o repositório
-   de conhecimento, que não está ativado
-   (`KnowledgeDatabaseRepositories: "documents.list" ainda não está disponível`).
-   Ele derruba o teste "2. o provisionamento deixou a turma matriculada e
-   visível ao professor" de `percurso-pedagogico`. Reproduzi a falha no
-   commit `19f5002` (antes da reformulação), com o mesmo erro.
+2. **Defeito anterior à reformulação — corrigido em 04/10/2026.** No modo
+   real, `/professor/turmas` (e também `/professor/aulas/[id]`) respondia
+   **500**: a página pedia documentos ao Knowledge Engine, cujo repositório
+   de banco ainda é stub. Reproduzido no commit `19f5002`. Agora essas telas
+   usam `listKnowledgeDocumentsForDisplay()`: no modo real, lista vazia sem
+   consultar o stub e sem cair nos seeds de demonstração.
+3. **Achado ao cobrir as telas do professor — corrigido.** `/professor/curriculo`
+   também respondia 500 no modo real (Curriculum Engine sem repositório de
+   banco). A página não está no menu; agora avisa que o Planejamento Anual
+   ainda não está disponível na instalação com banco real.
+   Nova suíte: `tests/e2e/telas-do-professor.test.mjs`.
 
 ## Resultado
 
 | Suíte | Resultado |
 |---|---|
-| `test:homologacao` | 36 testes · 35 passam · 1 falha (o defeito anterior do item 2) |
+| `test:homologacao` | 39 de 39 (depois das correções) |
 | `test:pilot` | 64 de 64 |
-| Unitários | 415 de 415 |
+| Unitários | 417 de 417 |
 
 ## Limites
 

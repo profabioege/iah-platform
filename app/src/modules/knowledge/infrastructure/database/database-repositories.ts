@@ -9,6 +9,13 @@
 
 import type { KnowledgeRepositories } from "../../domain/repositories";
 
+/**
+ * Vira `true` quando os métodos abaixo deixarem de ser stub. Enquanto for
+ * `false`, telas que só CITAM documentos do Knowledge Engine não tentam a
+ * consulta no modo real (ver `listKnowledgeDocumentsForDisplay`).
+ */
+export const KNOWLEDGE_DATABASE_IMPLEMENTED = false;
+
 function notConfigured(operation: string): never {
   throw new Error(
     `KnowledgeDatabaseRepositories: "${operation}" ainda não está disponível — ` +

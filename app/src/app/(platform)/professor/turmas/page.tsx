@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { localMissionRepository } from "@/modules/library";
-import { getDefaultKnowledgeRepositories } from "@/modules/knowledge";
+import { listKnowledgeDocumentsForDisplay } from "@/modules/knowledge";
 import { createInstitutionalClassMonitor, createMissionPublishingService } from "@/modules/platform";
 import { getRequestRepositories } from "@/modules/platform/infrastructure/request-repositories";
 import { getWorkspaceContext } from "@/modules/workspace";
@@ -29,7 +29,7 @@ export default async function TurmasPage() {
   const publishingService = createMissionPublishingService(repositories);
 
   const missions = await localMissionRepository.list();
-  const knowledgeDocuments = await getDefaultKnowledgeRepositories().documents.list();
+  const { documents: knowledgeDocuments } = await listKnowledgeDocumentsForDisplay();
 
   const classroomLifecycles: ClassroomLifecycle[] = await Promise.all(
     workspace.classrooms.map(async (classroom) => {

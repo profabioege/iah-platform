@@ -7,9 +7,13 @@
 
 import { isDatabaseConfigured } from "@/modules/platform";
 
+import type { KnowledgeDocument } from "../domain/entities";
 import type { KnowledgeRepositories } from "../domain/repositories";
 import { createSeedKnowledgeRepositories } from "./seed/seed-repositories";
-import { createDatabaseKnowledgeRepositories } from "./database/database-repositories";
+import {
+  createDatabaseKnowledgeRepositories,
+  KNOWLEDGE_DATABASE_IMPLEMENTED,
+} from "./database/database-repositories";
 
 export type KnowledgeRepositorySource = "seed" | "database";
 
@@ -32,4 +36,22 @@ export function createKnowledgeRepositories(
 /** Fonte padrão: banco real quando configurado, seeds de demonstração caso contrário. */
 export function getDefaultKnowledgeRepositories(): KnowledgeRepositories {
   return createKnowledgeRepositories(isDatabaseConfigured() ? "database" : "seed");
+}
+
+/**
+ * Documentos do Knowledge Engine para telas que apenas os CITAM (Turmas,
+ * Currículo, editor de aula). No modo real o repositório de banco ainda é
+ * stub: devolve lista vazia com `available: false` — sem cair nos seeds de
+ * demonstração (dado fictício em instalação real) e sem disparar a
+ * consulta que derrubava a página com 500. Quem DEPENDE do Knowledge
+ * Engine continua chamando os repositórios e recebe o erro explícito.
+ */
+export async function listKnowledgeDocumentsForDisplay(): Promise<{
+  documents: KnowledgeDocument[];
+  available: boolean;
+}> {
+  if (isDatabaseConfigured() && !KNOWLEDGE_DATABASE_IMPLEMENTED) {
+    return { documents: [], available: false };
+  }
+  return { documents: await getDefaultKnowledgeRepositories().documents.list(), available: true };
 }

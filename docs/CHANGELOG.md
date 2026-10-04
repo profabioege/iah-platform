@@ -2,6 +2,18 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 04/10/2026 — Correções do modo real nas telas do professor (branch não publicada)
+
+- `/professor/turmas` e `/professor/aulas/[id]` deixam de responder 500 no
+  modo real: `listKnowledgeDocumentsForDisplay()` devolve lista vazia
+  enquanto o repositório de banco do Knowledge Engine for stub, sem usar
+  seeds de demonstração (defeito anterior à reformulação, reproduzido em
+  `19f5002`).
+- `/professor/curriculo` avisa que o Planejamento Anual não está disponível
+  no modo real em vez de responder 500 (Curriculum Engine sem banco).
+- Testes: unitário do novo comportamento e `tests/e2e/telas-do-professor.test.mjs`;
+  homologação 39/39, integração 64/64, unitários 417/417.
+
 ## 04/10/2026 — Suíte de homologação do banco de questões (branch não publicada)
 
 - Percursos do circuito adaptativo e do catálogo/revisão viram suítes de

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { localMissionRepository } from "@/modules/library";
-import { getDefaultKnowledgeRepositories } from "@/modules/knowledge";
+import { listKnowledgeDocumentsForDisplay } from "@/modules/knowledge";
 import { getWorkspaceContext, getWorkspaceUser } from "@/modules/workspace";
 
 import { LessonWizard } from "./lesson-wizard";
@@ -25,7 +25,7 @@ export default async function LessonBuilderPage({
   const { id } = await params;
   const author = await resolveAuthor();
   const missions = await localMissionRepository.list();
-  const knowledgeDocuments = await getDefaultKnowledgeRepositories().documents.list();
+  const { documents: knowledgeDocuments } = await listKnowledgeDocumentsForDisplay();
   // Turmas reais da Instituição (M17/D-039), resolvidas pelo Workspace —
   // no modo real, filtradas às turmas do próprio professor (M22).
   const workspace = await getWorkspaceContext();
