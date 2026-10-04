@@ -84,6 +84,7 @@ const toSource = (r: Row): ContentSource => ({
   rightsHolder: String(r.rights_holder),
   license: String(r.license),
   rightsStatus: r.rights_status as ContentSource["rightsStatus"],
+  evidence: str(r.evidence),
 });
 
 const toQuestion = (r: Row): Question => ({
@@ -137,7 +138,8 @@ const toVersion = (r: Row): QuestionVersion => ({
 const toKey = (r: Row): QuestionKey => ({
   versionId: String(r.version_id),
   answerKey: String(r.answer_key),
-  resolution: String(r.resolution),
+  resolution: str(r.resolution),
+  optionFeedback: (r.option_feedback as Record<string, string> | null) ?? null,
 });
 
 const toReview = (r: Row): QuestionReview => ({
@@ -334,7 +336,7 @@ export function createDatabaseQuestionBankRepositories(
     async listSources(ids) {
       let query = db
         .from("content_sources")
-        .select("id, institution_id, kind, title, rights_holder, license, rights_status");
+        .select("id, institution_id, kind, title, rights_holder, license, rights_status, evidence");
       if (ids) {
         if (ids.length === 0) return [];
         query = query.in("id", ids);
@@ -373,16 +375,28 @@ export function createDatabaseQuestionBankRepositories(
     },
 
     async upsertKey(k) {
-      const { error } = await db.from("question_version_keys").upsert(
-        {
-          version_id: k.versionId,
-          institution_id: k.institutionId,
-          answer_key: k.answerKey,
-          resolution: k.resolution,
-        },
-        { onConflict: "version_id" },
-      );
+      const row: Row = {
+        version_id: k.versionId,
+        institution_id: k.institutionId,
+        answer_key: k.answerKey,
+        resolution: k.resolution,
+      };
+      // Sem o campo, a devolutiva por alternativa já gravada é mantida.
+      if (k.optionFeedback !== undefined) row.option_feedback = k.optionFeedback;
+      const { error } = await db.from("question_version_keys").upsert(row, { onConflict: "version_id" });
       fail("question_version_keys.upsert", error);
+    },
+
+    async updateQuestionSkill(questionId, skillId, componentId) {
+      const patch: Row = { skill_id: skillId };
+      if (componentId) patch.component_id = componentId;
+      const { data, error } = await db
+        .from("questions")
+        .update(patch)
+        .eq("id", questionId)
+        .select("id");
+      fail("questions.skill", error);
+      if (!data?.length) throw new Error("Só quem criou a questão altera a habilidade oficial.");
     },
 
     async listAssets(versionIds) {
@@ -496,7 +510,7 @@ export function createDatabaseQuestionBankRepositories(
       return (data ?? []).map(toQuestion);
     },
 
-    async listVersions({ ids, questionIds, status }) {
+    async listVersions({ ids, questionIds, status, statuses, institutionId }) {
       let query = db
         .from("question_versions")
         .select("id, institution_id, question_id, version, stem, options, editorial_difficulty, source_id, authorship, status, created_by, decided_by, decided_at, content_format");
@@ -509,6 +523,8 @@ export function createDatabaseQuestionBankRepositories(
         query = query.in("question_id", questionIds);
       }
       if (status) query = query.eq("status", status);
+      if (statuses) query = query.in("status", statuses);
+      if (institutionId) query = query.eq("institution_id", institutionId);
       const { data, error } = await query.order("version");
       fail("question_versions", error);
       return (data ?? []).map(toVersion);
@@ -518,7 +534,7 @@ export function createDatabaseQuestionBankRepositories(
       if (versionIds.length === 0) return [];
       const { data, error } = await db
         .from("question_version_keys")
-        .select("version_id, answer_key, resolution")
+        .select("version_id, answer_key, resolution, option_feedback")
         .in("version_id", versionIds);
       fail("question_version_keys", error);
       return (data ?? []).map(toKey);

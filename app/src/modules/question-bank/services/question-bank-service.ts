@@ -48,6 +48,13 @@ function requireRole(actor: QuestionBankActor, roles: QuestionBankActor["role"][
 
 const newId = () => crypto.randomUUID();
 
+/** Devolutivas por alternativa sem entradas vazias; nenhuma → null. */
+function cleanFeedback(feedback: Record<string, string> | null | undefined): Record<string, string> | null {
+  if (!feedback) return null;
+  const entries = Object.entries(feedback).map(([k, v]) => [k.trim(), v.trim()] as const).filter(([k, v]) => k && v);
+  return entries.length ? Object.fromEntries(entries) : null;
+}
+
 /** Ids determinísticos: repetir a mesma ação nunca cria segunda linha. */
 export const attemptIdFor = (listId: string, studentId: string) => `att:${listId}:${studentId}`;
 export const answerIdFor = (attemptId: string, itemId: string) => `ans:${attemptId}:${itemId}`;
@@ -295,6 +302,8 @@ export function createQuestionBankService(repos: QuestionBankRepositories, actor
       resolution: string;
       editorialDifficulty: EditorialDifficulty | null;
       authorship: string;
+      contentFormat?: ContentFormat;
+      optionFeedback?: Record<string, string> | null;
     }): Promise<string> {
       requireRole(actor, ["professor", "administrador", "admin_iah"], "Apenas a equipe escreve questões.");
       const problem = validateOptions(input.options, input.answerKey);
@@ -313,6 +322,8 @@ export function createQuestionBankService(repos: QuestionBankRepositories, actor
       resolution: string;
       editorialDifficulty: EditorialDifficulty | null;
       authorship: string;
+      contentFormat?: ContentFormat;
+      optionFeedback?: Record<string, string> | null;
     }): Promise<string> {
       const versionId = newId();
       await repos.insertVersion({
@@ -326,12 +337,14 @@ export function createQuestionBankService(repos: QuestionBankRepositories, actor
         sourceId: input.sourceId,
         authorship: input.authorship.trim(),
         createdBy: actor.userId,
+        contentFormat: input.contentFormat ?? "texto",
       });
       await repos.upsertKey({
         versionId,
         institutionId: actor.institutionId,
         answerKey: input.answerKey.trim(),
         resolution: input.resolution.trim(),
+        optionFeedback: cleanFeedback(input.optionFeedback),
       });
       return versionId;
     },

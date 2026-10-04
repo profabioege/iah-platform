@@ -1,7 +1,7 @@
 {
  "documento": "Matriz de Referência para o ENEM 2009 (MEC/INEP)",
  "fonte": "Documento oficial do INEP (download.inep.gov.br) inacessível desta sessão; texto transcrito de cópias públicas (sites.google.com/site/pccbioufam — CN; estudarcomquestoes.com.br — MT) e conferido com o conhecimento do texto oficial. CONFERIR com o PDF oficial antes de produção. Cópias públicas divergem em MT-H1 e MT-H27 (versões truncadas); adotada a redação completa do documento oficial — conferir.",
- "pendente": "Linguagens (LC) e Ciências Humanas (CH) — necessárias para o 1º dia.",
+ "pendente": "LC e CH: ver matriz-enem-2009-lc-ch.json (04/10/2026).",
  "areas": {
   "cnt": {
    "sigla_enem": "CN",

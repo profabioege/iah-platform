@@ -2,6 +2,20 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 04/10/2026 — Reformulação EM, incremento 4: acervo autoral IAH e revisão editorial (branch não publicada)
+
+- Migration 0020: devolutiva por alternativa (liberada ao aluno com o
+  gabarito), `marcacao_v2` com tabelas, habilidade corrigível só antes da
+  primeira aprovação — D-052.
+- Importador dos acervos autorais (.md) para o Catálogo IAH, em revisão;
+  classificação BNCC/Matriz/série proposta por IA para o acervo 01;
+  Matriz do Enem LC/CH transcrita (conferir com o PDF oficial).
+- Telas de revisão (`/professor/revisao`, `/gestor/revisao`), fontes e
+  direitos (`/gestor/fontes`) e devolutiva da alternativa ao aluno.
+- Testes: 415 unitários, 63 de integração com banco real (6 novos), 2
+  mutações detectadas, 59 da fila, percurso HTTP 10/10 com os 80 itens num
+  banco descartável.
+
 ## 04/10/2026 — Reformulação EM, incremento 3: circuito adaptativo (branch não publicada)
 
 - Migration 0019: rodada do circuito como lista pessoal, circuito da turma,

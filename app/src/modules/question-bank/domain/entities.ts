@@ -84,6 +84,7 @@ export interface ContentSource {
   rightsHolder: string;
   license: string;
   rightsStatus: RightsStatus;
+  evidence?: string | null;
 }
 
 export type EditorialDifficulty = "facil" | "media" | "dificil";
@@ -118,7 +119,7 @@ export interface Question {
 }
 
 /** Texto puro ou marcação mínima (sub/sup/em/strong/small + {{figura:N}}). */
-export type ContentFormat = "texto" | "marcacao_v1";
+export type ContentFormat = "texto" | "marcacao_v1" | "marcacao_v2";
 
 export interface QuestionAssetMeta {
   versionId: string;
@@ -164,6 +165,8 @@ export interface QuestionKey {
   answerKey: string;
   /** Pode faltar em rascunho importado; a aprovação exige. */
   resolution: string | null;
+  /** Devolutiva por alternativa (letra → texto), liberada ao aluno com o gabarito. */
+  optionFeedback?: Record<string, string> | null;
 }
 
 export interface ReviewChecklist {

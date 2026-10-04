@@ -79,6 +79,8 @@ export interface QuestionBankRepositories {
     contentFormat?: ContentFormat;
   }): Promise<void>;
   upsertKey(input: QuestionKey & { institutionId: string }): Promise<void>;
+  /** Habilidade oficial (e componente, se a habilidade exigir) — só quem criou, só antes da 1ª aprovação. */
+  updateQuestionSkill(questionId: string, skillId: string, componentId?: string): Promise<void>;
   /** Metadados das figuras (sem o conteúdo binário). */
   listAssets(versionIds: string[]): Promise<QuestionAssetMeta[]>;
   /** Conteúdo PNG de uma figura — sob a mesma RLS da versão. */
@@ -104,6 +106,9 @@ export interface QuestionBankRepositories {
     ids?: string[];
     questionIds?: string[];
     status?: QuestionVersion["status"];
+    statuses?: QuestionVersion["status"][];
+    /** Só versões deste inquilino (exclui o catálogo legível pela escola). */
+    institutionId?: string;
   }): Promise<QuestionVersion[]>;
   listKeys(versionIds: string[]): Promise<QuestionKey[]>;
 

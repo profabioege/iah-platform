@@ -51,5 +51,13 @@ export {
   type CircuitStudentRow,
   type MyCircuit,
 } from "./services/adaptive-circuit-service";
+export {
+  createEditorialService,
+  type EditorialService,
+  type QueueRow,
+  type ReviewItem,
+  type VersionInput,
+} from "./services/editorial-service";
+export { parseBlocks, markdownToMarkupV2, type MarkupBlock } from "./domain/markup";
 export { parseMarkup, decodeEntities, figureRefs, type MarkupNode } from "./domain/markup";
 export { createDatabaseQuestionBankRepositories } from "./infrastructure/database-repositories";

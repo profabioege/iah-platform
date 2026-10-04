@@ -109,6 +109,9 @@ export const CATALOG_COMPONENTS = [
   { id: "comp-mat-matematica", area_id: "mat", name: "Matemática" },
   // A prova de CN não separa Biologia/Física/Química nos microdados.
   { id: "comp-cnt-area", area_id: "cnt", name: "Ciências da Natureza (área)" },
+  // Itens por área do acervo autoral IAH (D-052).
+  { id: "comp-lgg-area", area_id: "lgg", name: "Linguagens (área)" },
+  { id: "comp-chs-area", area_id: "chs", name: "Ciências Humanas (área)" },
 ] as const;
 
 export const AREAS = [
@@ -414,7 +417,7 @@ function check(step: string, error: { message: string } | null) {
 /** Áreas, componentes do catálogo, BNCC EM completa e Matriz do Enem. Idempotente. */
 export async function loadCatalogReferences(
   admin: SupabaseClient,
-  refs: { bncc: BnccReference; matriz: MatrizReference },
+  refs: { bncc: BnccReference; matriz: MatrizReference | MatrizReference[] },
 ): Promise<{ bncc: number; matriz: number }> {
   check("áreas", (await admin.from("curriculum_areas").upsert([...AREAS], { onConflict: "id" })).error);
   check("componentes", (await admin.from("curriculum_components").upsert(
@@ -433,7 +436,8 @@ export async function loadCatalogReferences(
   }));
   check("BNCC", (await admin.from("curriculum_skills").upsert(bnccRows, { onConflict: "id" })).error);
 
-  const matrizRows = Object.entries(refs.matriz.areas).flatMap(([areaId, area]) =>
+  const matrizes = Array.isArray(refs.matriz) ? refs.matriz : [refs.matriz];
+  const matrizRows = matrizes.flatMap((matriz) => Object.entries(matriz.areas).flatMap(([areaId, area]) =>
     area.habilidades.map((h) => ({
       id: matrizSkillId(area.sigla_enem, h.numero),
       institution_id: null,
@@ -443,9 +447,9 @@ export async function loadCatalogReferences(
       code: h.codigo,
       competency_code: `C${h.competencia}`,
       description: h.texto,
-      source_reference: `${refs.matriz.documento} — transcrição a conferir com o PDF oficial do INEP.`,
+      source_reference: `${matriz.documento} — transcrição a conferir com o PDF oficial do INEP.`,
     })),
-  );
+  ));
   check("Matriz", (await admin.from("curriculum_skills").upsert(matrizRows, { onConflict: "id" })).error);
   return { bncc: bnccRows.length, matriz: matrizRows.length };
 }

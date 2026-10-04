@@ -648,3 +648,21 @@ atualizados.
 **Alternativas descartadas:** *tabelas próprias de rodada/resposta* (duplicaria correção, RLS e gabarito pós-entrega); *escolha das questões na aplicação com service_role* (quebraria o padrão de menor privilégio da D-041/0010); *TRI/proficiência com listas curtas* (estatisticamente insustentável com 3–5 itens); *avanço automático* (contraria a escolha do Founder e a supervisão docente da D-049); *IA escolhendo ou gerando itens agora* (regras transparentes primeiro; IA depois, sempre via revisão).
 
 **Impacto futuro:** Revisita para retenção, erro típico por alternativa, MentorIAH explicando o erro e geração de itens com IA constroem sobre estas tabelas. O circuito só é útil com banco amplo por habilidade: depende do Catálogo aprovado ou de itens inéditos IAH. Limites da regra v1 a calibrar com uso real.
+
+## D-052 — Acervo autoral IAH no Catálogo, devolutiva por alternativa e tela de revisão editorial (04/10/2026)
+
+**Status:** Proposto para revisão do Founder (branch `reform/em-curriculo-banco-questoes`, não publicada). Detalhes em `docs/reformulacao/05-acervo-autoral-e-revisao.md`.
+
+**Contexto e problema:** O Founder entregou 80 questões autorais IAH (estilo Enem/vestibular, 10 por área em dois acervos) com gabarito e devolutiva por alternativa; metade sem BNCC, Matriz ou série, e 15 com tabelas. O banco não guardava devolutiva por alternativa nem tabelas, e não havia tela para revisar e aprovar — sem ela, nada chega ao aluno.
+
+**Decisão:**
+
+1. **Destino: Catálogo IAH**, fonte `autoral_iah` única com direitos pendentes até a gestão IAH verificar; itens entram **em revisão**.
+2. **Devolutiva por alternativa** em `question_version_keys.option_feedback`, mesma tabela do gabarito: herda a regra "aluno só depois de entregar" e a imutabilidade pós-envio; o banco recusa letra inexistente ou texto vazio. O aluno lê a devolutiva da alternativa marcada; resolução = devolutiva da correta.
+3. **`marcacao_v2`** = v1 + tabelas em linhas `| a | b |`, renderizadas por lista de permissão (sem HTML injetado).
+4. **Classificação**: BNCC do autor quando existe; senão BNCC **proposta por IA** como habilidade oficial provisória, sempre marcada (`external_ref.classificacao.origem = 'ia'`) e confirmada pelo item "habilidade" da conferência; Matriz do Enem como sugestão a confirmar. Habilidade e componente corrigíveis pelo autor **só antes da primeira aprovação** (relaxa a imutabilidade da 0017 apenas nesse intervalo).
+5. **Tela de revisão** única para escola e catálogo (`/professor/revisao`, `/gestor/revisao`) e **fontes e direitos** (`/gestor/fontes`); correção sempre por nova versão.
+
+**Alternativas descartadas:** *devolutivas dentro das alternativas* (vazariam ao aluno antes da entrega); *tabelas como imagem* (inacessível, não editável); *HTML livre* (risco de injeção); *aprovar na carga* (pularia a revisão humana); *deixar o acervo 01 sem habilidade* (a coluna é obrigatória e o item ficaria fora das listas por habilidade).
+
+**Impacto futuro:** Mesma fila revisará os itens do Enem (D-050) e as próximas questões inéditas. Pendentes: inquilino/contas do catálogo em homologação, revisão humana dos 80 itens, conferência da Matriz LC/CH, dificuldade editorial.

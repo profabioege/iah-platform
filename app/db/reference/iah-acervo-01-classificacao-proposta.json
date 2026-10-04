@@ -1,0 +1,368 @@
+{
+ "fonte_itens": "IAH Educacional — Aprova Enem, 40 questões inéditas (acervo 01)",
+ "origem": "sugestao_ia",
+ "aviso": "Classificação PROPOSTA por IA (BNCC, Matriz do Enem e série) para itens que chegaram sem ela. A habilidade BNCC entra como habilidade oficial PROVISÓRIA do rascunho e só vale depois de conferida na revisão (item 'habilidade' da conferência); a Matriz entra como sugestão a confirmar.",
+ "data": "2026-10-04",
+ "itens": [
+  {
+   "codigo": "IAH-EM-LC-001",
+   "bncc": "EM13LP02",
+   "confianca_bncc": "alta",
+   "matriz": "LC-H18",
+   "confianca_matriz": "alta",
+   "serie": "1ª",
+   "motivo": "coesão referencial: retomada anafórica por demonstrativo"
+  },
+  {
+   "codigo": "IAH-EM-LC-002",
+   "bncc": "EM13LP10",
+   "confianca_bncc": "media",
+   "matriz": "LC-H26",
+   "confianca_matriz": "alta",
+   "serie": "1ª",
+   "motivo": "adequação de registro à situação de uso, sem hierarquizar variedades"
+  },
+  {
+   "codigo": "IAH-EM-LC-003",
+   "bncc": "EM13LP05",
+   "confianca_bncc": "alta",
+   "matriz": "LC-H24",
+   "confianca_matriz": "media",
+   "serie": "2ª",
+   "motivo": "argumento baseado em dado de levantamento em texto argumentativo"
+  },
+  {
+   "codigo": "IAH-EM-LC-004",
+   "bncc": "EM13LP01",
+   "confianca_bncc": "media",
+   "matriz": "LC-H19",
+   "confianca_matriz": "alta",
+   "serie": "1ª",
+   "motivo": "finalidade do verbete e função referencial predominante"
+  },
+  {
+   "codigo": "IAH-EM-LC-005",
+   "bncc": "EM13LP49",
+   "confianca_bncc": "alta",
+   "matriz": "LC-H16",
+   "confianca_matriz": "alta",
+   "serie": "1ª",
+   "motivo": "procedimentos do texto poético: personificação e contraste"
+  },
+  {
+   "codigo": "IAH-EM-LC-006",
+   "bncc": "EM13LGG403",
+   "confianca_bncc": "alta",
+   "matriz": "LC-H6",
+   "confianca_matriz": "media",
+   "serie": "1ª",
+   "motivo": "compreensão de instrução em inglês para agir numa situação"
+  },
+  {
+   "codigo": "IAH-EM-LC-007",
+   "bncc": "EM13LGG501",
+   "confianca_bncc": "alta",
+   "matriz": "LC-H11",
+   "confianca_matriz": "alta",
+   "serie": "2ª",
+   "motivo": "prática corporal inclusiva com adaptação para diferentes indivíduos"
+  },
+  {
+   "codigo": "IAH-EM-LC-008",
+   "bncc": "EM13LGG604",
+   "confianca_bncc": "media",
+   "matriz": "LC-H12",
+   "confianca_matriz": "media",
+   "serie": "2ª",
+   "motivo": "instalação artística relacionada à dimensão social do trabalho"
+  },
+  {
+   "codigo": "IAH-EM-LC-009",
+   "bncc": "EM13LP38",
+   "confianca_bncc": "alta",
+   "matriz": "LC-H22",
+   "confianca_matriz": "media",
+   "serie": "2ª",
+   "motivo": "recortes de dados em manchetes e limites de inferência"
+  },
+  {
+   "codigo": "IAH-EM-LC-010",
+   "bncc": "EM13LGG702",
+   "confianca_bncc": "alta",
+   "matriz": "LC-H28",
+   "confianca_matriz": "alta",
+   "serie": "3ª",
+   "motivo": "personalização algorítmica e avaliação crítica de evidências"
+  },
+  {
+   "codigo": "IAH-EM-CH-001",
+   "bncc": "EM13CHS104",
+   "confianca_bncc": "media",
+   "matriz": "CH-H2",
+   "confianca_matriz": "alta",
+   "serie": "1ª",
+   "motivo": "seleção de acervo e produção da memória pública"
+  },
+  {
+   "codigo": "IAH-EM-CH-002",
+   "bncc": "EM13CHS101",
+   "confianca_bncc": "alta",
+   "matriz": "CH-H14",
+   "confianca_matriz": "media",
+   "serie": "1ª",
+   "motivo": "confronto de fontes sobre a organização do trabalho"
+  },
+  {
+   "codigo": "IAH-EM-CH-003",
+   "bncc": "EM13CHS106",
+   "confianca_bncc": "alta",
+   "matriz": "CH-H6",
+   "confianca_matriz": "alta",
+   "serie": "1ª",
+   "motivo": "leitura de representações cartográficas e variáveis"
+  },
+  {
+   "codigo": "IAH-EM-CH-004",
+   "bncc": "EM13CHS201",
+   "confianca_bncc": "media",
+   "matriz": "CH-H18",
+   "confianca_matriz": "alta",
+   "serie": "2ª",
+   "motivo": "circulação de mercadorias e distribuição da renda na cadeia produtiva"
+  },
+  {
+   "codigo": "IAH-EM-CH-005",
+   "bncc": "EM13CHS401",
+   "confianca_bncc": "alta",
+   "matriz": "CH-H16",
+   "confianca_matriz": "alta",
+   "serie": "2ª",
+   "motivo": "técnica, divisão do trabalho e controle do ritmo"
+  },
+  {
+   "codigo": "IAH-EM-CH-006",
+   "bncc": "EM13CHS603",
+   "confianca_bncc": "media",
+   "matriz": "CH-H24",
+   "confianca_matriz": "alta",
+   "serie": "2ª",
+   "motivo": "representação, deliberação e participação democrática"
+  },
+  {
+   "codigo": "IAH-EM-CH-007",
+   "bncc": "EM13CHS501",
+   "confianca_bncc": "alta",
+   "matriz": "CH-H23",
+   "confianca_matriz": "media",
+   "serie": "1ª",
+   "motivo": "universalidade de normas éticas e privilégio"
+  },
+  {
+   "codigo": "IAH-EM-CH-008",
+   "bncc": "EM13CHS601",
+   "confianca_bncc": "alta",
+   "matriz": "CH-H10",
+   "confianca_matriz": "alta",
+   "serie": "3ª",
+   "motivo": "protagonismo quilombola e mobilização coletiva em decisão pública"
+  },
+  {
+   "codigo": "IAH-EM-CH-009",
+   "bncc": "EM13CHS304",
+   "confianca_bncc": "media",
+   "matriz": "CH-H27",
+   "confianca_matriz": "alta",
+   "serie": "2ª",
+   "motivo": "impermeabilização urbana e distribuição espacial do risco na bacia"
+  },
+  {
+   "codigo": "IAH-EM-CH-010",
+   "bncc": "EM13CHS204",
+   "confianca_bncc": "baixa",
+   "matriz": "CH-H7",
+   "confianca_matriz": "alta",
+   "serie": "3ª",
+   "motivo": "desigualdade de poder decisório entre nações em organismo internacional"
+  },
+  {
+   "codigo": "IAH-EM-CN-001",
+   "bncc": "EM13CNT301",
+   "confianca_bncc": "alta",
+   "matriz": "CN-H15",
+   "confianca_matriz": "alta",
+   "serie": "2ª",
+   "motivo": "interpretação de experimento controlado sobre transpiração"
+  },
+  {
+   "codigo": "IAH-EM-CN-002",
+   "bncc": "EM13CNT301",
+   "confianca_bncc": "media",
+   "matriz": "CN-H25",
+   "confianca_matriz": "media",
+   "serie": "1ª",
+   "motivo": "separação de misturas por cromatografia e evidência experimental"
+  },
+  {
+   "codigo": "IAH-EM-CN-003",
+   "bncc": "EM13CNT204",
+   "confianca_bncc": "media",
+   "matriz": "CN-H20",
+   "confianca_matriz": "alta",
+   "serie": "1ª",
+   "motivo": "segunda lei de Newton com forças horizontais"
+  },
+  {
+   "codigo": "IAH-EM-CN-004",
+   "bncc": "EM13CNT101",
+   "confianca_bncc": "alta",
+   "matriz": "CN-H21",
+   "confianca_matriz": "alta",
+   "serie": "2ª",
+   "motivo": "transferência de energia térmica e isolamento"
+  },
+  {
+   "codigo": "IAH-EM-CN-005",
+   "bncc": "EM13CNT205",
+   "confianca_bncc": "alta",
+   "matriz": "CN-H13",
+   "confianca_matriz": "alta",
+   "serie": "2ª",
+   "motivo": "herança mendeliana com probabilidade e incerteza"
+  },
+  {
+   "codigo": "IAH-EM-CN-006",
+   "bncc": "EM13CNT201",
+   "confianca_bncc": "alta",
+   "matriz": "CN-H16",
+   "confianca_matriz": "alta",
+   "serie": "2ª",
+   "motivo": "comparação entre explicações evolutivas: seleção natural"
+  },
+  {
+   "codigo": "IAH-EM-CN-007",
+   "bncc": "EM13CNT301",
+   "confianca_bncc": "media",
+   "matriz": "CN-H1",
+   "confianca_matriz": "alta",
+   "serie": "2ª",
+   "motivo": "ressonância a partir de dados de amplitude e frequência"
+  },
+  {
+   "codigo": "IAH-EM-CN-008",
+   "bncc": "EM13CNT307",
+   "confianca_bncc": "alta",
+   "matriz": "CN-H27",
+   "confianca_matriz": "media",
+   "serie": "3ª",
+   "motivo": "escolha de material por critérios de emissão, resistência e resíduo"
+  },
+  {
+   "codigo": "IAH-EM-CN-009",
+   "bncc": "EM13CNT203",
+   "confianca_bncc": "alta",
+   "matriz": "CN-H9",
+   "confianca_matriz": "alta",
+   "serie": "1ª",
+   "motivo": "fluxo de energia entre níveis tróficos"
+  },
+  {
+   "codigo": "IAH-EM-CN-010",
+   "bncc": "EM13CNT107",
+   "confianca_bncc": "alta",
+   "matriz": "CN-H5",
+   "confianca_matriz": "alta",
+   "serie": "3ª",
+   "motivo": "dimensionamento de bateria por potência e tempo"
+  },
+  {
+   "codigo": "IAH-EM-MT-001",
+   "bncc": "EM13MAT302",
+   "confianca_bncc": "alta",
+   "matriz": "MT-H19",
+   "confianca_matriz": "alta",
+   "serie": "1ª",
+   "motivo": "função afim como modelo de variação constante"
+  },
+  {
+   "codigo": "IAH-EM-MT-002",
+   "bncc": "EM13MAT301",
+   "confianca_bncc": "alta",
+   "matriz": "MT-H21",
+   "confianca_matriz": "alta",
+   "serie": "1ª",
+   "motivo": "sistema de equações lineares em contexto"
+  },
+  {
+   "codigo": "IAH-EM-MT-003",
+   "bncc": "EM13MAT104",
+   "confianca_bncc": "media",
+   "matriz": "MT-H3",
+   "confianca_matriz": "alta",
+   "serie": "1ª",
+   "motivo": "variações percentuais sucessivas e fator acumulado"
+  },
+  {
+   "codigo": "IAH-EM-MT-004",
+   "bncc": "EM13MAT307",
+   "confianca_bncc": "alta",
+   "matriz": "MT-H12",
+   "confianca_matriz": "alta",
+   "serie": "1ª",
+   "motivo": "área de figura composta por decomposição"
+  },
+  {
+   "codigo": "IAH-EM-MT-005",
+   "bncc": "EM13MAT309",
+   "confianca_bncc": "alta",
+   "matriz": "MT-H12",
+   "confianca_matriz": "alta",
+   "serie": "2ª",
+   "motivo": "volume de prisma, densidade e conversão de unidades"
+  },
+  {
+   "codigo": "IAH-EM-MT-006",
+   "bncc": "EM13MAT316",
+   "confianca_bncc": "alta",
+   "matriz": "MT-H27",
+   "confianca_matriz": "alta",
+   "serie": "2ª",
+   "motivo": "média de tabela de frequências e porcentagem"
+  },
+  {
+   "codigo": "IAH-EM-MT-007",
+   "bncc": "EM13MAT312",
+   "confianca_bncc": "alta",
+   "matriz": "MT-H28",
+   "confianca_matriz": "alta",
+   "serie": "2ª",
+   "motivo": "probabilidade em retiradas sucessivas sem reposição"
+  },
+  {
+   "codigo": "IAH-EM-MT-008",
+   "bncc": "EM13MAT310",
+   "confianca_bncc": "alta",
+   "matriz": "MT-H2",
+   "confianca_matriz": "alta",
+   "serie": "2ª",
+   "motivo": "contagem com restrição de ordem"
+  },
+  {
+   "codigo": "IAH-EM-MT-009",
+   "bncc": "EM13MAT101",
+   "confianca_bncc": "alta",
+   "matriz": "MT-H24",
+   "confianca_matriz": "alta",
+   "serie": "1ª",
+   "motivo": "taxa de variação média lida em gráfico"
+  },
+  {
+   "codigo": "IAH-EM-MT-010",
+   "bncc": "EM13MAT102",
+   "confianca_bncc": "alta",
+   "matriz": "MT-H26",
+   "confianca_matriz": "media",
+   "serie": "1ª",
+   "motivo": "viés de seleção em amostra e generalização indevida"
+  }
+ ]
+}

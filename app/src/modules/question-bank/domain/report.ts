@@ -31,6 +31,9 @@ export interface ItemReport {
   isCorrect: boolean | null;
   answerKey: string | null;
   resolution: string | null;
+  /** Devolutiva da alternativa marcada (quando a questão tem devolutiva por alternativa). */
+  selectedFeedback: string | null;
+  optionFeedback: Record<string, string> | null;
 }
 
 export interface SkillReport {
@@ -78,6 +81,8 @@ export function buildAttemptReport(input: {
         isCorrect: answer?.isCorrect ?? null,
         answerKey: key?.answerKey ?? null,
         resolution: key?.resolution ?? null,
+        selectedFeedback: (answer?.selectedKey && key?.optionFeedback?.[answer.selectedKey]) || null,
+        optionFeedback: key?.optionFeedback ?? null,
       };
     });
 

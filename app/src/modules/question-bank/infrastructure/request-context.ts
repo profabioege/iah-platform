@@ -13,6 +13,7 @@
 import { isAuthConfigured, getPlatformConfigError } from "@/lib/auth-flags";
 
 import { createDatabaseQuestionBankRepositories } from "./database-repositories";
+import { createEditorialService, type EditorialService } from "../services/editorial-service";
 import {
   createAdaptiveCircuitService,
   type AdaptiveCircuitService,
@@ -29,6 +30,7 @@ export async function getQuestionBankContext(): Promise<{
   actor: QuestionBankActor;
   service: QuestionBankService;
   circuit: AdaptiveCircuitService;
+  editorial: EditorialService;
 }> {
   const configError = getPlatformConfigError();
   if (configError) throw new QuestionBankUnavailableError(configError);
@@ -47,5 +49,10 @@ export async function getQuestionBankContext(): Promise<{
   if (!actor) throw new Error("Sessão inválida ou expirada — entre novamente.");
   const repositories = createDatabaseQuestionBankRepositories(await getScopedDatabaseClient(actor));
   const service = createQuestionBankService(repositories, actor);
-  return { actor, service, circuit: createAdaptiveCircuitService(repositories, actor, service) };
+  return {
+    actor,
+    service,
+    circuit: createAdaptiveCircuitService(repositories, actor, service),
+    editorial: createEditorialService(repositories, actor, service),
+  };
 }

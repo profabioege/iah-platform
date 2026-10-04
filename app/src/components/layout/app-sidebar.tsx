@@ -9,6 +9,7 @@ import {
   ClipboardCheck,
   ClipboardList,
   FlaskConical,
+  FileCheck,
   FolderKanban,
   GraduationCap,
   History,
@@ -19,6 +20,7 @@ import {
   NotebookPen,
   Route,
   Rocket,
+  ShieldCheck,
   Sparkles,
 } from "lucide-react";
 
@@ -59,6 +61,7 @@ const TEACHER_MENU: MenuItem[] = [
   { title: "Sondagens", icon: ClipboardList, href: "/professor/avaliacoes" },
   { title: "Banco de questões", icon: ListChecks, href: "/professor/banco-de-questoes" },
   { title: "Circuito", icon: Route, href: "/professor/circuito" },
+  { title: "Revisão", icon: FileCheck, href: "/professor/revisao" },
   { title: "Laboratório", icon: FlaskConical },
   { title: "Biblioteca", icon: Library },
   { title: "Projetos", icon: FolderKanban },
@@ -91,6 +94,8 @@ const ADMIN_MENU: MenuItem[] = [
   { title: "Professores", icon: GraduationCap, href: "/gestor?visao=professores" },
   { title: "Missões", icon: Rocket, href: "/gestor?visao=missoes" },
   { title: "Sondagens", icon: ClipboardCheck, href: "/gestor/sondagens" },
+  { title: "Revisão de questões", icon: FileCheck, href: "/gestor/revisao" },
+  { title: "Fontes e direitos", icon: ShieldCheck, href: "/gestor/fontes" },
   { title: "Agenda", icon: CalendarDays },
   { title: "Perfil", icon: CircleUser },
 ];
