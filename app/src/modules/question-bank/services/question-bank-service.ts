@@ -159,6 +159,11 @@ export function createQuestionBankService(repos: QuestionBankRepositories, actor
       return { classroom, entries, gradeKnown: classroom.gradeCode !== null };
     },
 
+    /** Componentes visíveis ao ator (referência comum + os da escola) — percursos (D-053). */
+    async components(): Promise<CurriculumComponent[]> {
+      return repos.listComponents();
+    },
+
     // ------------------------------------------------------------------
     // Banco: consulta
     // ------------------------------------------------------------------

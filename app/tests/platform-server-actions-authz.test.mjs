@@ -118,12 +118,30 @@ const professorActions = () => import("@/app/(platform)/professor/actions");
 const alunoActions = () =>
   import("@/app/(platform)/missoes/[id]/mission-flow/actions");
 
+const { missions } = await import("@/content/missions/index.ts");
+const MISSION_AXES = missions.find((m) => m.id === MISSION).axes;
+
+// A Missão 01 tem dois eixos (D-053): a avaliação precisa trazer os dois.
 const review = {
   studentId: ALUNO_01.id,
   missionId: MISSION,
   grade: "Atingiu",
-  observedCriteria: ["Justificou o veredito"],
+  observedCriteria: [],
   feedback: "Boa checagem de fontes.",
+  axes: {
+    discipline: {
+      level: "atingido",
+      observedCriteria: [MISSION_AXES.discipline.criteria[0]],
+      note: "",
+      skillCode: MISSION_AXES.discipline.skill.code,
+    },
+    ai: {
+      level: "em_desenvolvimento",
+      observedCriteria: [MISSION_AXES.ai.criteria[0]],
+      note: "",
+      competencyIds: [...MISSION_AXES.ai.competencyIds],
+    },
+  },
 };
 
 // ----------------------------------------------- avaliação (professor)
@@ -187,6 +205,17 @@ test("a avaliação persiste com o institutionId da sessão, nunca do cliente", 
   for (const call of repositories.calls) {
     assert.equal(call.institutionId, INSTITUTION.id, call.method);
   }
+});
+
+test("Missão de dois eixos: avaliação sem os eixos é recusada no servidor", async () => {
+  const repositories = signedInAs("user-fabio", "professor", cicloConcluidoDoAluno01());
+  const { reviewSubmissionAction } = await professorActions();
+  const semEixos = { ...review, axes: undefined };
+  await assert.rejects(
+    () => reviewSubmissionAction({ classroomId: TURMA_JORNADA, ...semEixos }),
+    /dois eixos/,
+  );
+  assert.equal(repositories.saved.missionReviews.length, 0);
 });
 
 test("avaliar revalida as áreas dos quatro perfis", async () => {

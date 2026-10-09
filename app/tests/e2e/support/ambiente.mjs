@@ -25,6 +25,8 @@ const turmaPor = (prefixo) => ambiente.turmas.find((t) => t.prefixo === prefixo)
 export const TURMA = turmaPor("beryon");
 export const OUTRA_TURMA = turmaPor("outra");
 export const MISSAO_ID = ambiente.missionId;
+/** Missão de dois eixos da Trilha IA & Humanidades (D-053). */
+export const MISSAO_IA_ID = ambiente.aiMissionId;
 
 /** Banco de questões sintético semeado pelo arranque (catálogo, acervo, item Enem). */
 export const BANCO = ambiente.bancoDeQuestoes;

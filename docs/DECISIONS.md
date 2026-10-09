@@ -666,3 +666,22 @@ atualizados.
 **Alternativas descartadas:** *devolutivas dentro das alternativas* (vazariam ao aluno antes da entrega); *tabelas como imagem* (inacessível, não editável); *HTML livre* (risco de injeção); *aprovar na carga* (pularia a revisão humana); *deixar o acervo 01 sem habilidade* (a coluna é obrigatória e o item ficaria fora das listas por habilidade).
 
 **Impacto futuro:** Mesma fila revisará os itens do Enem (D-050) e as próximas questões inéditas. Pendentes: inquilino/contas do catálogo em homologação, revisão humana dos 80 itens, conferência da Matriz LC/CH, dificuldade editorial.
+
+## D-053 — Missão com dois eixos (disciplina × competência em IA) e percursos do aluno (09/10/2026)
+
+**Status:** Proposto para revisão do Founder (branch `feature/dois-eixos-ia-trilhas`, não publicada). Detalhes em `docs/reformulacao/07-dois-eixos-ia-e-disciplinas.md`.
+
+**Contexto e problema:** O Professor Fabio Ege definiu dois eixos conectados para o Ensino Médio: o Ensino de IA (trilha IA & Humanidades, apoiada por História, Geografia, Filosofia e Sociologia) e as trilhas de estudo das quatro áreas. A Missão tinha uma produção e um conceito únicos: o professor não conseguia registrar que o aluno acertou a análise histórica sem verificar criticamente a IA, e o aluno não via as trilhas das disciplinas ao lado da trilha de IA.
+
+**Decisão:**
+
+1. **A Missão declara os dois eixos no arquivo de conteúdo** (`Mission.axes`): objetivo, componente e habilidade BNCC da disciplina com seus critérios; objetivo, competências, instrução prática, evidências de uso crítico e critérios de IA; critérios da reflexão. Um critério não pode valer para os dois eixos.
+2. **Registro de uso da IA separado da produção** (ferramenta, pedido, resposta, verificação, decisão) em colunas próprias de `productions` (0021). Missão de dois eixos só é entregue com o registro completo.
+3. **Avaliação por eixo** em colunas próprias de `mission_reviews` (0021): nível (não evidenciado, em desenvolvimento, atingido, superado), critérios e comentário por eixo, mais o que foi avaliado. O banco exige os dois eixos juntos; o servidor exige que a habilidade e as competências sejam as da Missão e que os critérios venham da especificação. Não é nota nem TRI.
+4. **Referencial IAH de competências em IA provisório** (usar, compreender, avaliar, criar), identificado como provisório até o alinhamento com o referencial do MEC.
+5. **Percursos** (`src/modules/pathways`): o aluno vê a trilha de IA (Missões atribuídas pelo professor) e um cartão por área com a próxima atividade; listas cuja habilidade-alvo é a da Missão aparecem ligadas a ela. O professor tem o painel da trilha com os dois eixos separados. A série vem da turma (configuração da escola); o conhecimento de IA não é deduzido da série.
+6. **Atribuição sem Lesson** para Missões de dois eixos (a Missão já traz objetivos e critérios), pelo mesmo serviço de publicação.
+
+**Alternativas descartadas:** *registro de IA dentro do texto da produção* (o professor não separaria os eixos nem o banco poderia exigir o registro); *tabelas novas de avaliação por eixo* (duplicaria as policies da 0010 e o ciclo de vida da avaliação); *nota numérica por eixo* (falsa precisão; o projeto não usa TRI com listas curtas); *dar nível de IA pela série* (contraria a decisão pedagógica); *eixos gravados no banco* (o conteúdo da Missão já vive em arquivo versionado).
+
+**Impacto futuro:** Novas Missões de IA (Geografia, Filosofia, Sociologia; 2ª e 3ª séries) só precisam do bloco `axes`. Diagnóstico por etapas e plano semanal das trilhas ficam para o próximo incremento. O lote piloto de 40 itens entra no Catálogo IAH em revisão pelo importador desta branch; o `0016_item_bank` de 06/10 (worktree `iah-pilot-beryon`) fica obsoleto.

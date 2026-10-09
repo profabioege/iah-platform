@@ -12,7 +12,8 @@
 import { createLearningCycleService, type LearningCycleScope } from "@/modules/platform";
 import { getRequestRepositories } from "@/modules/platform/infrastructure/request-repositories";
 import { getWorkspaceContext } from "@/modules/workspace";
-import type { StudentWork } from "@/modules/classroom";
+import type { AiUseEvidence, StudentWork } from "@/modules/classroom";
+import { localMissionRepository } from "@/modules/library";
 
 async function requireStudentScope(missionId: string): Promise<LearningCycleScope> {
   const workspace = await getWorkspaceContext();
@@ -76,7 +77,24 @@ export async function setProductionDeliveredAction(
   delivered: boolean,
 ): Promise<StudentWork> {
   const scope = await requireStudentScope(missionId);
-  return (await service()).setProductionDelivered(scope, delivered);
+  // Regra de entrega da Missão de dois eixos: a especificação vem do
+  // arquivo de conteúdo, nunca do cliente.
+  const mission = await localMissionRepository.getById(missionId);
+  return (await service()).setProductionDelivered(scope, delivered, mission?.axes);
+}
+
+export async function saveAiEvidenceDraftAction(
+  missionId: string,
+  evidence: AiUseEvidence,
+): Promise<StudentWork> {
+  const scope = await requireStudentScope(missionId);
+  return (await service()).saveAiEvidenceDraft(scope, {
+    tool: String(evidence?.tool ?? ""),
+    request: String(evidence?.request ?? ""),
+    response: String(evidence?.response ?? ""),
+    verification: String(evidence?.verification ?? ""),
+    decision: String(evidence?.decision ?? ""),
+  });
 }
 
 export async function saveReflectionDraftAction(

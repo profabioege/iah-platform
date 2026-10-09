@@ -21,7 +21,12 @@ export const metadata: Metadata = {
  * arquitetura institucional (`modules/platform`), sem depender mais do
  * `simulated-class-monitor` (`modules/classroom`).
  */
-export default async function TurmasPage() {
+export default async function TurmasPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ turma?: string }>;
+}) {
+  const turma = (await searchParams)?.turma ?? null;
   const workspace = await getWorkspaceContext();
   if (!workspace) return null; // middleware garante sessão; guarda defensiva
 
@@ -74,6 +79,7 @@ export default async function TurmasPage() {
         institutionId={workspace.institution.id}
         reviewer={{ id: workspace.user.id, name: workspace.user.name }}
         classroomLifecycles={classroomLifecycles}
+        initialClassroomId={turma}
         missions={missions}
         knowledgeDocuments={knowledgeDocuments}
       />

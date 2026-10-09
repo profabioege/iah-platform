@@ -47,9 +47,12 @@ export function TurmasExplorer({
   classroomLifecycles,
   missions,
   knowledgeDocuments,
+  initialClassroomId = null,
 }: {
   institutionId: string;
   reviewer: { id: string; name: string };
+  /** Turma pedida na URL (`?turma=`), ex.: vindo do painel da Trilha IA. */
+  initialClassroomId?: string | null;
   classroomLifecycles: ClassroomLifecycle[];
   missions: Mission[];
   knowledgeDocuments: KnowledgeDocument[];
@@ -57,7 +60,8 @@ export function TurmasExplorer({
   const router = useRouter();
   const realMode = isRealModeClient();
   const [selectedClassroomId, setSelectedClassroomId] = React.useState(
-    classroomLifecycles.find((item) => item.activeAssignment)?.classroom.id ??
+    classroomLifecycles.find((item) => item.classroom.id === initialClassroomId)?.classroom.id ??
+      classroomLifecycles.find((item) => item.activeAssignment)?.classroom.id ??
       classroomLifecycles[0]?.classroom.id ??
       "",
   );
@@ -234,6 +238,11 @@ export function TurmasExplorer({
                       (mission) => mission.id === current.activeAssignment?.missionId,
                     ),
                   )}
+                  axes={
+                    missions.find(
+                      (mission) => mission.id === current.activeAssignment?.missionId,
+                    )?.axes
+                  }
                 />
               </>
             )}

@@ -16,4 +16,26 @@ export type {
   MissionRepository,
 } from "./domain/mission-repository";
 
+export type {
+  AxisLevel,
+  CurriculumAreaCode,
+  MissionAiAxis,
+  MissionAxes,
+  MissionDisciplineAxis,
+} from "./domain/mission-axes";
+export {
+  AREA_NAMES,
+  AXIS_LEVELS,
+  axisLevelLabel,
+  resolveAiCompetencies,
+  validateMissionAxes,
+} from "./domain/mission-axes";
+
+export type { AiCompetency, AiCompetencyDimension } from "./domain/ai-competencies";
+export {
+  AI_COMPETENCIES,
+  AI_COMPETENCIES_REFERENCE_LABEL,
+  AI_DIMENSIONS,
+} from "./domain/ai-competencies";
+
 export { localMissionRepository } from "./infrastructure/local-mission-repository";

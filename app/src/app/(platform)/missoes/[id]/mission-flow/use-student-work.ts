@@ -10,11 +10,13 @@ import {
   isReflectionRecorded,
   loadStudentWork,
   saveStudentWork,
+  type AiUseEvidence,
   type StudentWork,
   type StudentWorkScope,
 } from "@/modules/classroom";
 
 import {
+  saveAiEvidenceDraftAction,
   saveProductionDraftAction,
   saveReflectionDraftAction,
   setProductionDeliveredAction,
@@ -50,7 +52,9 @@ export function useStudentWork(source: StudentWorkSource, missionId: string) {
   const [saveStatus, setSaveStatus] = React.useState<WorkSaveStatus>("idle");
   const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingRef = React.useRef<
-    { field: "production" | "reflection"; value: string } | null
+    | { field: "production" | "reflection"; value: string }
+    | { field: "aiEvidence"; value: AiUseEvidence }
+    | null
   >(null);
 
   React.useEffect(() => {
@@ -89,9 +93,11 @@ export function useStudentWork(source: StudentWorkSource, missionId: string) {
     pendingRef.current = null;
     if (!pending) return;
     await persistReal(() =>
-      pending.field === "production"
-        ? saveProductionDraftAction(missionId, pending.value)
-        : saveReflectionDraftAction(missionId, pending.value),
+      pending.field === "aiEvidence"
+        ? saveAiEvidenceDraftAction(missionId, pending.value)
+        : pending.field === "production"
+          ? saveProductionDraftAction(missionId, pending.value)
+          : saveReflectionDraftAction(missionId, pending.value),
     );
   }, [missionId, persistReal]);
 
@@ -104,12 +110,29 @@ export function useStudentWork(source: StudentWorkSource, missionId: string) {
   }, [flushPendingDraft]);
 
   const scheduleDraftSave = React.useCallback(
-    (field: "production" | "reflection", value: string) => {
-      pendingRef.current = { field, value };
+    (
+      pending:
+        | { field: "production" | "reflection"; value: string }
+        | { field: "aiEvidence"; value: AiUseEvidence },
+    ) => {
+      // Um rascunho de OUTRO campo ainda pendente sai antes (sem esperar o
+      // debounce), para nunca ser descartado pela troca de campo.
+      const previous = pendingRef.current;
+      if (previous && previous.field !== pending.field) {
+        pendingRef.current = null;
+        void persistReal(() =>
+          previous.field === "aiEvidence"
+            ? saveAiEvidenceDraftAction(missionId, previous.value)
+            : previous.field === "production"
+              ? saveProductionDraftAction(missionId, previous.value)
+              : saveReflectionDraftAction(missionId, previous.value),
+        );
+      }
+      pendingRef.current = pending;
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(flushPendingDraft, DRAFT_DEBOUNCE_MS);
     },
-    [flushPendingDraft],
+    [flushPendingDraft, missionId, persistReal],
   );
 
   const update = React.useCallback(
@@ -147,11 +170,15 @@ export function useStudentWork(source: StudentWorkSource, missionId: string) {
         return;
       }
       if (typeof partial.production === "string") {
-        scheduleDraftSave("production", partial.production);
+        scheduleDraftSave({ field: "production", value: partial.production });
         return;
       }
       if (typeof partial.reflection === "string") {
-        scheduleDraftSave("reflection", partial.reflection);
+        scheduleDraftSave({ field: "reflection", value: partial.reflection });
+        return;
+      }
+      if (partial.aiEvidence) {
+        scheduleDraftSave({ field: "aiEvidence", value: partial.aiEvidence });
         return;
       }
     },

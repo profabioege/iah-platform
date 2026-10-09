@@ -35,6 +35,9 @@ export const REST_PROXY_PORT = Number(process.env.E2E_REST_PORT ?? 54329);
 
 const AUTH_SECRET = "homologacao-local-descartavel-nao-e-segredo-de-producao";
 
+/** Missão da Trilha IA & Humanidades com os dois eixos (D-053). */
+export const AI_MISSION_ID = "01-a-fabrica-de-noticias";
+
 function base64url(value) {
   return Buffer.from(value)
     .toString("base64")
@@ -167,11 +170,25 @@ export async function startHttpHomologation(options = {}) {
       NEXT_TELEMETRY_DISABLED: "1",
     };
 
-    log("2/6 Missão sintética no catálogo...");
+    log("2/6 Missões no catálogo (sintética + Missão 01 da Trilha IA & Humanidades)...");
     await run(process.execPath, ["scripts/pilot-seed-mission.mjs", "--execute"], {
       env,
       quiet: true,
     });
+    // Missão de dois eixos (D-053). O conteúdo está no código
+    // (src/content/missions); a tabela `missions` é só o registro.
+    await run(
+      process.execPath,
+      [
+        "scripts/pilot-seed-mission.mjs",
+        `--id=${AI_MISSION_ID}`,
+        "--number=1",
+        "--title=A Fábrica de Notícias",
+        "--module=Módulo 1 — O Auditor da Realidade",
+        "--execute",
+      ],
+      { env, quiet: true },
+    );
 
     log(`3/6 Provisionamento pela CLI real (${students} + ${otherStudents} contas)...`);
     const turmas = [];
@@ -244,6 +261,7 @@ export async function startHttpHomologation(options = {}) {
       turmas,
       actions,
       missionId: "missao-sintetica-01",
+      aiMissionId: AI_MISSION_ID,
     };
   } catch (error) {
     if (server) server.kill();

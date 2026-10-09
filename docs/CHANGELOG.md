@@ -2,6 +2,23 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 09/10/2026 — Dois eixos: Trilha IA & Humanidades e trilhas das disciplinas (branch não publicada)
+
+- Missão com dois eixos (D-053): `Mission.axes` na Missão 01 (História,
+  EM13CHS101 + competências de IA), referencial provisório de
+  competências em IA.
+- Migration 0021 (aditiva): registro de uso da IA em `productions` e
+  avaliação por eixo em `mission_reviews`, com CHECK dos dois eixos.
+- Aluno: etapa "Uso da IA" na Missão, entrega exige o registro,
+  devolutiva com os dois eixos; "Meus percursos" no Dashboard (trilha de
+  IA + 4 áreas, próxima atividade, progresso, lista ligada à Missão).
+- Professor: "Trilha IA & Humanidades" (atribuir, acompanhar os dois
+  eixos, exercícios ligados); avaliação por eixo na tela de Turmas.
+- Importador do lote piloto de 40 itens para o Catálogo IAH (em revisão).
+- `npm run demo:dois-eixos`: ambiente local de demonstração.
+- Testes: unitários 438/438, integração 71/71, homologação 49/49.
+  Ensaio local; não mede capacidade da Vercel.
+
 ## 04/10/2026 — Correções do modo real nas telas do professor (branch não publicada)
 
 - `/professor/turmas` e `/professor/aulas/[id]` deixam de responder 500 no

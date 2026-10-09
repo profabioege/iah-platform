@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { CheckCircle2, ChevronDown, NotebookPen, PenLine } from "lucide-react";
+import { BookOpenText, Bot, CheckCircle2, ChevronDown, NotebookPen, PenLine } from "lucide-react";
 
 import {
   STUDENT_MISSION_STATUSES,
@@ -10,9 +10,18 @@ import {
   loadStudentWork,
   reviewStudentWork,
   saveStudentWork,
+  type AxisAssessment,
   type StudentMissionSnapshot,
   type StudentMissionStatus,
+  type StudentWorkAxesReview,
 } from "@/modules/classroom";
+import {
+  AXIS_LEVELS,
+  axisLevelLabel,
+  resolveAiCompetencies,
+  type AxisLevel,
+  type MissionAxes,
+} from "@/modules/library";
 import { isRealModeClient } from "@/lib/auth-flags";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +61,7 @@ export function ClassPanel({
   missionId,
   reviewer,
   criteria,
+  axes,
 }: {
   students: StudentMissionSnapshot[];
   institutionId: string;
@@ -60,6 +70,8 @@ export function ClassPanel({
   missionId: string;
   reviewer: { id: string; name: string };
   criteria: string[];
+  /** Missão de dois eixos (D-053): avaliação separada da disciplina e da IA. */
+  axes?: MissionAxes;
 }) {
   const [filter, setFilter] = React.useState<Filter>("todos");
   const [openId, setOpenId] = React.useState<string | null>(null);
@@ -164,6 +176,16 @@ export function ClassPanel({
                       <Badge variant="outline" className="text-muted-foreground">
                         {meta.label}
                       </Badge>
+                      {s.review?.axes ? (
+                        <span className="flex flex-wrap gap-1.5 text-[11px]">
+                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-primary">
+                            Disciplina: {axisLevelLabel(s.review.axes.discipline.level)}
+                          </span>
+                          <span className="rounded-full bg-chart-2/10 px-2 py-0.5 text-chart-2">
+                            IA: {axisLevelLabel(s.review.axes.ai.level)}
+                          </span>
+                        </span>
+                      ) : null}
                       <span className="w-40 text-right text-xs text-muted-foreground">
                         {s.lastAccessAt
                           ? `Último acesso ${formatDateTime(s.lastAccessAt)}`
@@ -194,6 +216,7 @@ export function ClassPanel({
                             </p>
                           </div>
                         ) : null}
+                        {axes && s.aiEvidence ? <AiEvidencePanel evidence={s.aiEvidence} /> : null}
                         {s.reflection ? (
                           <div>
                             <p className="mb-1 flex items-center gap-1.5 text-xs font-medium text-chart-3">
@@ -212,7 +235,8 @@ export function ClassPanel({
                             classroomId={classroomId}
                             missionId={missionId}
                             reviewer={reviewer}
-                            criteria={criteria}
+                            criteria={axes ? [] : criteria}
+                            axes={axes}
                             realMode={realMode}
                             onReviewed={(reviewedStudent) =>
                               setSnapshots((current) =>
@@ -295,6 +319,7 @@ function ReviewForm({
   missionId,
   reviewer,
   criteria,
+  axes,
   realMode,
   onReviewed,
 }: {
@@ -304,6 +329,7 @@ function ReviewForm({
   missionId: string;
   reviewer: { id: string; name: string };
   criteria: string[];
+  axes?: MissionAxes;
   realMode: boolean;
   onReviewed: (student: StudentMissionSnapshot) => void;
 }) {
@@ -316,11 +342,40 @@ function ReviewForm({
   );
   const [message, setMessage] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
+  const [disciplineAxis, setDisciplineAxis] = React.useState<Partial<AxisAssessment>>(
+    existing?.axes?.discipline ?? { observedCriteria: [], note: "" },
+  );
+  const [aiAxis, setAiAxis] = React.useState<Partial<AxisAssessment>>(
+    existing?.axes?.ai ?? { observedCriteria: [], note: "" },
+  );
+
+  function axesReview(): StudentWorkAxesReview | null {
+    if (!axes || !disciplineAxis.level || !aiAxis.level) return null;
+    return {
+      discipline: {
+        level: disciplineAxis.level,
+        observedCriteria: disciplineAxis.observedCriteria ?? [],
+        note: (disciplineAxis.note ?? "").trim(),
+        skillCode: axes.discipline.skill.code,
+      },
+      ai: {
+        level: aiAxis.level,
+        observedCriteria: aiAxis.observedCriteria ?? [],
+        note: (aiAxis.note ?? "").trim(),
+        competencyIds: axes.ai.competencyIds,
+      },
+    };
+  }
 
   async function submitReview(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!grade.trim() || !feedback.trim()) {
       setMessage("Informe o conceito e uma devolutiva antes de confirmar.");
+      return;
+    }
+    const axesValue = axesReview();
+    if (axes && !axesValue) {
+      setMessage("Escolha o nível observado nos dois eixos: disciplina e IA.");
       return;
     }
 
@@ -335,6 +390,7 @@ function ReviewForm({
           grade: grade.trim(),
           observedCriteria: observed,
           feedback: feedback.trim(),
+          axes: axesValue,
         });
         onReviewed({
           ...student,
@@ -377,6 +433,7 @@ function ReviewForm({
         feedback: feedback.trim(),
         reviewerId: reviewer.id,
         reviewerName: reviewer.name,
+        axes: axesValue,
       });
       onReviewed({
         ...student,
@@ -404,8 +461,33 @@ function ReviewForm({
         {existing ? <Badge className="bg-chart-2/15 text-chart-2">Avaliado</Badge> : null}
       </div>
 
+      {axes ? (
+        <div className="grid gap-3 lg:grid-cols-2">
+          <AxisFieldset
+            tone="primary"
+            icon={<BookOpenText className="size-4" />}
+            title={`Disciplina · ${axes.discipline.component}`}
+            subtitle={`${axes.discipline.skill.code} — ${axes.discipline.objective}`}
+            criteria={axes.discipline.criteria}
+            value={disciplineAxis}
+            onChange={setDisciplineAxis}
+            name={`disciplina-${student.studentId}`}
+          />
+          <AxisFieldset
+            tone="chart-2"
+            icon={<Bot className="size-4" />}
+            title="Competência em IA"
+            subtitle={resolveAiCompetencies(axes).map((c) => c.label).join(" · ")}
+            criteria={axes.ai.criteria}
+            value={aiAxis}
+            onChange={setAiAxis}
+            name={`ia-${student.studentId}`}
+          />
+        </div>
+      ) : null}
+
       <label className="flex flex-col gap-1.5 text-xs font-medium">
-        Nota ou conceito
+        {axes ? "Conceito geral" : "Nota ou conceito"}
         <Input
           value={grade}
           onChange={(event) => setGrade(event.target.value)}
@@ -490,4 +572,122 @@ function formatDateTime(iso: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+/**
+ * Um eixo da avaliação (D-053): nível observado, critérios DESTE eixo e
+ * comentário. Disciplina e IA nunca compartilham critério.
+ */
+function AxisFieldset({
+  tone,
+  icon,
+  title,
+  subtitle,
+  criteria,
+  value,
+  onChange,
+  name,
+}: {
+  tone: "primary" | "chart-2";
+  icon: React.ReactNode;
+  title: string;
+  subtitle: string;
+  criteria: string[];
+  value: Partial<AxisAssessment>;
+  onChange: (next: Partial<AxisAssessment>) => void;
+  name: string;
+}) {
+  const color = tone === "primary" ? "text-primary" : "text-chart-2";
+  const border = tone === "primary" ? "border-primary/30" : "border-chart-2/40";
+  const observed = value.observedCriteria ?? [];
+  return (
+    <fieldset className={cn("flex flex-col gap-3 rounded-lg border p-3", border)}>
+      <legend className={cn("flex items-center gap-1.5 px-1 text-xs font-semibold", color)}>
+        {icon}
+        {title}
+      </legend>
+      <p className="text-[11px] leading-relaxed text-muted-foreground">{subtitle}</p>
+      <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={`Nível — ${title}`}>
+        {AXIS_LEVELS.map((level) => (
+          <label
+            key={level.value}
+            className={cn(
+              "cursor-pointer rounded-full border px-2.5 py-1 text-[11px] transition-colors",
+              value.level === level.value
+                ? "border-foreground bg-foreground text-background"
+                : "border-border text-muted-foreground hover:bg-muted",
+            )}
+          >
+            <input
+              type="radio"
+              name={name}
+              value={level.value}
+              checked={value.level === level.value}
+              onChange={() => onChange({ ...value, level: level.value as AxisLevel })}
+              className="sr-only"
+            />
+            {level.label}
+          </label>
+        ))}
+      </div>
+      <div className="flex flex-col gap-1.5">
+        {criteria.map((criterion) => (
+          <label key={criterion} className="flex items-start gap-2 text-xs text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={observed.includes(criterion)}
+              onChange={(event) =>
+                onChange({
+                  ...value,
+                  observedCriteria: event.target.checked
+                    ? [...observed, criterion]
+                    : observed.filter((item) => item !== criterion),
+                })
+              }
+              className="mt-0.5 size-4 rounded border-input accent-primary"
+            />
+            <span>{criterion}</span>
+          </label>
+        ))}
+      </div>
+      <textarea
+        value={value.note ?? ""}
+        onChange={(event) => onChange({ ...value, note: event.target.value })}
+        rows={2}
+        maxLength={2000}
+        placeholder="Comentário sobre este eixo (opcional)"
+        aria-label={`Comentário — ${title}`}
+        className="w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-xs leading-relaxed outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
+      />
+    </fieldset>
+  );
+}
+
+/** Registro de uso da IA do aluno — mostrado separado da produção. */
+function AiEvidencePanel({ evidence }: { evidence: NonNullable<StudentMissionSnapshot["aiEvidence"]> }) {
+  const rows: Array<[string, string]> = [
+    ["Ferramenta", evidence.tool],
+    ["Pedido à IA", evidence.request],
+    ["Resposta da IA (trecho)", evidence.response],
+    ["Como verificou", evidence.verification],
+    ["O que manteve, corrigiu ou descartou", evidence.decision],
+  ];
+  return (
+    <div className="rounded-lg border border-chart-2/40 bg-chart-2/5 p-3">
+      <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-chart-2">
+        <Bot className="size-3.5" />
+        Registro de uso da IA
+      </p>
+      <dl className="grid gap-2">
+        {rows.map(([label, text]) => (
+          <div key={label}>
+            <dt className="text-[11px] font-medium text-muted-foreground">{label}</dt>
+            <dd className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
+              {text.trim() || <span className="italic text-muted-foreground">não preenchido</span>}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  );
 }

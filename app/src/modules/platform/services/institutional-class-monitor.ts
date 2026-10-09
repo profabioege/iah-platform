@@ -56,6 +56,7 @@ export function createInstitutionalClassMonitor(
           lastAccessAt: studentProgress?.lastAccessAt ?? null,
           production: production?.content ?? null,
           reflection: reflection?.text ?? null,
+          aiEvidence: production?.aiEvidence ?? null,
           review: review
             ? {
                 grade: review.grade,
@@ -64,6 +65,7 @@ export function createInstitutionalClassMonitor(
                 reviewedAt: review.reviewedAt,
                 reviewerId: review.reviewerId,
                 reviewerName: review.reviewerName,
+                axes: review.axes ?? null,
               }
             : null,
         };

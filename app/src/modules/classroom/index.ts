@@ -5,6 +5,8 @@
 
 export {
   emptyStudentWork,
+  EMPTY_AI_EVIDENCE,
+  isAiEvidenceComplete,
   canTransitionSubmission,
   getStudentSubmissionStatus,
   isMissionCompleted,
@@ -13,6 +15,9 @@ export {
   type StudentWork,
   type StudentWorkReview,
   type StudentSubmissionStatus,
+  type AiUseEvidence,
+  type AxisAssessment,
+  type StudentWorkAxesReview,
 } from "./domain/student-work";
 
 export {

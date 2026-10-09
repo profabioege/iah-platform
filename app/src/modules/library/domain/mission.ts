@@ -3,6 +3,8 @@
  * Representa uma Missão conforme a estrutura padrão definida em docs/MISSION.md.
  */
 
+import type { MissionAxes } from "./mission-axes";
+
 /** Situação da Missão no ciclo de vida editorial. */
 export type MissionStatus = "draft" | "published" | "archived";
 
@@ -48,6 +50,14 @@ export interface Mission {
 
   /** 11. Competências Desenvolvidas — lista de competências. */
   competencies: string[];
+
+  /**
+   * Dois eixos (D-053): objetivo/habilidade da disciplina e objetivo/
+   * competência de IA, com critérios separados. Opcional: Missões antigas
+   * não têm; quando existe, a entrega exige o registro de uso da IA e a
+   * avaliação exige os dois eixos.
+   */
+  axes?: MissionAxes;
 
   /** Posição da Missão na sequência do módulo. */
   order: number;

@@ -8,7 +8,11 @@
  * bancos separados por escola; o isolamento é por coluna + contrato.
  */
 
-import type { StudentMissionStatus } from "@/modules/classroom";
+import type {
+  AiUseEvidence,
+  StudentMissionStatus,
+  StudentWorkAxesReview,
+} from "@/modules/classroom";
 
 /** Paleta institucional para branding futuro (white-label) — sem consumidor ainda. */
 export interface InstitutionColors {
@@ -120,6 +124,11 @@ export interface Production {
   /** Primeiro início explícito da investigação (ISO); null até o aluno começar. */
   startedAt: string | null;
   content: string;
+  /**
+   * Registro de uso da IA (D-053, migration 0021) — campos separados do
+   * texto da produção. Ausente/nulo em produções anteriores ao incremento.
+   */
+  aiEvidence?: AiUseEvidence | null;
   status: "draft" | "delivered";
   deliveredAt: string | null;
   updatedAt: string;
@@ -156,6 +165,8 @@ export interface MissionReview {
   reviewerId: string;
   reviewerName: string;
   reviewedAt: string;
+  /** Avaliação separada dos dois eixos (D-053); nula em Missões sem eixos. */
+  axes?: StudentWorkAxesReview | null;
 }
 
 /** Provedores de integração/importação reconhecidos pela plataforma. */

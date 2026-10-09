@@ -60,7 +60,13 @@ export function loadStudentWork(
     if (!raw) return emptyStudentWork(missionId);
     const parsed = JSON.parse(raw) as Partial<StudentWork>;
     // Mescla sobre o vazio para tolerar registros de versões anteriores.
-    return { ...emptyStudentWork(missionId), ...parsed, missionId };
+    const base = emptyStudentWork(missionId);
+    return {
+      ...base,
+      ...parsed,
+      aiEvidence: { ...base.aiEvidence, ...(parsed.aiEvidence ?? {}) },
+      missionId,
+    };
   } catch {
     return emptyStudentWork(missionId);
   }

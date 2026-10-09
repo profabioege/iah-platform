@@ -5,7 +5,10 @@ import { createLearningCycleService } from "@/modules/platform";
 import { getRequestRepositories } from "@/modules/platform/infrastructure/request-repositories";
 import type { StudentWork } from "@/modules/classroom";
 
+import { loadStudentPathways } from "@/modules/pathways/infrastructure/load-pathways";
+
 import { DashboardHome, type DashboardMission, type DashboardSource } from "./dashboard-home";
+import { StudentPathwaysSection } from "./student-pathways";
 
 /**
  * Dashboard da Plataforma — "Minha Aula" do Aluno (Sprint M17).
@@ -87,12 +90,24 @@ export default async function DashboardPage() {
     source = { kind: "demo", scope };
   }
 
+  // Percursos (D-053): os dois eixos do IAH na entrada do aluno — só com
+  // banco real (as trilhas por disciplina dependem do banco de questões).
+  const pathways = mode === "supabase" ? await loadStudentPathways() : null;
+
   return (
-    <DashboardHome
-      missions={items}
-      classroomId={classroomId}
-      source={source}
-      initialAssignments={initialAssignments}
-    />
+    <div className="flex flex-col gap-8">
+      {pathways ? (
+        <StudentPathwaysSection
+          pathways={pathways.pathways}
+          disciplineUnavailable={pathways.disciplineUnavailable}
+        />
+      ) : null}
+      <DashboardHome
+        missions={items}
+        classroomId={classroomId}
+        source={source}
+        initialAssignments={initialAssignments}
+      />
+    </div>
   );
 }

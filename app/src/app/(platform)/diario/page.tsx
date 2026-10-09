@@ -2,6 +2,7 @@ import { localMissionRepository } from "@/modules/library";
 import { requirePlatformDataMode } from "@/lib/platform-access";
 import { getRequestRepositories } from "@/modules/platform/infrastructure/request-repositories";
 import { getWorkspaceContext } from "@/modules/workspace";
+import { EMPTY_AI_EVIDENCE } from "@/modules/classroom";
 
 import { DiarioList, type DiarioSource, type MissionRef } from "./diario-list";
 
@@ -49,6 +50,7 @@ export default async function DiarioPage() {
             productionDeliveredAt: null,
             reflection: r.text,
             reflectionRecordedAt: r.recordedAt,
+            aiEvidence: { ...EMPTY_AI_EVIDENCE },
             review: null,
             updatedAt: r.recordedAt,
           },

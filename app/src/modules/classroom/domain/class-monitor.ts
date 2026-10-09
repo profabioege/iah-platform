@@ -47,6 +47,8 @@ export interface StudentMissionSnapshot {
   reflection: string | null;
   /** Avaliação humana, quando concluída pelo Professor. */
   review?: import("./student-work").StudentWorkReview | null;
+  /** Registro de uso da IA (Missões de dois eixos, D-053); nulo nas demais. */
+  aiEvidence?: import("./student-work").AiUseEvidence | null;
 }
 
 /** Contrato de leitura do acompanhamento de turma (porta do domínio). */

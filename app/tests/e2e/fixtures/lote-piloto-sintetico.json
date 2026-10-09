@@ -1,0 +1,82 @@
+{
+ "banco": "sintético para testes",
+ "itens": [
+  {
+   "id": "IAH-CH-901",
+   "versao": "1.0",
+   "area": "CH",
+   "tema": "Item sintético de teste — fontes",
+   "serie_sugerida": "1ª",
+   "habilidade_enem": {
+    "competencia": "C1",
+    "codigo": "H1",
+    "texto": "Texto sintético de teste da habilidade."
+   },
+   "habilidade_bncc": {
+    "codigo": "EM13CHS101",
+    "texto": "Texto sintético."
+   },
+   "texto_base": "Linha 1 do texto-base sintético.\nLinha 2 do texto-base sintético.",
+   "comando": "Comando sintético:",
+   "alternativas": {
+    "A": "alternativa A",
+    "B": "alternativa B",
+    "C": "alternativa C",
+    "D": "alternativa D",
+    "E": "alternativa E"
+   },
+   "gabarito": "B",
+   "resolucao_comentada": "B está correta porque é o teste.",
+   "analise_distratores": {
+    "A": "A errada.",
+    "C": "C errada.",
+    "D": "D errada.",
+    "E": "E errada."
+   },
+   "dificuldade_estimada": "média",
+   "status_editorial": "aprovada",
+   "decisao_docente": {
+    "decisao": "aprovada",
+    "data_decisao": "2026-10-06"
+   },
+   "verificacao_originalidade": {
+    "status": "sintético"
+   },
+   "fonte_texto_base": "Sintético."
+  },
+  {
+   "id": "IAH-MT-902",
+   "versao": "1.0",
+   "area": "MT",
+   "tema": "Item sintético rascunho",
+   "serie_sugerida": "2ª",
+   "habilidade_enem": {
+    "codigo": "H2",
+    "texto": "x"
+   },
+   "habilidade_bncc": {
+    "codigo": "EM13MAT310",
+    "texto": "x"
+   },
+   "texto_base": "t",
+   "comando": "c",
+   "alternativas": {
+    "A": "1",
+    "B": "2",
+    "C": "3",
+    "D": "4",
+    "E": "5"
+   },
+   "gabarito": "A",
+   "resolucao_comentada": "r",
+   "analise_distratores": {
+    "B": "b",
+    "C": "c",
+    "D": "d",
+    "E": "e"
+   },
+   "dificuldade_estimada": "fácil",
+   "status_editorial": "revisao_docente"
+  }
+ ]
+}

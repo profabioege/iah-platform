@@ -18,14 +18,35 @@ const STEP_MINUTES: Record<number, number> = {
   9: 1.5, // Reflexão Final
 };
 
-const TOTAL_STEPS = Object.keys(STEP_MINUTES).length;
+/**
+ * Missão de dois eixos (D-053): uma etapa a mais, "Uso da IA", logo
+ * depois da Produção (2 min). As etapas seguintes andam uma posição.
+ */
+const TWO_AXES_STEP_MINUTES: Record<number, number> = {
+  ...STEP_MINUTES,
+  7: 2, // Registro de uso da IA
+  8: STEP_MINUTES[7], // Critérios
+  9: STEP_MINUTES[8], // Entrega
+  10: STEP_MINUTES[9], // Reflexão Final
+};
 
-export const TOTAL_MISSION_MINUTES = Math.round(
-  Object.values(STEP_MINUTES).reduce((sum, minutes) => sum + minutes, 0),
-);
+function minutesFor(twoAxes: boolean): Record<number, number> {
+  return twoAxes ? TWO_AXES_STEP_MINUTES : STEP_MINUTES;
+}
 
-export function minutesRemainingFrom(step: number): number {
+export function totalSteps(twoAxes = false): number {
+  return Object.keys(minutesFor(twoAxes)).length;
+}
+
+export function totalMissionMinutes(twoAxes = false): number {
+  return Math.round(Object.values(minutesFor(twoAxes)).reduce((sum, minutes) => sum + minutes, 0));
+}
+
+export const TOTAL_MISSION_MINUTES = totalMissionMinutes(false);
+
+export function minutesRemainingFrom(step: number, twoAxes = false): number {
+  const table = minutesFor(twoAxes);
   let remaining = 0;
-  for (let s = step; s <= TOTAL_STEPS; s++) remaining += STEP_MINUTES[s] ?? 0;
+  for (let s = step; s <= totalSteps(twoAxes); s++) remaining += table[s] ?? 0;
   return Math.max(1, Math.round(remaining));
 }

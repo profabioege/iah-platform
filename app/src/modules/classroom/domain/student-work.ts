@@ -8,11 +8,60 @@
  * Fase 1 do MVP: persistido no dispositivo (localStorage), um registro por
  * Missão. A futura sincronização com banco preservará este mesmo formato.
  */
+import type { AxisLevel } from "@/modules/library";
+
 export type StudentSubmissionStatus =
   | "not_started"
   | "in_progress"
   | "submitted"
   | "reviewed";
+
+/**
+ * Registro de uso da IA (D-053) — o que o aluno fez COM a IA, em campos
+ * separados da produção, para o professor avaliar a competência em IA
+ * sem confundi-la com a aprendizagem da disciplina.
+ */
+export interface AiUseEvidence {
+  /** Ferramenta usada (ex.: "assistente de texto da escola"). */
+  tool: string;
+  /** O que o aluno pediu à IA, copiado. */
+  request: string;
+  /** O trecho da resposta da IA que foi analisado. */
+  response: string;
+  /** Como verificou: critério ou fonte independente. */
+  verification: string;
+  /** O que manteve, corrigiu ou descartou — e por quê. */
+  decision: string;
+}
+
+export const EMPTY_AI_EVIDENCE: AiUseEvidence = {
+  tool: "",
+  request: "",
+  response: "",
+  verification: "",
+  decision: "",
+};
+
+/** Todos os campos do registro preenchidos? (condição de entrega em Missão de dois eixos) */
+export function isAiEvidenceComplete(evidence: AiUseEvidence | null | undefined): boolean {
+  if (!evidence) return false;
+  return (["tool", "request", "response", "verification", "decision"] as const).every(
+    (field) => evidence[field].trim().length > 0,
+  );
+}
+
+/** Avaliação de UM eixo: nível observado (não é nota), critérios e comentário. */
+export interface AxisAssessment {
+  level: AxisLevel;
+  observedCriteria: string[];
+  note: string;
+}
+
+/** Avaliação separada dos dois eixos de uma Missão de IA & Humanidades. */
+export interface StudentWorkAxesReview {
+  discipline: AxisAssessment & { skillCode: string };
+  ai: AxisAssessment & { competencyIds: string[] };
+}
 
 export interface StudentWorkReview {
   grade: string;
@@ -21,6 +70,8 @@ export interface StudentWorkReview {
   reviewedAt: string;
   reviewerId: string;
   reviewerName: string;
+  /** Presente nas Missões de dois eixos (D-053); ausente nas antigas. */
+  axes?: StudentWorkAxesReview | null;
 }
 
 export interface StudentWork {
@@ -42,6 +93,9 @@ export interface StudentWork {
   /** Momento do registro da reflexão (ISO); null enquanto não registrada. */
   reflectionRecordedAt: string | null;
 
+  /** Registro de uso da IA (Missões de dois eixos; vazio nas demais). */
+  aiEvidence: AiUseEvidence;
+
   /** Avaliação humana registrada pelo Professor; null enquanto pendente. */
   review: StudentWorkReview | null;
 
@@ -58,6 +112,7 @@ export function emptyStudentWork(missionId: string): StudentWork {
     productionDeliveredAt: null,
     reflection: "",
     reflectionRecordedAt: null,
+    aiEvidence: { ...EMPTY_AI_EVIDENCE },
     review: null,
     updatedAt: new Date().toISOString(),
   };

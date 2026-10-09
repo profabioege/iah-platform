@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Building2,
+  Bot,
   CalendarDays,
   CircleUser,
   ClipboardCheck,
@@ -56,6 +57,7 @@ type MenuItem = { title: string; icon: typeof LayoutDashboard; href?: string };
 const TEACHER_MENU: MenuItem[] = [
   { title: "Painel do Professor", icon: LayoutDashboard, href: "/professor" },
   { title: "Turmas", icon: GraduationCap, href: "/professor/turmas" },
+  { title: "Trilha IA & Humanidades", icon: Bot, href: "/professor/trilha-ia" },
   { title: "Missões", icon: Rocket, href: "/professor/estudio" },
   { title: "DocentIAH", icon: Sparkles, href: "/professor/docente-iah" },
   { title: "Sondagens", icon: ClipboardList, href: "/professor/avaliacoes" },

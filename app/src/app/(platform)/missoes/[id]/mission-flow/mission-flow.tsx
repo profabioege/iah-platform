@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import type { Mission } from "@/modules/library";
+import { isAiEvidenceComplete } from "@/modules/classroom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -33,14 +34,13 @@ import {
   parseMissionContent,
   splitQuestions,
 } from "./parse-mission-content";
-import { minutesRemainingFrom, TOTAL_MISSION_MINUTES } from "./mission-timing";
+import { minutesRemainingFrom, totalMissionMinutes, totalSteps } from "./mission-timing";
+import { AiEvidenceForm, AxesObjectives, AxesReviewCards } from "./two-axes";
 import {
   useStudentWork,
   type StudentWorkSource,
   type WorkSaveStatus,
 } from "./use-student-work";
-
-const TOTAL_STEPS = 9;
 
 /**
  * Mission Flow — a Missão como investigação guiada, não como
@@ -72,6 +72,19 @@ export function MissionFlow({
     [mission.reflection],
   );
 
+  // Missão de dois eixos (D-053): etapa extra "Uso da IA" depois da
+  // Produção; as seguintes andam uma posição.
+  const twoAxes = Boolean(mission.axes);
+  const TOTAL_STEPS = totalSteps(twoAxes);
+  const S = {
+    production: 6,
+    aiEvidence: twoAxes ? 7 : -1,
+    criteria: twoAxes ? 8 : 7,
+    delivery: twoAxes ? 9 : 8,
+    reflection: twoAxes ? 10 : 9,
+  };
+  const evidenceReady = !twoAxes || (work ? isAiEvidenceComplete(work.aiEvidence) : false);
+
   const [step, setStep] = React.useState<number | null>(null);
   const [evidenceIndex, setEvidenceIndex] = React.useState(0);
 
@@ -79,11 +92,11 @@ export function MissionFlow({
   // existe — sem persistir nenhum dado novo (só decisão de apresentação).
   React.useEffect(() => {
     if (step !== null || !work) return;
-    if (recorded) setStep(9);
-    else if (delivered) setStep(8);
-    else if (work.production.trim().length > 0) setStep(6);
+    if (recorded) setStep(S.reflection);
+    else if (delivered) setStep(S.delivery);
+    else if (work.production.trim().length > 0) setStep(S.production);
     else setStep(1);
-  }, [step, work, delivered, recorded]);
+  }, [step, work, delivered, recorded, S.reflection, S.delivery, S.production]);
 
   if (step === null) return <FlowSkeleton />;
 
@@ -99,14 +112,14 @@ export function MissionFlow({
         title={mission.title}
         step={step}
         totalSteps={TOTAL_STEPS}
-        minutesRemaining={minutesRemainingFrom(step)}
+        minutesRemaining={minutesRemainingFrom(step, twoAxes)}
       />
 
       <StepTransition stepKey={`${step}:${step === 4 ? evidenceIndex : 0}`}>
         {step === 1 && (
           <CoverStep
             mission={mission}
-            totalMinutes={TOTAL_MISSION_MINUTES}
+            totalMinutes={totalMissionMinutes(twoAxes)}
             onStart={() => {
               if (work && !work.startedAt) {
                 update({ startedAt: new Date().toISOString() });
@@ -145,6 +158,14 @@ export function MissionFlow({
                 </p>
               </CardContent>
             </Card>
+            {mission.axes ? (
+              <>
+                <p className="text-center text-xs text-muted-foreground">
+                  Esta missão tem dois objetivos, avaliados separadamente pelo professor.
+                </p>
+                <AxesObjectives axes={mission.axes} />
+              </>
+            ) : null}
             <MissionNavigation onBack={() => goTo(2)} onNext={() => goTo(4)} />
           </MissionStep>
         )}
@@ -204,11 +225,33 @@ export function MissionFlow({
                 </p>
               </CardContent>
             </Card>
-            <MissionNavigation onBack={() => goTo(5)} onNext={() => goTo(7)} />
+            <MissionNavigation onBack={() => goTo(5)} onNext={() => goTo(S.production + 1)} />
           </MissionStep>
         )}
 
-        {step === 7 && (
+        {step === S.aiEvidence && work && mission.axes && (
+          <MissionStep
+            eyebrow="Uso da IA"
+            title="Registre como você usou a IA"
+            description="Este registro mostra ao professor a sua competência em IA — separada do conteúdo de História."
+          >
+            <AiEvidenceForm
+              axes={mission.axes}
+              evidence={work.aiEvidence}
+              readOnly={delivered}
+              onChange={(next) => update({ aiEvidence: next })}
+              onBlur={flush}
+              statusLabel={
+                delivered
+                  ? "Já entregue — reabra na etapa Entrega para editar."
+                  : saveStatusLabel(saveStatus, "Salvo automaticamente enquanto você escreve.")
+              }
+            />
+            <MissionNavigation onBack={() => goTo(S.production)} onNext={() => goTo(S.criteria)} />
+          </MissionStep>
+        )}
+
+        {step === S.criteria && (
           <MissionStep
             eyebrow="Critérios"
             title="O que torna um veredito válido"
@@ -219,11 +262,11 @@ export function MissionFlow({
                 <RubricCard key={entry.label} entry={entry} index={i} />
               ))}
             </div>
-            <MissionNavigation onBack={() => goTo(6)} onNext={() => goTo(8)} />
+            <MissionNavigation onBack={() => goTo(S.criteria - 1)} onNext={() => goTo(S.delivery)} />
           </MissionStep>
         )}
 
-        {step === 8 && work && (
+        {step === S.delivery && work && (
           <MissionStep eyebrow="Entrega" title="Pronto para entregar?">
             <Card className={delivered ? "border-chart-2/50" : undefined}>
               <CardContent className="flex flex-col gap-4 py-2">
@@ -264,24 +307,29 @@ export function MissionFlow({
                     onClick={() =>
                       update({ productionDeliveredAt: new Date().toISOString() })
                     }
-                    disabled={work.production.trim().length === 0}
+                    disabled={work.production.trim().length === 0 || !evidenceReady}
                   >
                     <CheckCircle2 className="size-4" />
                     Entregar relatório
                   </Button>
                 )}
+                {!delivered && !evidenceReady ? (
+                  <p className="text-xs text-muted-foreground">
+                    Falta completar o registro de uso da IA (etapa anterior a Critérios).
+                  </p>
+                ) : null}
               </CardContent>
             </Card>
             <MissionNavigation
-              onBack={() => goTo(7)}
-              onNext={() => goTo(9)}
+              onBack={() => goTo(S.criteria)}
+              onNext={() => goTo(S.reflection)}
               nextDisabled={!delivered}
               nextLabel="Ir para a Reflexão"
             />
           </MissionStep>
         )}
 
-        {step === 9 && work && (
+        {step === S.reflection && work && (
           <MissionStep
             eyebrow="Reflexão Final"
             title="O que essa investigação mudou em você?"
@@ -370,6 +418,9 @@ export function MissionFlow({
                   <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
                     {work.review.feedback}
                   </p>
+                  {mission.axes && work.review.axes ? (
+                    <AxesReviewCards axes={mission.axes} review={work.review.axes} />
+                  ) : null}
                   {work.review.observedCriteria.length > 0 ? (
                     <div>
                       <p className="mb-2 text-xs font-medium text-muted-foreground">
@@ -389,7 +440,7 @@ export function MissionFlow({
               </Card>
             ) : null}
 
-            <MissionNavigation onBack={() => goTo(8)} hideNext />
+            <MissionNavigation onBack={() => goTo(S.delivery)} hideNext />
           </MissionStep>
         )}
       </StepTransition>

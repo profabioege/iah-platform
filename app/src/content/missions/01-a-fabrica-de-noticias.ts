@@ -220,6 +220,63 @@ export const missionAFabricaDeNoticias: Mission = {
     "Letramento midiático e digital",
   ],
 
+  // Dois eixos (D-053) — avaliados separadamente pelo professor.
+  axes: {
+    discipline: {
+      area: "CHS",
+      component: "História",
+      objective:
+        "Comparar fontes e narrativas sobre um mesmo fato, identificando quem " +
+        "produziu cada uma, com que intenção e com que evidências, para distinguir " +
+        "informação verificável de conteúdo fabricado.",
+      skill: {
+        framework: "bncc",
+        code: "EM13CHS101",
+        text:
+          "Identificar, analisar e comparar diferentes fontes e narrativas expressas " +
+          "em diversas linguagens, com vistas à compreensão de ideias filosóficas e de " +
+          "processos e eventos históricos, geográficos, políticos, econômicos, sociais, " +
+          "ambientais e culturais.",
+        reference:
+          "BNCC — Ensino Médio (MEC, 2018). Texto conferido no HTML oficial " +
+          "(basenacionalcomum.mec.gov.br) em 05/10/2026.",
+      },
+      criteria: [
+        "Identifica a autoria e a origem de cada item do Dossiê.",
+        "Compara as versões e explicita onde elas divergem.",
+        "Sustenta cada veredito com evidência do próprio material, não com opinião.",
+      ],
+    },
+    ai: {
+      objective:
+        "Usar uma IA generativa como objeto de estudo — produzir uma manchete falsa " +
+        "— e verificar criticamente o que ela gera, sem tratá-la como fonte de verdade.",
+      competencyIds: ["ia-compreender-01", "ia-avaliar-01", "ia-criar-01"],
+      practicalInstruction:
+        "Depois da auditoria, peça a um assistente de IA uma manchete falsa e " +
+        "convincente sobre a sua cidade ou escola. Copie o pedido e a resposta, " +
+        "aplique os critérios de auditoria ao texto gerado e registre o que o " +
+        "denunciaria. Não pergunte à IA se as manchetes do Dossiê são reais.",
+      criticalUseEvidence: [
+        "O pedido feito à IA, copiado como foi enviado.",
+        "O trecho da resposta da IA que você analisou.",
+        "Como você verificou: o critério ou a fonte usada.",
+        "O que você manteve, corrigiu ou descartou — e por quê.",
+      ],
+      criteria: [
+        "Registra o pedido e a resposta da IA sem omitir partes.",
+        "Verifica a resposta com critério ou fonte independente.",
+        "Explica por que o texto gerado parece verdadeiro e o que o denuncia.",
+        "Declara o uso da IA e decide, com justificativa, o que aproveitar.",
+      ],
+    },
+    reflectionCriteria: [
+      "Compara a hipótese inicial com o veredito final.",
+      "Nomeia o que mudou a própria opinião.",
+      "Indica uma mudança concreta na forma de ler notícias.",
+    ],
+  },
+
   createdAt: new Date("2026-07-14"),
   updatedAt: new Date("2026-07-16"),
 };

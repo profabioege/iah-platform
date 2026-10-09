@@ -135,6 +135,20 @@ const toProduction = (r: Row): Production => ({
   missionId: r.mission_id as string,
   startedAt: (r.started_at as string | null) ?? null,
   content: r.content as string,
+  aiEvidence:
+    r.ai_tool == null &&
+    r.ai_request == null &&
+    r.ai_response == null &&
+    r.ai_verification == null &&
+    r.ai_decision == null
+      ? null
+      : {
+          tool: (r.ai_tool as string | null) ?? "",
+          request: (r.ai_request as string | null) ?? "",
+          response: (r.ai_response as string | null) ?? "",
+          verification: (r.ai_verification as string | null) ?? "",
+          decision: (r.ai_decision as string | null) ?? "",
+        },
   status: r.status as Production["status"],
   deliveredAt: (r.delivered_at as string | null) ?? null,
   updatedAt: r.updated_at as string,
@@ -177,6 +191,23 @@ const toReview = (r: Row): MissionReview => ({
   reviewerId: r.reviewer_id as string,
   reviewerName: r.reviewer_name as string,
   reviewedAt: r.reviewed_at as string,
+  axes:
+    r.discipline_level == null || r.ai_level == null
+      ? null
+      : {
+          discipline: {
+            level: r.discipline_level as NonNullable<MissionReview["axes"]>["discipline"]["level"],
+            skillCode: (r.discipline_skill as string | null) ?? "",
+            observedCriteria: (r.discipline_criteria as string[] | null) ?? [],
+            note: (r.discipline_note as string | null) ?? "",
+          },
+          ai: {
+            level: r.ai_level as NonNullable<MissionReview["axes"]>["ai"]["level"],
+            competencyIds: (r.ai_competencies as string[] | null) ?? [],
+            observedCriteria: (r.ai_criteria as string[] | null) ?? [],
+            note: (r.ai_note as string | null) ?? "",
+          },
+        },
 });
 
 const toIntegration = (r: Row): ClassroomIntegration => ({
@@ -458,6 +489,17 @@ export function createDatabaseRepositories(
             mission_id: production.missionId,
             started_at: production.startedAt,
             content: production.content,
+            // Só escreve o registro de IA quando a chamada o traz: produções de
+            // Missões sem eixos continuam gravando exatamente o que gravavam.
+            ...(production.aiEvidence
+              ? {
+                  ai_tool: production.aiEvidence.tool,
+                  ai_request: production.aiEvidence.request,
+                  ai_response: production.aiEvidence.response,
+                  ai_verification: production.aiEvidence.verification,
+                  ai_decision: production.aiEvidence.decision,
+                }
+              : {}),
             status: production.status,
             delivered_at: production.deliveredAt,
             updated_at: production.updatedAt,
@@ -659,6 +701,18 @@ export function createDatabaseRepositories(
             reviewer_id: review.reviewerId,
             reviewer_name: review.reviewerName,
             reviewed_at: review.reviewedAt,
+            ...(review.axes
+              ? {
+                  discipline_level: review.axes.discipline.level,
+                  discipline_skill: review.axes.discipline.skillCode,
+                  discipline_criteria: review.axes.discipline.observedCriteria,
+                  discipline_note: review.axes.discipline.note,
+                  ai_level: review.axes.ai.level,
+                  ai_competencies: review.axes.ai.competencyIds,
+                  ai_criteria: review.axes.ai.observedCriteria,
+                  ai_note: review.axes.ai.note,
+                }
+              : {}),
           },
           "classroom_id,student_id,mission_id",
         );
