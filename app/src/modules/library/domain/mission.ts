@@ -59,6 +59,15 @@ export interface Mission {
    */
   axes?: MissionAxes;
 
+  /**
+   * Textos de apresentação opcionais do Mission Flow (D-054): cada Missão
+   * pode orientar a produção, a hipótese de cada item e o título dos
+   * critérios com as próprias palavras. Ausentes, a tela usa textos gerais.
+   */
+  productionPlaceholder?: string;
+  hypothesisPrompt?: string;
+  criteriaTitle?: string;
+
   /** Posição da Missão na sequência do módulo. */
   order: number;
 

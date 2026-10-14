@@ -8,7 +8,8 @@
  *
  * Monta, pelo MESMO código de carga dos scripts de produção:
  *  - recorte curricular provisório da turma "beryon" (1ª série) + 4 itens
- *    sintéticos de Matemática aprovados (banco para o circuito adaptativo);
+ *    sintéticos de Matemática aprovados (banco para o circuito adaptativo)
+ *    + itens DEMONSTRATIVOS do diagnóstico (4 por habilidade do recorte);
  *  - Catálogo IAH sintético (inquilino `kind = 'catalogo'`, contas de
  *    autoria e de gestão criadas pelo provisionamento real);
  *  - referências BNCC e Matriz do Enem;
@@ -38,7 +39,11 @@ import {
   buildAuthoredImportPlan,
   parseAuthoredMarkdown,
 } from "../src/modules/question-bank/catalog/iah-authored-import.ts";
-import { loadProvisionalCut, loadReferenceCatalog } from "../src/modules/question-bank/seeds/recorte-provisorio.ts";
+import {
+  loadDemonstrativeDiagnosticItems,
+  loadProvisionalCut,
+  loadReferenceCatalog,
+} from "../src/modules/question-bank/seeds/recorte-provisorio.ts";
 import { assertAuthorizedTarget } from "./pilot-target-guard.mjs";
 
 const out = process.argv.find((a) => a.startsWith("--out="))?.slice(6);
@@ -83,6 +88,8 @@ const anoLetivo = (await one("ano letivo", db.from("classrooms").select("academi
 check("série da turma", await db.from("classrooms").update({ grade_code: "em1" }).eq("id", TURMA));
 await loadReferenceCatalog(db);
 await loadProvisionalCut(db, { institutionId: ESCOLA, academicYearId: anoLetivo, authorUserId: professor, reviewerUserId: gestor });
+// Diagnóstico (D-054): +2 itens DEMONSTRATIVOS por habilidade do recorte (4 por etapa).
+await loadDemonstrativeDiagnosticItems(db, { institutionId: ESCOLA, authorUserId: professor, reviewerUserId: gestor });
 // Sequência do circuito: Matemática primeiro.
 check("ordem do plano", await db.from("school_curriculum_plans").update({ period_order: 2 }).eq("institution_id", ESCOLA).neq("skill_id", "bncc-em13mat101"));
 

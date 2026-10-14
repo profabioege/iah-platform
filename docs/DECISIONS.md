@@ -685,3 +685,22 @@ atualizados.
 **Alternativas descartadas:** *registro de IA dentro do texto da produção* (o professor não separaria os eixos nem o banco poderia exigir o registro); *tabelas novas de avaliação por eixo* (duplicaria as policies da 0010 e o ciclo de vida da avaliação); *nota numérica por eixo* (falsa precisão; o projeto não usa TRI com listas curtas); *dar nível de IA pela série* (contraria a decisão pedagógica); *eixos gravados no banco* (o conteúdo da Missão já vive em arquivo versionado).
 
 **Impacto futuro:** Novas Missões de IA (Geografia, Filosofia, Sociologia; 2ª e 3ª séries) só precisam do bloco `axes`. Diagnóstico por etapas e plano semanal das trilhas ficam para o próximo incremento. O lote piloto de 40 itens entra no Catálogo IAH em revisão pelo importador desta branch; o `0016_item_bank` de 06/10 (worktree `iah-pilot-beryon`) fica obsoleto.
+
+## D-054 — Diagnóstico por etapas, plano semanal por regra explícita e Missão 02 (Geografia) (14/10/2026)
+
+**Status:** Proposto para revisão do Founder (branch `feature/diagnostico-plano-semanal`, não publicada). Detalhes em `docs/reformulacao/08-diagnostico-e-plano-semanal.md`.
+
+**Contexto e problema:** A 1ª série precisa do fluxo diagnóstico → necessidades de estudo → plano semanal → atividades → acompanhamento docente. Não há itens aprovados no sistema em quantidade suficiente (o lote de 40 tem 1 item por habilidade na 1ª série e está em revisão), e o planejamento da escola ainda é provisório.
+
+**Decisão:**
+
+1. **Etapa = lista diagnóstica de uma habilidade** (`diagnostics`, `diagnostic_blocks`, 0022), reaproveitando tentativas, correção no banco e devolutivas. Progresso salvo por resposta; etapa entregue aceita questões em branco.
+2. **Marcas calculadas pelo banco**: diagnóstico com questão de fonte `synthetic` é **demonstrativo**; com lista de currículo provisório, **provisório**. O cliente não define as marcas.
+3. **Evidências, não nota** (`diag-v1`): mínimo de 3 respostas por habilidade; incorreta ≠ não respondida ≠ etapa pendente; rótulos "evidência insuficiente / prioridade de estudo / em desenvolvimento / indícios favoráveis". Sem TRI e sem "domínio".
+4. **Plano por regra explícita** (`plano-v1`, R1–R6) com motivo por atividade; orçamento de minutos e dias conferido na aplicação **e no banco** (gatilho com bloqueio do plano); histórico só de inserção; aluno e professor da turma ajustam.
+5. **Revisão ≠ repetição**: revisão é reler devolutivas; prática nova vem do circuito (questões inéditas).
+6. **Missão 02 (Geografia, EM13CHS106)** com dado real do IBGE (Censo 2022, com procedência) e peças sintéticas identificadas; dois eixos (D-053).
+
+**Alternativas descartadas:** *tabelas próprias de resposta do diagnóstico* (duplicaria correção e RLS); *liberar o diagnóstico com 1 item por habilidade* (leitura sem sustentação); *usar itens aprovados só em bloco ou por revisão assistida por IA* (não equivale a aprovação docente no sistema); *otimizador/IA montando o plano* (regras simples e verificáveis primeiro); *orçamento só na aplicação* (dois cliques ou um cliente adulterado estourariam o limite).
+
+**Impacto futuro:** Com itens revisados (≥ 3–4 por habilidade) e o planejamento real, o diagnóstico deixa de ser demonstrativo sem mudança de código. A regra do plano pode ganhar versões (`plano-v2`) mantendo o histórico. A Missão 02 e o código EM13CHS106 aguardam revisão docente e a conferência no portal do MEC.

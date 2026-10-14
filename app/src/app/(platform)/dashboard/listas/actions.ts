@@ -34,7 +34,12 @@ export async function saveAnswersAction(formData: FormData): Promise<void> {
         await service.answer(listId, field.slice("item:".length), value);
       }
     }
-    if (formData.get("intent") === "entregar") await service.submit(listId);
+    if (formData.get("intent") === "entregar") {
+      // Etapa de diagnóstico (D-054) aceita questões em branco.
+      const { getStudyContext } = await import("@/modules/study/infrastructure/request-context");
+      const allowUnanswered = await (await getStudyContext()).diagnostic.isDiagnosticList(listId);
+      await service.submit(listId, { allowUnanswered });
+    }
   } catch (error) {
     aviso = error instanceof Error ? error.message : "Não foi possível gravar.";
   }
@@ -42,5 +47,6 @@ export async function saveAnswersAction(formData: FormData): Promise<void> {
   if (aviso) redirect(`${path}?aviso=${encodeURIComponent(aviso)}`);
   revalidatePath(path);
   revalidatePath("/dashboard/listas");
+  revalidatePath("/dashboard/diagnostico");
   redirect(path);
 }

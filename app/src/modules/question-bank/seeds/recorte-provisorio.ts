@@ -310,6 +310,8 @@ export async function loadProvisionalCut(
       ...SYNTHETIC_SOURCE,
     })).error);
   }
+  // Fonte sintética (0022): diagnóstico com estes itens é sempre demonstrativo.
+  check("fonte sintética", (await admin.from("content_sources").update({ synthetic: true }).eq("id", sourceId)).error);
   if (existingSource?.rights_status !== "verificado") {
     check("verificação da fonte", (await admin.from("content_sources").update({
       rights_status: "verificado",
@@ -318,8 +320,24 @@ export async function loadProvisionalCut(
     }).eq("id", sourceId)).error);
   }
 
+  const approved = await approveSyntheticItems(admin, target, sourceId, SYNTHETIC_ITEMS, "Equipe IAH — item sintético de demonstração");
+  return { planEntries: PROVISIONAL_PLAN.length, approvedVersions: approved };
+}
+
+/**
+ * Passa itens sintéticos pelo fluxo editorial real (rascunho → revisão →
+ * aprovação pela GESTÃO ≠ autora). Idempotente por ids determinísticos.
+ */
+async function approveSyntheticItems(
+  admin: SupabaseClient,
+  target: { institutionId: string; authorUserId: string; reviewerUserId: string },
+  sourceId: string,
+  items: SyntheticItem[],
+  authorship: string,
+): Promise<number> {
+  const { institutionId, authorUserId, reviewerUserId } = target;
   let approved = 0;
-  for (const item of SYNTHETIC_ITEMS) {
+  for (const item of items) {
     const questionId = `q:${institutionId}:${item.code}`;
     const versionId = `qv:${institutionId}:${item.code}:1`;
     const { data: version } = await admin
@@ -345,7 +363,7 @@ export async function loadProvisionalCut(
         options: item.options,
         editorial_difficulty: item.editorialDifficulty,
         source_id: sourceId,
-        authorship: "Equipe IAH — item sintético de demonstração",
+        authorship,
         created_by: authorUserId,
       })).error);
       check(`gabarito ${item.code}`, (await admin.from("question_version_keys").insert({
@@ -371,5 +389,136 @@ export async function loadProvisionalCut(
     approved += 1;
   }
 
-  return { planEntries: PROVISIONAL_PLAN.length, approvedVersions: approved };
+  return approved;
+}
+
+/**
+ * ITENS DEMONSTRATIVOS DO DIAGNÓSTICO (D-054) — 2 por habilidade do
+ * recorte, para que cada etapa tenha 4 questões (o diagnóstico não lê uma
+ * habilidade com menos de 3 respostas). Sintéticos, escritos pela equipe
+ * IAH em 09/10/2026 e PENDENTES DE REVISÃO DOCENTE: a aprovação feita
+ * pela carga é de uma conta sintética de gestão, não de um professor.
+ * Mesma fonte sintética do recorte → todo diagnóstico com eles é
+ * marcado como demonstrativo pelo banco (0022).
+ */
+export const DEMONSTRATIVE_DIAGNOSTIC_ITEMS: SyntheticItem[] = [
+  {
+    code: "mat101-03",
+    skillId: "bncc-em13mat101",
+    componentId: "comp-mat-matematica",
+    stem: "A população de uma cidade fictícia era de 50.000 habitantes em 2010 e de 62.000 habitantes em 2020. Supondo que o crescimento tenha sido linear, qual foi o aumento médio de habitantes por ano nesse período?",
+    options: opts("1.200 habitantes por ano", "12.000 habitantes por ano", "6.200 habitantes por ano", "1.120 habitantes por ano"),
+    answerKey: "A",
+    resolution: "Taxa de variação = (62.000 − 50.000) ÷ (2020 − 2010) = 12.000 ÷ 10 = 1.200 habitantes por ano. 12.000 é o aumento total, não o anual.",
+    editorialDifficulty: "facil",
+  },
+  {
+    code: "mat101-04",
+    skillId: "bncc-em13mat101",
+    componentId: "comp-mat-matematica",
+    stem: "O tanque de um caminhão tem 300 litros e o consumo é constante: 25 litros a cada 100 km. Partindo com o tanque cheio, depois de quantos quilômetros restarão 100 litros?",
+    options: opts("400 km", "800 km", "1.200 km", "200 km"),
+    answerKey: "B",
+    resolution: "Serão consumidos 300 − 100 = 200 litros. Como o consumo é de 25 L a cada 100 km, 200 L correspondem a (200 ÷ 25) × 100 = 800 km. 1.200 km seria o percurso até esvaziar o tanque.",
+    editorialDifficulty: "media",
+  },
+  {
+    code: "cnt101-03",
+    skillId: "bncc-em13cnt101",
+    componentId: "comp-cnt-fisica",
+    stem: "Uma bola de 0,5 kg é solta, a partir do repouso, de uma altura de 5 m. Desprezando a resistência do ar e adotando g = 10 m/s², qual é a energia cinética da bola imediatamente antes de tocar o chão?",
+    options: opts("2,5 J", "25 J", "50 J", "250 J"),
+    answerKey: "B",
+    resolution: "Sem perdas, a energia potencial gravitacional vira energia cinética: E = m·g·h = 0,5 × 10 × 5 = 25 J.",
+    editorialDifficulty: "facil",
+  },
+  {
+    code: "cnt101-04",
+    skillId: "bncc-em13cnt101",
+    componentId: "comp-cnt-fisica",
+    stem: "Em um recipiente fechado, 12 g de carbono reagem completamente com 32 g de oxigênio e formam gás carbônico, sem sobra de reagentes. Qual é a massa de gás carbônico formada?",
+    options: opts("20 g", "32 g", "44 g", "12 g"),
+    answerKey: "C",
+    resolution: "Em sistema fechado a massa se conserva (Lei de Lavoisier): 12 g + 32 g = 44 g de gás carbônico.",
+    editorialDifficulty: "facil",
+  },
+  {
+    code: "chs101-03",
+    skillId: "bncc-em13chs101",
+    componentId: "comp-chs-historia",
+    stem: "Um pesquisador encontra uma carta escrita em 1850 por um fazendeiro que descreve a vida nas plantações como \"harmoniosa\". Para usar essa carta como fonte histórica, a atitude mais adequada é",
+    options: opts(
+      "aceitá-la como retrato fiel, porque foi escrita na época.",
+      "descartá-la, porque é parcial.",
+      "considerar quem escreveu, para quem e com que interesse, e confrontá-la com outras fontes, como relatos de pessoas escravizadas e registros de fugas.",
+      "usá-la apenas se tiver firma reconhecida.",
+    ),
+    answerKey: "C",
+    resolution: "Ser da época não torna a fonte neutra: o autor tinha interesse em apresentar a escravidão como \"harmoniosa\". A carta é útil justamente para estudar esse ponto de vista, desde que comparada com outras fontes.",
+    editorialDifficulty: "facil",
+  },
+  {
+    code: "chs101-04",
+    skillId: "bncc-em13chs101",
+    componentId: "comp-chs-historia",
+    stem: "Uma fotografia mostra trabalhadores reunidos em uma praça durante uma greve. Sobre o uso de fotografias como fonte histórica, é correto afirmar que",
+    options: opts(
+      "mostram os fatos exatamente como aconteceram, sem interpretação.",
+      "são produzidas por alguém que escolhe enquadramento e momento, e precisam ser lidas com autoria, contexto e circulação.",
+      "só têm valor quando acompanhadas de um documento oficial.",
+      "não servem para estudar movimentos sociais.",
+    ),
+    answerKey: "B",
+    resolution: "Fotografia também é narrativa: quem fotografou escolheu o que mostrar e o que deixar de fora. Por isso se pergunta quem fez, quando, para quem e onde a imagem circulou.",
+    editorialDifficulty: "media",
+  },
+  {
+    code: "lgg101-03",
+    skillId: "bncc-em13lgg101",
+    componentId: "comp-lgg-lingua-portuguesa",
+    stem: "Um vídeo curto viraliza com a legenda \"cientistas comprovam que dormir 4 horas é suficiente\", sem citar estudo, instituição ou data. O vídeo foi publicado por um perfil que vende suplementos \"para render mais\". A análise mais adequada da produção e da circulação desse discurso é",
+    options: opts(
+      "se viralizou, a informação foi aceita por muitos e deve ser verdadeira.",
+      "a falta de fonte e o interesse comercial do perfil exigem verificar em fontes científicas antes de aceitar ou compartilhar.",
+      "por ser vídeo, é mais confiável do que um texto.",
+      "basta ler os comentários para saber se é verdade.",
+    ),
+    answerKey: "B",
+    resolution: "Quem produz (um vendedor de suplementos), com que interesse (vender) e com que base (nenhuma fonte citada) são perguntas centrais. Popularidade e formato não garantem veracidade.",
+    editorialDifficulty: "facil",
+  },
+  {
+    code: "lgg101-04",
+    skillId: "bncc-em13lgg101",
+    componentId: "comp-lgg-lingua-portuguesa",
+    stem: "Uma prefeitura publica um cartaz: \"Vacinação contra a gripe de 1º a 30 de maio, nas unidades básicas de saúde, para pessoas acima de 60 anos\". Um perfil de humor posta uma montagem do cartaz trocando a data por \"só até amanhã\". O que distingue os dois discursos?",
+    options: opts(
+      "Nada: as imagens são iguais.",
+      "O cartaz tem autoria institucional e finalidade informativa; a montagem altera o conteúdo com outra finalidade e pode desinformar se circular fora de contexto.",
+      "A montagem é mais confiável por ser mais recente.",
+      "O cartaz é opinião e a montagem é informação.",
+    ),
+    answerKey: "B",
+    resolution: "Mesmo com aparência parecida, produção (autoria, finalidade) e circulação (onde e como chega) mudam o sentido. Fora do contexto do humor, a montagem vira desinformação.",
+    editorialDifficulty: "media",
+  },
+];
+
+/**
+ * Carrega os itens demonstrativos do diagnóstico na escola, pela mesma
+ * fonte sintética do recorte. Exige `loadProvisionalCut` antes.
+ */
+export async function loadDemonstrativeDiagnosticItems(
+  admin: SupabaseClient,
+  target: { institutionId: string; authorUserId: string; reviewerUserId: string },
+): Promise<number> {
+  if (target.authorUserId === target.reviewerUserId) throw new Error("Autor e revisor precisam ser contas diferentes.");
+  const sourceId = `src:${target.institutionId}:sinteticos-recorte-provisorio`;
+  return approveSyntheticItems(
+    admin,
+    target,
+    sourceId,
+    DEMONSTRATIVE_DIAGNOSTIC_ITEMS,
+    "Equipe IAH — item sintético DEMONSTRATIVO do diagnóstico, pendente de revisão docente",
+  );
 }

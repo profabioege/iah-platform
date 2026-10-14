@@ -220,6 +220,14 @@ export const missionAFabricaDeNoticias: Mission = {
     "Letramento midiático e digital",
   ],
 
+  productionPlaceholder:
+    "a) Vereditos das 4 manchetes, com evidências…\n" +
+    "b) A manchete falsa que você gerou…\n" +
+    "c) Por que ela engana — e o que a denuncia…",
+  hypothesisPrompt:
+    "Antes de aplicar o guia: essa manchete parece real ou fabricada, e por quê? Anote sua hipótese — você vai usá-la no Relatório.",
+  criteriaTitle: "O que torna um veredito válido",
+
   // Dois eixos (D-053) — avaliados separadamente pelo professor.
   axes: {
     discipline: {

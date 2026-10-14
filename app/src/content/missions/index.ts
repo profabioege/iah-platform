@@ -1,6 +1,7 @@
 import type { Mission } from "@/modules/library";
 
 import { missionAFabricaDeNoticias } from "./01-a-fabrica-de-noticias";
+import { missionQuemConferiuEsteDado } from "./02-quem-conferiu-este-dado";
 
 /**
  * Índice de conteúdo das Missões do IAH.
@@ -10,4 +11,4 @@ import { missionAFabricaDeNoticias } from "./01-a-fabrica-de-noticias";
  * componente de interface precisa mudar. A ordem final de exibição é
  * resolvida pelo repositório (por módulo e por `order`).
  */
-export const missions: Mission[] = [missionAFabricaDeNoticias];
+export const missions: Mission[] = [missionAFabricaDeNoticias, missionQuemConferiuEsteDado];

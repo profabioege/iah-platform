@@ -87,6 +87,7 @@ const toSource = (r: Row): ContentSource => ({
   license: String(r.license),
   rightsStatus: r.rights_status as ContentSource["rightsStatus"],
   evidence: str(r.evidence),
+  synthetic: Boolean(r.synthetic),
 });
 
 const toQuestion = (r: Row): Question => ({
@@ -338,7 +339,7 @@ export function createDatabaseQuestionBankRepositories(
     async listSources(ids) {
       let query = db
         .from("content_sources")
-        .select("id, institution_id, kind, title, rights_holder, license, rights_status, evidence");
+        .select("id, institution_id, kind, title, rights_holder, license, rights_status, evidence, synthetic");
       if (ids) {
         if (ids.length === 0) return [];
         query = query.in("id", ids);

@@ -76,6 +76,7 @@ try {
       actions: ambiente.actions,
       missionId: ambiente.missionId,
       aiMissionId: ambiente.aiMissionId,
+      geoMissionId: ambiente.geoMissionId,
       turmas: ambiente.turmas,
       supabaseUrl: ambiente.env.NEXT_PUBLIC_SUPABASE_URL,
       serviceRoleKey: ambiente.env.SUPABASE_SERVICE_ROLE_KEY,

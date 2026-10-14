@@ -37,6 +37,8 @@ const AUTH_SECRET = "homologacao-local-descartavel-nao-e-segredo-de-producao";
 
 /** Missão da Trilha IA & Humanidades com os dois eixos (D-053). */
 export const AI_MISSION_ID = "01-a-fabrica-de-noticias";
+/** Missão de Geografia com os dois eixos (D-054). */
+export const GEO_MISSION_ID = "02-quem-conferiu-este-dado";
 
 function base64url(value) {
   return Buffer.from(value)
@@ -170,7 +172,7 @@ export async function startHttpHomologation(options = {}) {
       NEXT_TELEMETRY_DISABLED: "1",
     };
 
-    log("2/6 Missões no catálogo (sintética + Missão 01 da Trilha IA & Humanidades)...");
+    log("2/6 Missões no catálogo (sintética + Missões 01 e 02 da Trilha IA & Humanidades)...");
     await run(process.execPath, ["scripts/pilot-seed-mission.mjs", "--execute"], {
       env,
       quiet: true,
@@ -184,6 +186,18 @@ export async function startHttpHomologation(options = {}) {
         `--id=${AI_MISSION_ID}`,
         "--number=1",
         "--title=A Fábrica de Notícias",
+        "--module=Módulo 1 — O Auditor da Realidade",
+        "--execute",
+      ],
+      { env, quiet: true },
+    );
+    await run(
+      process.execPath,
+      [
+        "scripts/pilot-seed-mission.mjs",
+        `--id=${GEO_MISSION_ID}`,
+        "--number=2",
+        "--title=Quem Conferiu Este Dado?",
         "--module=Módulo 1 — O Auditor da Realidade",
         "--execute",
       ],
@@ -262,6 +276,7 @@ export async function startHttpHomologation(options = {}) {
       actions,
       missionId: "missao-sintetica-01",
       aiMissionId: AI_MISSION_ID,
+      geoMissionId: GEO_MISSION_ID,
     };
   } catch (error) {
     if (server) server.kill();

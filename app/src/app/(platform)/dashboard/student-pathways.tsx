@@ -124,10 +124,20 @@ export function StudentPathwaysSection({
 
       {/* Eixo 2 — Trilhas de estudo por área */}
       <div className="flex flex-col gap-2">
-        <h2 className="flex items-center gap-2 text-lg font-semibold">
-          <BookOpenText className="size-5 text-primary" />
-          Trilhas de estudo
-        </h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 text-lg font-semibold">
+            <BookOpenText className="size-5 text-primary" />
+            Trilhas de estudo
+          </h2>
+          <nav aria-label="Diagnóstico e plano" className="flex flex-wrap gap-2">
+            <Link href="/dashboard/diagnostico" className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
+              Diagnóstico
+            </Link>
+            <Link href="/dashboard/plano" className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
+              Plano da semana
+            </Link>
+          </nav>
+        </div>
         {disciplineUnavailable ? (
           <p className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
             As trilhas das disciplinas não puderam ser carregadas agora ({disciplineUnavailable}). A trilha de IA

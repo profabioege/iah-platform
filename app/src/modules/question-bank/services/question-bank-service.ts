@@ -649,14 +649,30 @@ export function createQuestionBankService(repos: QuestionBankRepositories, actor
       });
     },
 
-    async submit(listId: string): Promise<ListAttempt> {
+    /**
+     * Entrega a tentativa. Lista comum exige todas as respostas; etapa de
+     * diagnóstico (D-054) aceita questões em branco — em branco não é erro,
+     * é "não respondida" — e pode ser entregue sem resposta alguma.
+     */
+    async submit(listId: string, options: { allowUnanswered?: boolean } = {}): Promise<ListAttempt> {
       requireRole(actor, ["aluno"], "Apenas alunos respondem listas.");
       const studentId = actor.studentId!;
-      const attempt = await repos.getAttempt(listId, studentId);
+      let attempt = await repos.getAttempt(listId, studentId);
+      if (!attempt && options.allowUnanswered) {
+        const list = await repos.getList(listId);
+        if (!list || list.status !== "publicada") throw new Error("Lista não está aberta para respostas.");
+        attempt = await repos.ensureAttempt({
+          id: attemptIdFor(listId, studentId),
+          institutionId: actor.institutionId,
+          classroomId: list.classroomId,
+          listId,
+          studentId,
+        });
+      }
       if (!attempt) throw new Error("Responda às questões antes de entregar.");
       if (attempt.status === "entregue") return attempt; // repetir a entrega não muda nada
       const [items, answers] = await Promise.all([repos.listItems(listId), repos.listAnswers([attempt.id])]);
-      if (answers.length < items.length) {
+      if (!options.allowUnanswered && answers.length < items.length) {
         throw new Error(`Faltam ${items.length - answers.length} questão(ões) sem resposta.`);
       }
       return repos.submitAttempt(attempt.id);

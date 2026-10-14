@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Demonstração LOCAL dos dois eixos (D-053) — sobe o mesmo ambiente da
+ * Demonstração LOCAL dos dois eixos (D-053) e do diagnóstico + plano
+ * semanal (D-054) — sobe o mesmo ambiente da
  * homologação (`npm run test:homologacao`) e o DEIXA NO AR para navegar:
  *
  *   npm run demo:dois-eixos
@@ -102,6 +103,7 @@ try {
       actions: ambiente.actions,
       missionId: ambiente.missionId,
       aiMissionId: ambiente.aiMissionId,
+      geoMissionId: ambiente.geoMissionId,
       turmas: ambiente.turmas,
       supabaseUrl: ambiente.env.NEXT_PUBLIC_SUPABASE_URL,
       serviceRoleKey: ambiente.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -113,19 +115,22 @@ try {
 
   console.log(`
 ==============================================================
- Demonstração dos dois eixos no ar: ${ambiente.baseUrl}/entrar
+ Demonstração local no ar: ${ambiente.baseUrl}/entrar
 --------------------------------------------------------------
  Contas sintéticas e senhas iniciais (troca no 1º acesso):
    ${arquivoContas}
- Roteiro:
-   1. Professor (escola inst-beryon) → menu "Trilha IA & Humanidades"
-      → "Atribuir à turma" na Missão 1.
-   2. Aluno → Dashboard ("Meus percursos") → "Começar a Missão 1"
-      → produção, etapa "Uso da IA", entrega e reflexão.
+ Roteiro — dois eixos (D-053):
+   1. Professor (escola inst-beryon) → "Trilha IA & Humanidades"
+      → "Atribuir à turma" (Missão 1 — História; Missão 2 — Geografia).
+   2. Aluno → Dashboard ("Meus percursos") → missão → produção,
+      etapa "Uso da IA", entrega e reflexão.
    3. Professor → "Abrir entregas e avaliar os dois eixos".
-   4. Professor → "Montar lista com questões revisadas desta
-      habilidade" (EM13CHS101) → aluno responde a lista.
-   5. Aluno → Dashboard: os dois eixos e a lista ligada à Missão.
+ Roteiro — diagnóstico e plano (D-054; itens DEMONSTRATIVOS):
+   4. Professor → "Diagnóstico e planos" → criar e publicar.
+   5. Aluno → "Diagnóstico": etapas curtas, salvar e continuar,
+      entregar com questões em branco, evidências iniciais.
+   6. Aluno → "Plano da semana": dias + minutos → plano com motivos;
+      concluir, adiar, reagendar. Professor ajusta e orienta.
  Ctrl+C encerra e apaga tudo.
  Ambiente para as suítes HTTP: E2E_AMBIENTE=${arquivoAmbiente}
 ==============================================================

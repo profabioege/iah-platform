@@ -15,7 +15,8 @@
     "test:pilot": "node scripts/run-pilot-integration-tests.mjs",
     "test:pilot:load": "node --experimental-strip-types scripts/pilot-load-test.mjs",
     "test:homologacao": "node scripts/run-pilot-homologation.mjs",
-    "demo:dois-eixos": "node scripts/demo-dois-eixos.mjs"
+    "demo:dois-eixos": "node scripts/demo-dois-eixos.mjs",
+    "demo:diagnostico": "node scripts/demo-dois-eixos.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

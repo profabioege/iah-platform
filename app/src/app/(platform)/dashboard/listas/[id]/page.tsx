@@ -41,19 +41,28 @@ export default async function StudentListPage({
   const { list, items, answers, report, feedback, skills } = view;
   const skillCode = new Map(skills.map((s) => [s.id, s.code]));
   const open = list.status === "publicada" && view.attempt?.status !== "entregue";
+  // Etapa de diagnóstico (D-054): aceita entrega com questões em branco.
+  const isDiagnosticStep =
+    list.kind === "diagnostica" &&
+    (await import("@/modules/study/infrastructure/request-context")
+      .then(async (m) => (await m.getStudyContext()).diagnostic.isDiagnosticList(list.id))
+      .catch(() => false));
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
       <header className="flex flex-col gap-2">
         {list.kind === "circuito" ? (
           <Link href="/dashboard/circuito" className="text-xs text-primary hover:underline">← Circuito</Link>
+        ) : isDiagnosticStep ? (
+          <Link href="/dashboard/diagnostico" className="text-xs text-primary hover:underline">← Diagnóstico</Link>
         ) : (
           <Link href="/dashboard/listas" className="text-xs text-primary hover:underline">← Listas</Link>
         )}
         <h1 className="text-2xl font-semibold">{list.title}</h1>
         {report ? (
           <p className="text-sm">
-            Você acertou <strong>{report.correct} de {report.total}</strong>.{" "}
+            Você acertou <strong>{report.correct} de {report.total}</strong>
+            {report.unanswered > 0 ? ` · ${report.unanswered} em branco (não respondida, não conta como erro)` : ""}.{" "}
             {report.bySkill.map((s) => `${s.skillCode}: ${s.correct}/${s.total}`).join(" · ")}
           </p>
         ) : null}
@@ -82,9 +91,13 @@ export default async function StudentListPage({
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium">Questão {item.position}</span>
                   <Badge variant="secondary" className="font-mono">{skillCode.get(item.skillId)}</Badge>
-                  <Badge variant={item.isCorrect ? "default" : "destructive"}>
-                    {item.isCorrect ? "Correta" : "Incorreta"}
-                  </Badge>
+                  {item.selectedKey === null ? (
+                    <Badge variant="outline">Não respondida</Badge>
+                  ) : (
+                    <Badge variant={item.isCorrect ? "default" : "destructive"}>
+                      {item.isCorrect ? "Correta" : "Incorreta"}
+                    </Badge>
+                  )}
                 </div>
                 <CardTitle className="text-base font-normal leading-snug">
                   <QuestionContent text={item.stem} format={item.contentFormat} versionId={item.versionId} />
@@ -156,13 +169,15 @@ export default async function StudentListPage({
           {open ? (
             <div className="flex flex-wrap gap-2">
               <button type="submit" name="intent" value="salvar" className={cn(buttonVariants({ variant: "outline" }))}>
-                Salvar respostas
+                {isDiagnosticStep ? "Salvar e continuar depois" : "Salvar respostas"}
               </button>
               <button type="submit" name="intent" value="entregar" className={cn(buttonVariants())}>
-                Entregar lista
+                {isDiagnosticStep ? "Entregar etapa" : "Entregar lista"}
               </button>
               <p className="w-full text-xs text-muted-foreground">
-                Depois de entregar, as respostas não mudam e você vê gabarito e resolução.
+                {isDiagnosticStep
+                  ? "Etapa do diagnóstico: pode deixar em branco o que não souber — em branco não conta como erro. Depois de entregar, as respostas não mudam e você vê gabarito e resolução."
+                  : "Depois de entregar, as respostas não mudam e você vê gabarito e resolução."}
               </p>
             </div>
           ) : (

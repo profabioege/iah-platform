@@ -173,6 +173,7 @@ export function MissionFlow({
         {step === 4 && (
           <InvestigationStep
             parsed={parsed}
+            hypothesisPrompt={mission.hypothesisPrompt}
             evidenceIndex={evidenceIndex}
             setEvidenceIndex={setEvidenceIndex}
             onBack={() => goTo(3)}
@@ -183,7 +184,7 @@ export function MissionFlow({
         {step === 5 && (
           <MissionStep
             eyebrow="Comparação"
-            title="Reveja as 4 evidências lado a lado"
+            title={`Reveja as ${parsed.evidences.length} evidências lado a lado`}
             description="Compare padrões antes de fechar seu veredito."
           >
             <div className="grid gap-3 sm:grid-cols-2">
@@ -210,11 +211,7 @@ export function MissionFlow({
                   readOnly={delivered}
                   autoFocus={!delivered}
                   rows={12}
-                  placeholder={
-                    "a) Vereditos das 4 manchetes, com evidências…\n" +
-                    "b) A manchete falsa que você gerou…\n" +
-                    "c) Por que ela engana — e o que a denuncia…"
-                  }
+                  placeholder={mission.productionPlaceholder ?? "Escreva aqui a sua produção…"}
                   className="w-full resize-y rounded-lg border border-input bg-background/60 p-3 text-sm leading-relaxed text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-ring focus:ring-2 focus:ring-ring/30 read-only:opacity-80"
                   aria-label="Texto do Relatório de Auditoria"
                 />
@@ -233,7 +230,7 @@ export function MissionFlow({
           <MissionStep
             eyebrow="Uso da IA"
             title="Registre como você usou a IA"
-            description="Este registro mostra ao professor a sua competência em IA — separada do conteúdo de História."
+            description={`Este registro mostra ao professor a sua competência em IA — separada do conteúdo de ${mission.axes.discipline.component}.`}
           >
             <AiEvidenceForm
               axes={mission.axes}
@@ -254,7 +251,7 @@ export function MissionFlow({
         {step === S.criteria && (
           <MissionStep
             eyebrow="Critérios"
-            title="O que torna um veredito válido"
+            title={mission.criteriaTitle ?? "Critérios de avaliação"}
             description="Confira seu relatório contra estes critérios antes de entregar."
           >
             <div className="grid gap-3 sm:grid-cols-2">
@@ -500,12 +497,14 @@ function CoverStep({
 
 function InvestigationStep({
   parsed,
+  hypothesisPrompt,
   evidenceIndex,
   setEvidenceIndex,
   onBack,
   onDone,
 }: {
   parsed: ReturnType<typeof parseMissionContent>;
+  hypothesisPrompt?: string;
   evidenceIndex: number;
   setEvidenceIndex: (i: number) => void;
   onBack: () => void;
@@ -520,7 +519,7 @@ function InvestigationStep({
       <MissionStep
         eyebrow="Investigação"
         title="Como examinar cada pista"
-        description="Use estes cinco filtros para investigar os itens do Dossiê."
+        description={`Use estes ${parsed.investigationGuide.length} filtros para investigar os itens do Dossiê.`}
       >
         <InvestigationGuideStepper
           entries={parsed.investigationGuide}
@@ -538,7 +537,10 @@ function InvestigationStep({
     >
       <EvidenceCard
         evidence={evidence}
-        prompt="Antes de aplicar o guia: essa manchete parece real ou fabricada, e por quê? Anote sua hipótese — você vai usá-la no Relatório."
+        prompt={
+          hypothesisPrompt ??
+          "Antes de aplicar o guia: anote sua hipótese sobre este item — você vai usá-la no Relatório."
+        }
       />
       <MissionNavigation
         onBack={() =>

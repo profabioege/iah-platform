@@ -27,6 +27,8 @@ export const OUTRA_TURMA = turmaPor("outra");
 export const MISSAO_ID = ambiente.missionId;
 /** Missão de dois eixos da Trilha IA & Humanidades (D-053). */
 export const MISSAO_IA_ID = ambiente.aiMissionId;
+/** Missão de Geografia (dois eixos, D-054). */
+export const MISSAO_GEO_ID = ambiente.geoMissionId;
 
 /** Banco de questões sintético semeado pelo arranque (catálogo, acervo, item Enem). */
 export const BANCO = ambiente.bancoDeQuestoes;

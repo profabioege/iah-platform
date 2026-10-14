@@ -2,6 +2,25 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 14/10/2026 — Diagnóstico por etapas, plano semanal e Missão 02 de Geografia (branch não publicada)
+
+- Migration 0022 (aditiva): `diagnostics`, `diagnostic_blocks`,
+  `study_plans`, `study_plan_items`, `study_plan_events`, fonte
+  `synthetic`; marcas demonstrativo/provisório e orçamento de minutos
+  conferidos pelo banco.
+- Aluno: `/dashboard/diagnostico` (etapas curtas, progresso salvo,
+  evidências iniciais `diag-v1`) e `/dashboard/plano` (disponibilidade,
+  proposta `plano-v1` com motivos, concluir/adiar/reagendar, histórico).
+- Professor: `/professor/diagnostico` (criar e publicar, acompanhamento
+  por habilidade e por aluno, ajuste e orientação do plano).
+- Missão 02 "Quem Conferiu Este Dado?" (Geografia, EM13CHS106) com dado
+  real do IBGE e peças sintéticas identificadas; pendente de revisão
+  docente.
+- Itens demonstrativos do diagnóstico (2 por habilidade do recorte).
+- `migrations:check` recusa a `0016_item_bank` obsoleta.
+- Testes: unitários 455/455, integração 79/79, homologação 58/58.
+  Ensaio local; não mede capacidade da Vercel.
+
 ## 09/10/2026 — Dois eixos: Trilha IA & Humanidades e trilhas das disciplinas (branch não publicada)
 
 - Missão com dois eixos (D-053): `Mission.axes` na Missão 01 (História,

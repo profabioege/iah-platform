@@ -85,6 +85,8 @@ export interface ContentSource {
   license: string;
   rightsStatus: RightsStatus;
   evidence?: string | null;
+  /** Fonte de questões sintéticas/demonstrativas (0022): diagnóstico com elas não vai a aluno real. */
+  synthetic?: boolean;
 }
 
 export type EditorialDifficulty = "facil" | "media" | "dificil";

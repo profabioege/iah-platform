@@ -50,6 +50,21 @@ for (const name of entries) {
   }
 }
 
+/**
+ * Migrations SUBSTITUÍDAS que não podem voltar a esta linha. A
+ * `0016_item_bank.sql` (e o seed `item_bank_seed_piloto_40_v1_1.sql`)
+ * nasceram em 06/10/2026 no worktree do piloto e nunca foram aplicadas;
+ * a numeração 0016–0020 desta linha já é do currículo e do banco de
+ * questões (D-049..D-052), e o lote de 40 itens entra pelo importador
+ * do Catálogo IAH (D-053). Ver docs/reformulacao/08-….
+ */
+const OBSOLETE = new Map([
+  ["0016_item_bank.sql", "substituída por 0016_curriculum_matrix…0020 e pelo importador do lote piloto"],
+]);
+for (const name of entries) {
+  if (OBSOLETE.has(name)) fail(`Migration obsoleta "${name}" — ${OBSOLETE.get(name)}. Não aplique.`);
+}
+
 const timestamps = new Map();
 const names = new Map();
 
