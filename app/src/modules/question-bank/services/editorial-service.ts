@@ -3,6 +3,7 @@ import type {
   ContentSource,
   CurriculumSkill,
   EditorialDifficulty,
+  GradeCode,
   Question,
   QuestionKey,
   QuestionOption,
@@ -35,6 +36,29 @@ export interface QueueRow {
   classification: ClassificationOrigin;
   sourceRights: ContentSource["rightsStatus"] | null;
   mine: boolean;
+  /** Série sugerida pelo autor/lote (em1–em3), quando informada. Não é planejamento. */
+  serie: GradeCode | null;
+}
+
+/** Filtros da fila de revisão (D-055): série sugerida e habilidade (código BNCC). */
+export interface QueueFilters {
+  serie?: GradeCode | null;
+  habilidade?: string | null;
+}
+
+/** Série sugerida no item ("1ª", "1ª série", "em1"…) → em1–em3. */
+export function suggestedGradeOf(question: Question): GradeCode | null {
+  const raw = (question.externalRef as { serie_sugerida?: unknown } | null)?.serie_sugerida;
+  if (typeof raw !== "string") return null;
+  const m = raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().match(/^(?:em)?\s*([123])/);
+  return m ? (`em${m[1]}` as GradeCode) : null;
+}
+
+export function filterQueueRows(rows: QueueRow[], filters: QueueFilters): QueueRow[] {
+  const code = filters.habilidade?.trim().toUpperCase() || null;
+  return rows.filter(
+    (r) => (!filters.serie || r.serie === filters.serie) && (!code || r.skill?.code.toUpperCase() === code),
+  );
 }
 
 export interface ReviewItem extends QueueRow {
@@ -103,13 +127,14 @@ export function createEditorialService(
           classification: classificationOf(question),
           sourceRights: srcById.get(version.sourceId)?.rightsStatus ?? null,
           mine: version.createdBy === actor.userId,
+          serie: suggestedGradeOf(question),
         };
       });
   }
 
   const service = {
     /** Última versão de cada questão do próprio inquilino, com contagem por status. */
-    async queue(status: QuestionVersionStatus = "em_revisao"): Promise<{
+    async queue(status: QuestionVersionStatus = "em_revisao", filters: QueueFilters = {}): Promise<{
       rows: QueueRow[];
       counts: Record<string, number>;
     }> {
@@ -121,9 +146,14 @@ export function createEditorialService(
         if (!current || v.version > current.version) latest.set(v.questionId, v);
       }
       const all = [...latest.values()];
+      // Os filtros valem para a contagem por situação e para a lista.
+      const filtered = filters.serie || filters.habilidade ? filterQueueRows(await rows(all), filters) : null;
+      const visible = filtered ? filtered.map((r) => r.version) : all;
       const counts: Record<string, number> = {};
-      for (const v of all) counts[v.status] = (counts[v.status] ?? 0) + 1;
-      const selected = await rows(all.filter((v) => v.status === status));
+      for (const v of visible) counts[v.status] = (counts[v.status] ?? 0) + 1;
+      const selected = filtered
+        ? filtered.filter((r) => r.version.status === status)
+        : await rows(all.filter((v) => v.status === status));
       selected.sort((a, b) => (a.code ?? a.version.id).localeCompare(b.code ?? b.version.id, "pt-BR", { numeric: true }));
       return { rows: selected, counts };
     },

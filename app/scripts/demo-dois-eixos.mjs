@@ -131,6 +131,10 @@ try {
       entregar com questões em branco, evidências iniciais.
    6. Aluno → "Plano da semana": dias + minutos → plano com motivos;
       concluir, adiar, reagendar. Professor ajusta e orienta.
+ Roteiro — prontidão para o diagnóstico real (D-055):
+   7. Professor → "Diagnóstico e planos" → "Prontidão": o que falta
+      (planejamento validado; ≥ 3 questões revisadas por habilidade).
+   8. Gestão do catálogo → "Revisão" → filtro "1ª série" e habilidade.
  Ctrl+C encerra e apaga tudo.
  Ambiente para as suítes HTTP: E2E_AMBIENTE=${arquivoAmbiente}
 ==============================================================

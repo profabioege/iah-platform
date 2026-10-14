@@ -6,3 +6,4 @@
 export * from "./domain/diagnostic-evidence";
 export * from "./domain/weekly-plan-rule";
 export * from "./domain/entities";
+export * from "./domain/diagnostic-readiness";

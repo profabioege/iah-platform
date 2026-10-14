@@ -355,3 +355,24 @@ test("plano: professor acrescenta orientação dentro do orçamento; aluno não 
   assert.ok(db.events.some((e) => e.action === "adicionado" && e.actorRole === "professor"));
   await assert.rejects(() => prof.generate("turma", context, { days: [1], minutesPerDay: 30 }, MONDAY), /próprio aluno/);
 });
+
+// ------------------------------------------------ prontidão (D-055)
+test("prontidão: sintéticas não contam; planejamento provisório impede; faltas por habilidade", async () => {
+  const { buildDiagnosticReadiness } = await import("@/modules/study");
+  const r = buildDiagnosticReadiness([
+    { skillId: "a", skillCode: "EM13MAT101", componentName: "Matemática", planProvisional: true, eligible: 4, synthetic: 4 },
+    { skillId: "b", skillCode: "EM13CHS106", componentName: "Geografia", planProvisional: false, eligible: 4, synthetic: 1 },
+    { skillId: "c", skillCode: "EM13LP01", componentName: "Língua Portuguesa", planProvisional: false, eligible: 1, synthetic: 0 },
+  ]);
+  assert.equal(r.ready, false);
+  assert.deepEqual(r.skills.map((s) => [s.reviewed, s.missing, s.ready]), [[0, 3, false], [3, 0, true], [1, 2, false]]);
+  assert.equal(r.readySkills, 1);
+  assert.ok(r.reasons.some((m) => /provisório em 1/.test(m)));
+  assert.ok(r.reasons.some((m) => /EM13MAT101 \(faltam 3\), EM13LP01 \(faltam 2\)/.test(m)));
+  const ok = buildDiagnosticReadiness([
+    { skillId: "b", skillCode: "EM13CHS106", componentName: "Geografia", planProvisional: false, eligible: 3, synthetic: 0 },
+  ]);
+  assert.equal(ok.ready, true);
+  assert.deepEqual(ok.reasons, []);
+  assert.equal(buildDiagnosticReadiness([]).ready, false);
+});

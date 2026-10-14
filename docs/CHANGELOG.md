@@ -2,6 +2,16 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 14/10/2026 — Prontidão para o diagnóstico real (branch não publicada)
+
+- Carga do planejamento curricular da escola por planilha
+  (`scripts/planejamento-escolar-carga.mjs`, modelo em
+  `db/reference/modelo-planejamento-escolar.csv`): simula por padrão,
+  confere códigos na BNCC, substitui o provisório aposentando (sem apagar).
+- Painel "Prontidão para um diagnóstico real" em `/professor/diagnostico`.
+- Fila de revisão com filtros por série sugerida e habilidade.
+- Testes: unitários 463/463, integração 84/84, homologação 60/60.
+
 ## 14/10/2026 — Diagnóstico por etapas, plano semanal e Missão 02 de Geografia (branch não publicada)
 
 - Migration 0022 (aditiva): `diagnostics`, `diagnostic_blocks`,

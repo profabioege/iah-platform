@@ -704,3 +704,20 @@ atualizados.
 **Alternativas descartadas:** *tabelas próprias de resposta do diagnóstico* (duplicaria correção e RLS); *liberar o diagnóstico com 1 item por habilidade* (leitura sem sustentação); *usar itens aprovados só em bloco ou por revisão assistida por IA* (não equivale a aprovação docente no sistema); *otimizador/IA montando o plano* (regras simples e verificáveis primeiro); *orçamento só na aplicação* (dois cliques ou um cliente adulterado estourariam o limite).
 
 **Impacto futuro:** Com itens revisados (≥ 3–4 por habilidade) e o planejamento real, o diagnóstico deixa de ser demonstrativo sem mudança de código. A regra do plano pode ganhar versões (`plano-v2`) mantendo o histórico. A Missão 02 e o código EM13CHS106 aguardam revisão docente e a conferência no portal do MEC.
+
+## D-055 — Prontidão para o diagnóstico real: carga do planejamento da escola e revisão filtrada (14/10/2026)
+
+**Status:** Proposto para revisão do Founder (branch `feature/prontidao-diagnostico-real`, não publicada). Detalhes em `docs/reformulacao/09-prontidao-diagnostico-real.md`.
+
+**Contexto e problema:** O diagnóstico da D-054 é demonstrativo porque faltam (a) o planejamento real da escola e (b) questões aprovadas no sistema por revisor humano, em número suficiente por habilidade. As duas coisas dependem de pessoas; o sistema precisava torná-las fáceis e visíveis.
+
+**Decisão:**
+
+1. **Carga do planejamento por planilha** (`planejamento-escolar-carga.mjs`): validação completa antes de gravar; `approved` só com declaração explícita de validação pela escola; substituição do provisório por **aposentadoria** (`retired`), nunca exclusão; upsert pela chave natural (sem duplicar, mantendo o id).
+2. **Prontidão calculada por regra explícita**: conta só questões aprovadas no sistema, de fonte não sintética, com vínculo oficial ou confirmado; mínimo de 3 por habilidade; planejamento validado. A tela diz o que falta e leva à fila filtrada.
+3. **Fila de revisão filtrável** por série sugerida e habilidade, para a revisão docente item a item da 1ª série.
+4. **Nenhuma migration nova**: as garantias necessárias já estão no banco (0016–0022).
+
+**Alternativas descartadas:** *tela de edição do planejamento* (a escola entrega planilha; tela fica para quando houver uso recorrente); *marcar o lote como aprovado pela declaração em bloco* (aprovação docente é item a item, no sistema); *contar itens sintéticos para a prontidão* (o diagnóstico continuaria demonstrativo); *apagar o planejamento provisório* (o histórico de como diagnósticos antigos nasceram se perderia).
+
+**Impacto futuro:** Quando a escola entregar o planejamento e a revisão docente terminar, o primeiro diagnóstico real nasce sem mudança de código. Itens novos serão escritos para as habilidades do planejamento real, com revisão docente.

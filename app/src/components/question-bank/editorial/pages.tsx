@@ -47,14 +47,16 @@ export async function EditorialQueuePage({
 }: {
   base: string;
   role: QuestionBankActor["role"];
-  searchParams: Promise<{ status?: string; aviso?: string }>;
+  searchParams: Promise<{ status?: string; aviso?: string; serie?: string; habilidade?: string }>;
 }) {
   if (requirePlatformDataMode() !== "supabase") return <Unavailable />;
   const { actor, editorial } = await getQuestionBankContext();
   if (actor.role !== role) return null;
   const params = await searchParams;
   const status = STATUSES.find((s) => s === params.status) ?? "em_revisao";
-  const { rows, counts } = await editorial.queue(status);
+  const serie = (["em1", "em2", "em3"] as const).find((g) => g === params.serie) ?? null;
+  const habilidade = /^EM13[A-Z]{2,3}\d{2,3}$/i.test(params.habilidade ?? "") ? params.habilidade!.toUpperCase() : null;
+  const { rows, counts } = await editorial.queue(status, { serie, habilidade });
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       <header>
@@ -66,7 +68,7 @@ export async function EditorialQueuePage({
         </p>
       </header>
       <Notice aviso={params.aviso} />
-      <ReviewQueue rows={rows} counts={counts} status={status} base={base} />
+      <ReviewQueue rows={rows} counts={counts} status={status} base={base} serie={serie} habilidade={habilidade} />
     </div>
   );
 }

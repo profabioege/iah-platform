@@ -18,6 +18,7 @@ import { requirePlatformDataMode } from "@/lib/platform-access";
 import { cn } from "@/lib/utils";
 import {
   BLOCK_STATUS_LABEL,
+  buildDiagnosticReadiness,
   DIAGNOSTIC_RULES,
   EVIDENCE_LABEL,
   todayIso,
@@ -130,6 +131,21 @@ export default async function TeacherDiagnosticPage({
         >
           {aviso}
         </p>
+      ) : null}
+
+      {candidates ? (
+        <ReadinessPanel
+          readiness={buildDiagnosticReadiness(
+            candidates.skills.map((c) => ({
+              skillId: c.skill.id,
+              skillCode: c.skill.code,
+              componentName: c.componentName,
+              planProvisional: c.planProvisional,
+              eligible: c.eligible,
+              synthetic: c.synthetic,
+            })),
+          )}
+        />
       ) : null}
 
       {candidates ? (
@@ -436,5 +452,98 @@ export default async function TeacherDiagnosticPage({
         </p>
       </section>
     </div>
+  );
+}
+
+/**
+ * Prontidão para um diagnóstico REAL (D-055): por habilidade planejada,
+ * quantas questões estão revisadas no sistema (não demonstrativas) e
+ * quantas faltam. Texto sempre visível; nada é decidido pela tela.
+ */
+function ReadinessPanel({
+  readiness,
+}: {
+  readiness: ReturnType<typeof buildDiagnosticReadiness>;
+}) {
+  return (
+    <section
+      aria-labelledby="prontidao"
+      className="flex min-w-0 flex-col gap-3 rounded-xl border border-border p-4"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="flex flex-col gap-1">
+          <h2 id="prontidao" className="text-base font-semibold">
+            Prontidão para um diagnóstico real
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            Conta só questões aprovadas no sistema por um revisor humano,
+            de fonte não demonstrativa, com vínculo oficial ou confirmado —
+            mínimo de {DIAGNOSTIC_RULES.minAnswered} por habilidade, com o
+            planejamento validado pela escola.
+          </p>
+        </div>
+        <span
+          className={cn(
+            "rounded-full px-2.5 py-0.5 text-xs font-medium",
+            readiness.ready
+              ? "bg-chart-2/15 text-chart-2"
+              : "bg-amber-500/15 text-amber-600 dark:text-amber-300",
+          )}
+        >
+          {readiness.ready
+            ? "Pronto para diagnóstico real"
+            : `Ainda demonstrativo · ${readiness.readySkills} de ${readiness.skills.length} habilidade(s) prontas`}
+        </span>
+      </div>
+      {readiness.reasons.length ? (
+        <ul className="flex list-disc flex-col gap-1 pl-5 text-xs text-foreground/80">
+          {readiness.reasons.map((r) => (
+            <li key={r}>{r}</li>
+          ))}
+        </ul>
+      ) : null}
+      <div className="grid min-w-0">
+        <div className="min-w-0 overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead className="text-left text-muted-foreground">
+              <tr>
+                <th className="py-1 pr-3 font-medium">Habilidade</th>
+                <th className="py-1 pr-3 font-medium">Planejamento</th>
+                <th className="py-1 pr-3 font-medium">Revisadas</th>
+                <th className="py-1 pr-3 font-medium">Demonstrativas</th>
+                <th className="py-1 font-medium">Faltam</th>
+              </tr>
+            </thead>
+            <tbody>
+              {readiness.skills.map((s) => (
+                <tr key={s.skillId} className="border-t border-border">
+                  <td className="py-1.5 pr-3">
+                    <span className="font-mono">{s.skillCode}</span> ·{" "}
+                    {s.componentName}
+                  </td>
+                  <td className="py-1.5 pr-3">
+                    {s.planProvisional ? "provisório" : "validado"}
+                  </td>
+                  <td className="py-1.5 pr-3 tabular-nums">{s.reviewed}</td>
+                  <td className="py-1.5 pr-3 tabular-nums">{s.synthetic}</td>
+                  <td className="py-1.5 tabular-nums">
+                    {s.missing > 0 ? (
+                      <Link
+                        href={`/professor/revisao?habilidade=${encodeURIComponent(s.skillCode)}`}
+                        className="text-primary hover:underline"
+                      >
+                        {s.missing} · revisar
+                      </Link>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
   );
 }

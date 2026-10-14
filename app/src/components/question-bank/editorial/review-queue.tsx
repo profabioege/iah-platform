@@ -35,24 +35,67 @@ export function ClassificationBadge({ origin }: { origin: QueueRow["classificati
   );
 }
 
+const SERIE_LABEL = { em1: "1ª série", em2: "2ª série", em3: "3ª série" } as const;
+
+/** Monta o endereço da fila mantendo situação e filtros (D-055). */
+function queueHref(
+  base: string,
+  p: { status: QuestionVersionStatus; serie: keyof typeof SERIE_LABEL | null; habilidade: string | null },
+) {
+  const q = new URLSearchParams({ status: p.status });
+  if (p.serie) q.set("serie", p.serie);
+  if (p.habilidade) q.set("habilidade", p.habilidade);
+  return `${base}?${q.toString()}`;
+}
+
 export function ReviewQueue({
   rows,
   counts,
   status,
   base,
+  serie = null,
+  habilidade = null,
 }: {
   rows: QueueRow[];
   counts: Record<string, number>;
   status: QuestionVersionStatus;
   base: string;
+  serie?: keyof typeof SERIE_LABEL | null;
+  habilidade?: string | null;
 }) {
+  const chip = (active: boolean) =>
+    cn(
+      "rounded-full border px-3 py-1 text-xs",
+      active ? "border-primary bg-primary/15 text-primary" : "border-border hover:bg-muted/60",
+    );
   return (
     <div className="flex flex-col gap-4">
+      <nav aria-label="Série sugerida do item" className="flex flex-wrap items-center gap-2">
+        <span className="text-xs text-muted-foreground">Série sugerida:</span>
+        <Link href={queueHref(base, { status, serie: null, habilidade })} className={chip(!serie)} aria-current={!serie ? "page" : undefined}>
+          Todas
+        </Link>
+        {(Object.keys(SERIE_LABEL) as Array<keyof typeof SERIE_LABEL>).map((g) => (
+          <Link
+            key={g}
+            href={queueHref(base, { status, serie: g, habilidade })}
+            className={chip(serie === g)}
+            aria-current={serie === g ? "page" : undefined}
+          >
+            {SERIE_LABEL[g]}
+          </Link>
+        ))}
+        {habilidade ? (
+          <Link href={queueHref(base, { status, serie, habilidade: null })} className={chip(true)}>
+            Habilidade {habilidade} ✕
+          </Link>
+        ) : null}
+      </nav>
       <nav aria-label="Situação" className="flex flex-wrap gap-2">
         {(["em_revisao", "devolvida", "rascunho", "aprovada"] as const).map((s) => (
           <Link
             key={s}
-            href={`${base}?status=${s}`}
+            href={queueHref(base, { status: s, serie, habilidade })}
             aria-current={s === status ? "page" : undefined}
             className={cn(
               "rounded-full border px-3 py-1 text-sm",
@@ -76,6 +119,7 @@ export function ReviewQueue({
                 <span className="flex flex-wrap items-center gap-2">
                   <span className="font-mono font-semibold">{row.code ?? row.version.id}</span>
                   <Badge variant="secondary" className="font-mono">{row.skill?.code ?? "sem habilidade"}</Badge>
+                  {row.serie ? <Badge variant="outline">{SERIE_LABEL[row.serie]} (sugerida)</Badge> : null}
                   <ClassificationBadge origin={row.classification} />
                   {row.sourceRights !== "verificado" ? (
                     <Badge variant="outline">direitos {row.sourceRights ?? "?"}</Badge>
