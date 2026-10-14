@@ -21,6 +21,9 @@
  *  - Com `--lote-piloto=<arquivo>`: os itens APROVADOS pela coordenação
  *    do lote piloto entram no Catálogo IAH sintético EM REVISÃO (a
  *    aprovação no sistema continua sendo da gestão, pela tela).
+ *  - Com `--lote-complementar=<arquivo>`: os itens do lote complementar
+ *    da 1ª série (D-055), PENDENTES de revisão docente, entram no
+ *    Catálogo IAH sintético EM REVISÃO.
  *
  * As senhas iniciais vão para um arquivo no diretório temporário do
  * sistema (o caminho é impresso; o conteúdo, não) e são apagadas ao
@@ -68,14 +71,19 @@ try {
     ambiente.env,
   );
 
-  const lote = arg("lote-piloto");
-  if (lote) {
+  for (const [opcao, extra] of [
+    ["lote-piloto", []],
+    ["lote-complementar", ["--complementar"]],
+  ]) {
+    const lote = arg(opcao);
+    if (!lote) continue;
     await node(
       [
         "--experimental-strip-types",
         "scripts/catalogo-iah-lote-piloto-carga.mjs",
         `--arquivo=${resolve(lote)}`,
         "--catalogo=iah-catalogo-homolog",
+        ...extra,
         "--execute",
       ],
       ambiente.env,

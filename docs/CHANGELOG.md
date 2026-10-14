@@ -10,7 +10,13 @@ Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a
   confere códigos na BNCC, substitui o provisório aposentando (sem apagar).
 - Painel "Prontidão para um diagnóstico real" em `/professor/diagnostico`.
 - Fila de revisão com filtros por série sugerida e habilidade.
-- Testes: unitários 463/463, integração 84/84, homologação 60/60.
+- Lote complementar da 1ª série (42 itens originais, pendentes de revisão
+  docente) e carga `--complementar`; etapa do diagnóstico prefere questões
+  revisadas não sintéticas; migration 0023 (etapa aceita habilidade
+  confirmada por revisão humana).
+- Missão 02: texto de EM13CHS106 alinhado à versão HTML oficial do MEC.
+- Testes: unitários 466/466, integração 87/87, homologação 64/64
+  (inclui o primeiro diagnóstico não demonstrativo, ponta a ponta).
 
 ## 14/10/2026 — Diagnóstico por etapas, plano semanal e Missão 02 de Geografia (branch não publicada)
 

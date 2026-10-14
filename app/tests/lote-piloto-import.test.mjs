@@ -66,3 +66,35 @@ test("habilidade fora da referência carregada vira problema, não item", () => 
   assert.equal(plan.items.length, 0);
   assert.ok(plan.problems.some((p) => /fora da referência/.test(p.problema)));
 });
+
+// ------------------------------------------- lote complementar (D-055)
+const complementar = JSON.parse(
+  await readFile(new URL("./e2e/fixtures/lote-complementar-sintetico.json", import.meta.url), "utf8"),
+);
+
+test("lote complementar: só itens pendentes de revisão docente; fonte própria; nada aprovado", async () => {
+  const { LOTE_COMPLEMENTAR_SOURCE_SUFFIX } = await import("@/modules/question-bank/catalog/iah-lote-piloto-import.ts");
+  const plan = buildLotePilotoPlan({
+    json: complementar,
+    arquivo: "lote-complementar-sintetico.json",
+    catalogInstitutionId: "iah-catalogo-teste",
+    authorUserId: "autoria-1",
+    knownSkillIds: new Set(["bncc-em13chs101", "enem-ch-h1"]),
+    kind: "complementar",
+  });
+  assert.equal(plan.source.id, `src:iah-catalogo-teste:${LOTE_COMPLEMENTAR_SOURCE_SUFFIX}`);
+  assert.match(plan.source.evidence, /Nenhum item aprovado/);
+  assert.deepEqual(plan.items.map((i) => i.codigo), ["IAH-CH-911"]);
+  const [it] = plan.items;
+  assert.equal(it.question.external_ref.origem, "iah_lote_complementar");
+  assert.equal(it.question.external_ref.decisao_coordenacao, null);
+  assert.match(it.question.external_ref.habilidade_enem_conferencia, /PENDENTE/);
+  assert.match(it.version.authorship, /PENDENTE de revisão docente/);
+  assert.ok(plan.problems.some((p) => p.codigo === "IAH-CH-912" && /só aceita itens pendentes/.test(p.problema)));
+});
+
+test("lote piloto continua recusando itens pendentes (sem aprovação da coordenação)", () => {
+  const { items, problems } = parseLotePiloto(complementar);
+  assert.deepEqual(items.map((i) => i.codigo), ["IAH-CH-912"]);
+  assert.ok(problems.some((p) => p.codigo === "IAH-CH-911" && /só itens aprovados/.test(p.problema)));
+});

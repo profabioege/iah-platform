@@ -376,3 +376,14 @@ test("prontidão: sintéticas não contam; planejamento provisório impede; falt
   assert.deepEqual(ok.reasons, []);
   assert.equal(buildDiagnosticReadiness([]).ready, false);
 });
+
+test("etapa: com o mínimo de questões revisadas não sintéticas, as demonstrativas ficam de fora", async () => {
+  const { pickDiagnosticItems } = await import("@/modules/study/services/diagnostic-service");
+  const it = (id, origin, synthetic) => ({ origin, version: { id }, source: { synthetic } });
+  const misto = [it("s1", "escola", true), it("s2", "escola", true), it("c1", "catalogo", false), it("c2", "catalogo", false), it("e1", "escola", false)];
+  assert.deepEqual(pickDiagnosticItems(misto).map((x) => x.version.id), ["e1", "c1", "c2"], "3 revisadas bastam: nenhuma sintética entra");
+  const poucas = [it("s1", "escola", true), it("s2", "escola", true), it("c1", "catalogo", false)];
+  assert.deepEqual(pickDiagnosticItems(poucas).map((x) => x.version.id), ["c1", "s1", "s2"], "sem o mínimo, completa com demonstrativas (diagnóstico demonstrativo)");
+  const muitas = Array.from({ length: 6 }, (_, i) => it(`c${i}`, "catalogo", false));
+  assert.equal(pickDiagnosticItems(muitas).length, 4);
+});

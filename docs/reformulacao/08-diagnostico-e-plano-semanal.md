@@ -108,11 +108,9 @@ outra turma ou escola não alcança (RLS).
 | Critérios docentes | 3 de Geografia, 4 de IA, 3 da reflexão — separados (dois eixos, D-053) |
 
 **Verificação curricular**: código e texto de EM13CHS106 conferidos na
-base de dados abertos da BNCC usada pelo projeto (`db/reference`, que
-remete ao PDF oficial do MEC, p. 574). **A conferência direta no portal
-do MEC ficou bloqueada** nesta sessão (acesso ao portal não autorizado);
-registrar a conferência antes de usar com alunos reais. A Missão está
-marcada **pendente de revisão docente**.
+**versão HTML oficial do MEC** em 05/10/2026 (produção do lote piloto;
+`banco-iah/src/fontes.py`). Atualizado em 14/10: o texto da Missão segue
+essa versão. A Missão continua **pendente de revisão docente**.
 
 ## 6. Substituir o planejamento provisório pelo real
 
@@ -149,8 +147,8 @@ da Vercel**; as reprovações de latência de 28/09 continuam registradas
   por conta sintética de gestão — **pendentes de revisão docente**.
 - 40 itens do lote: em revisão no sistema; 1 por habilidade na 1ª série.
 - Planejamento **provisório** (1 habilidade por área).
-- Missão 02: pendente de revisão docente; conferência de EM13CHS106 no
-  portal do MEC pendente.
+- Missão 02: pendente de revisão docente (EM13CHS106 conferida na versão
+  HTML oficial do MEC em 05/10).
 - Referencial de competências em IA **provisório**.
 - 2ª e 3ª séries: o modelo aceita, mas não há conteúdo.
 

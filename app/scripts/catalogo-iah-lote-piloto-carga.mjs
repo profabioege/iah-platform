@@ -7,7 +7,10 @@
  *   node --experimental-strip-types scripts/catalogo-iah-lote-piloto-carga.mjs \
  *     --arquivo=<banco_piloto_40_v1.1_aprovado.json> \
  *     --catalogo=<id da instituição kind='catalogo'> [--autor=<id da conta de autoria>] \
- *     [--execute] [--confirm-project=<ref>]
+ *     [--complementar] [--execute] [--confirm-project=<ref>]
+ *
+ * `--complementar`: lote complementar da 1ª série (D-055) — aceita só
+ * itens `pendente_revisao_docente`, com fonte própria; entram em revisão.
  *
  * Por padrão SIMULA. `--execute` grava — só no banco local ou no projeto
  * de homologação confirmado duas vezes (`pilot-target-guard.mjs`);
@@ -43,6 +46,7 @@ function fail(message) {
 const arquivo = arg("arquivo");
 const catalogo = arg("catalogo");
 const execute = arg("execute", false) === true;
+const kind = arg("complementar", false) === true ? "complementar" : "piloto";
 if (!arquivo || !catalogo) fail("Informe --arquivo e --catalogo.");
 
 const reference = resolve(import.meta.dirname, "../db/reference");
@@ -92,10 +96,11 @@ const plan = buildLotePilotoPlan({
   catalogInstitutionId: catalogo,
   authorUserId: autor ?? "autoria-a-definir",
   knownSkillIds,
+  kind,
 });
 const porArea = {};
 for (const item of plan.items) porArea[item.codigo.slice(4, 6)] = (porArea[item.codigo.slice(4, 6)] ?? 0) + 1;
-console.log(`Lote piloto IAH — ${basename(arquivo)}`);
+console.log(`${kind === "piloto" ? "Lote piloto" : "Lote complementar (pendente de revisão docente)"} IAH — ${basename(arquivo)}`);
 console.log(`  itens a criar (em revisão): ${plan.items.length} · por área: ${JSON.stringify(porArea)}`);
 if (plan.problems.length) {
   console.log("  PROBLEMAS (itens não serão carregados até corrigir):");

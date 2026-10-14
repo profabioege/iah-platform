@@ -184,14 +184,14 @@ export const missionQuemConferiuEsteDado: Mission = {
         text:
           "Utilizar as linguagens cartográfica, gráfica e iconográfica, diferentes gêneros textuais e " +
           "tecnologias digitais de informação e comunicação de forma crítica, significativa, reflexiva e " +
-          "ética nas diversas práticas sociais (incluindo as escolares) para se comunicar, acessar e difundir " +
+          "ética nas diversas práticas sociais, incluindo as escolares, para se comunicar, acessar e difundir " +
           "informações, produzir conhecimentos, resolver problemas e exercer protagonismo e autoria na vida " +
           "pessoal e coletiva.",
         reference:
           "BNCC — Ensino Médio (MEC, 2018), Ciências Humanas e Sociais Aplicadas, competência específica 1. " +
-          "Código e texto conferidos em 09/10/2026 na base de dados abertos da BNCC usada pelo projeto " +
-          "(db/reference/bncc-ensino-medio-2018.json, que remete ao PDF oficial, p. 574). A conferência no " +
-          "portal do MEC ficou pendente nesta sessão (acesso ao portal não disponível).",
+          "Código e texto conferidos na versão HTML oficial do MEC (basenacionalcomum.mec.gov.br/abase/#medio) " +
+          "em 05/10/2026, na produção do lote piloto IAH. A base de dados abertos usada pelo projeto " +
+          "(db/reference, que remete ao PDF oficial, p. 574) traz a mesma habilidade com \"(incluindo as escolares)\".",
       },
       criteria: [
         "Identifica a procedência (quem produziu, quando, com que recorte) de cada dado ou representação.",

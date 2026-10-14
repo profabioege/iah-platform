@@ -31,6 +31,16 @@ import {
 } from "./iah-authored-import.ts";
 
 export const LOTE_PILOTO_SOURCE_SUFFIX = "iah-lote-piloto";
+/** Lote complementar da 1ª série (D-055): itens PENDENTES de revisão docente. */
+export const LOTE_COMPLEMENTAR_SOURCE_SUFFIX = "iah-lote-complementar-1serie";
+
+export type LoteKind = "piloto" | "complementar";
+
+/** Status editoriais aceitos por tipo de lote: o piloto só com aprovação da coordenação. */
+const ACCEPTED_STATUS: Record<LoteKind, string[]> = {
+  piloto: ["aprovada"],
+  complementar: ["pendente_revisao_docente"],
+};
 
 const DIFFICULTY: Record<string, "facil" | "media" | "dificil"> = {
   "fácil": "facil",
@@ -44,7 +54,7 @@ interface LoteItem {
   area: AuthoredArea;
   tema: string;
   serie_sugerida: string;
-  habilidade_enem: { codigo: string; texto: string };
+  habilidade_enem: { codigo: string; texto: string; conferencia?: string };
   habilidade_bncc: { codigo: string; texto: string };
   texto_base: string;
   comando: string;
@@ -68,7 +78,7 @@ function paragraphs(text: string): string {
     .join("\n\n");
 }
 
-export function parseLotePiloto(json: unknown): {
+export function parseLotePiloto(json: unknown, kind: LoteKind = "piloto"): {
   items: AuthoredItem[];
   extras: Map<string, { difficulty: "facil" | "media" | "dificil" | null; item: LoteItem }>;
   problems: Array<{ codigo: string | null; problema: string }>;
@@ -84,8 +94,14 @@ export function parseLotePiloto(json: unknown): {
       problems.push({ codigo, problema: "código fora do padrão IAH-<área>-NNN" });
       continue;
     }
-    if (it.status_editorial !== "aprovada") {
-      problems.push({ codigo, problema: `status "${it.status_editorial}" — só itens aprovados pela coordenação entram` });
+    if (!ACCEPTED_STATUS[kind].includes(it.status_editorial)) {
+      problems.push({
+        codigo,
+        problema:
+          kind === "piloto"
+            ? `status "${it.status_editorial}" — só itens aprovados pela coordenação entram`
+            : `status "${it.status_editorial}" — o lote complementar só aceita itens pendentes de revisão docente`,
+      });
       continue;
     }
     const keys = Object.keys(it.alternativas ?? {}).sort();
@@ -126,8 +142,11 @@ export function buildLotePilotoPlan(input: {
   catalogInstitutionId: string;
   authorUserId: string;
   knownSkillIds: Set<string>;
+  /** "complementar": itens pendentes de revisão docente, fonte própria (D-055). */
+  kind?: LoteKind;
 }): AuthoredImportPlan {
-  const parsed = parseLotePiloto(input.json);
+  const kind = input.kind ?? "piloto";
+  const parsed = parseLotePiloto(input.json, kind);
   const plan = buildAuthoredImportPlan({
     files: [{ arquivo: input.arquivo, items: parsed.items }],
     proposals: [],
@@ -135,16 +154,20 @@ export function buildLotePilotoPlan(input: {
     authorUserId: input.authorUserId,
     knownSkillIds: input.knownSkillIds,
   });
-  const sourceId = `src:${input.catalogInstitutionId}:${LOTE_PILOTO_SOURCE_SUFFIX}`;
+  const sourceId = `src:${input.catalogInstitutionId}:${kind === "piloto" ? LOTE_PILOTO_SOURCE_SUFFIX : LOTE_COMPLEMENTAR_SOURCE_SUFFIX}`;
   for (const item of plan.items) {
     const extra = parsed.extras.get(item.codigo);
     item.version.source_id = sourceId;
     item.version.editorial_difficulty = extra?.difficulty ?? null;
     item.version.authorship =
-      `IAH Educacional — ${item.codigo}, lote piloto v${extra?.item.versao ?? "1.0"} ` +
-      "(rascunho gerado por IA sob coordenação editorial; aprovado pela coordenação em 06/10/2026)";
+      kind === "piloto"
+        ? `IAH Educacional — ${item.codigo}, lote piloto v${extra?.item.versao ?? "1.0"} ` +
+          "(rascunho gerado por IA sob coordenação editorial; aprovado pela coordenação em 06/10/2026)"
+        : `IAH Educacional — ${item.codigo}, lote complementar da 1ª série v${extra?.item.versao ?? "1.0"} ` +
+          "(rascunho gerado por IA sob coordenação editorial; PENDENTE de revisão docente)";
     const ref = item.question.external_ref as Record<string, unknown>;
-    ref.origem = "iah_lote_piloto";
+    ref.origem = kind === "piloto" ? "iah_lote_piloto" : "iah_lote_complementar";
+    ref.habilidade_enem_conferencia = extra?.item.habilidade_enem.conferencia ?? null;
     ref.classificacao = {
       ...(ref.classificacao as Record<string, unknown>),
       origem: "autor",
@@ -153,6 +176,23 @@ export function buildLotePilotoPlan(input: {
     ref.decisao_coordenacao = extra?.item.decisao_docente ?? null;
     ref.verificacao_originalidade = extra?.item.verificacao_originalidade ?? null;
     ref.fonte_texto_base = extra?.item.fonte_texto_base ?? null;
+  }
+  if (kind === "complementar") {
+    return {
+      source: {
+        ...plan.source,
+        id: sourceId,
+        title: "Lote complementar IAH — 1ª série (itens originais, pendentes de revisão docente)",
+        license:
+          "Itens originais da IAH Educacional para uso nas escolas parceiras e nos produtos IAH. Não são itens oficiais do Inep.",
+        evidence:
+          `Lote produzido em 14/10/2026 (rascunho de IA sob coordenação editorial), com revisão independente por IA e ` +
+          `verificação de originalidade contra o banco IAH; comparação com cadernos do Enem pendente. Nenhum item aprovado: ` +
+          `a revisão docente é item a item, no sistema. Arquivo de origem: ${input.arquivo}.`,
+      },
+      items: plan.items,
+      problems: [...parsed.problems, ...plan.problems],
+    };
   }
   return {
     source: {

@@ -703,7 +703,7 @@ atualizados.
 
 **Alternativas descartadas:** *tabelas próprias de resposta do diagnóstico* (duplicaria correção e RLS); *liberar o diagnóstico com 1 item por habilidade* (leitura sem sustentação); *usar itens aprovados só em bloco ou por revisão assistida por IA* (não equivale a aprovação docente no sistema); *otimizador/IA montando o plano* (regras simples e verificáveis primeiro); *orçamento só na aplicação* (dois cliques ou um cliente adulterado estourariam o limite).
 
-**Impacto futuro:** Com itens revisados (≥ 3–4 por habilidade) e o planejamento real, o diagnóstico deixa de ser demonstrativo sem mudança de código. A regra do plano pode ganhar versões (`plano-v2`) mantendo o histórico. A Missão 02 e o código EM13CHS106 aguardam revisão docente e a conferência no portal do MEC.
+**Impacto futuro:** Com itens revisados (≥ 3–4 por habilidade) e o planejamento real, o diagnóstico deixa de ser demonstrativo sem mudança de código. A regra do plano pode ganhar versões (`plano-v2`) mantendo o histórico. A Missão 02 aguarda revisão docente (EM13CHS106 conferida na versão HTML oficial do MEC em 05/10/2026, na produção do lote piloto).
 
 ## D-055 — Prontidão para o diagnóstico real: carga do planejamento da escola e revisão filtrada (14/10/2026)
 
@@ -721,3 +721,9 @@ atualizados.
 **Alternativas descartadas:** *tela de edição do planejamento* (a escola entrega planilha; tela fica para quando houver uso recorrente); *marcar o lote como aprovado pela declaração em bloco* (aprovação docente é item a item, no sistema); *contar itens sintéticos para a prontidão* (o diagnóstico continuaria demonstrativo); *apagar o planejamento provisório* (o histórico de como diagnósticos antigos nasceram se perderia).
 
 **Impacto futuro:** Quando a escola entregar o planejamento e a revisão docente terminar, o primeiro diagnóstico real nasce sem mudança de código. Itens novos serão escritos para as habilidades do planejamento real, com revisão docente.
+
+**Complemento (14/10/2026, mesma branch):**
+
+5. **Lote complementar da 1ª série** (42 itens originais, 3 por habilidade das 14 da 1ª série do lote piloto), escrito antes do planejamento real porque as habilidades da BNCC do EM são por área, não por série. Entra **em revisão**, com fonte própria; o importador recusa itens sem o status correto em cada tipo de lote (piloto: `aprovada`; complementar: `pendente_revisao_docente`). Revisão independente por IA registrada, **sem valor de aprovação**.
+6. **Etapa sem demonstrativas quando possível**: com o mínimo de questões revisadas não sintéticas, a etapa usa só elas — condição para o diagnóstico nascer não demonstrativo sem mudança de código.
+7. **Migration 0023**: a etapa aceita questão com habilidade **confirmada por revisão humana** (correção da 0022, que recusava itens classificados pela Matriz do Enem com BNCC confirmada).

@@ -39,6 +39,26 @@ export function eligibleForDiagnostic(item: BankItem): boolean {
   return item.version.status === "aprovada" && (item.link.kind === "oficial" || item.link.kind === "confirmada");
 }
 
+/**
+ * Questões de uma etapa (D-055): revisadas de fonte NÃO sintética primeiro;
+ * se houver o mínimo delas, as demonstrativas ficam de fora — é o que
+ * permite o diagnóstico nascer não demonstrativo assim que o banco tiver
+ * questões revisadas, sem mudar código. Depois, escola antes do catálogo
+ * e ordem estável.
+ */
+export function pickDiagnosticItems<T extends Pick<BankItem, "origin" | "version" | "source">>(items: T[]): T[] {
+  const real = items.filter((i) => !i.source?.synthetic);
+  const pool = real.length >= DIAGNOSTIC_RULES.minAnswered ? real : items;
+  return [...pool]
+    .sort(
+      (a, b) =>
+        Number(Boolean(a.source?.synthetic)) - Number(Boolean(b.source?.synthetic)) ||
+        (a.origin === b.origin ? 0 : a.origin === "escola" ? -1 : 1) ||
+        a.version.id.localeCompare(b.version.id),
+    )
+    .slice(0, QUESTIONS_PER_BLOCK);
+}
+
 export interface SkillCandidate {
   skill: CurriculumSkill;
   componentId: string;
@@ -161,6 +181,14 @@ export function createDiagnosticService(
         return c;
       });
 
+      // Questões de cada etapa escolhidas ANTES de gravar: um problema aqui
+      // não deixa diagnóstico pela metade.
+      const picks = [];
+      for (const c of chosen) {
+        const items = (await bankService.approvedForSkill(c.skill.id)).filter(eligibleForDiagnostic);
+        picks.push({ c, picked: pickDiagnosticItems(items) });
+      }
+
       const diagnosticId = newId();
       await study.insertDiagnostic({
         id: diagnosticId,
@@ -171,12 +199,7 @@ export function createDiagnosticService(
         createdBy: actor.userId,
       });
       const blocks: DiagnosticBlock[] = [];
-      for (const [index, c] of chosen.entries()) {
-        const items = (await bankService.approvedForSkill(c.skill.id)).filter(eligibleForDiagnostic);
-        // Questões da escola primeiro, depois do catálogo; ordem estável.
-        const picked = [...items]
-          .sort((a, b) => (a.origin === b.origin ? a.version.id.localeCompare(b.version.id) : a.origin === "escola" ? -1 : 1))
-          .slice(0, QUESTIONS_PER_BLOCK);
+      for (const [index, { c, picked }] of picks.entries()) {
         const listId = await bankService.createList({
           classroomId: classroom.id,
           componentId: c.componentId,

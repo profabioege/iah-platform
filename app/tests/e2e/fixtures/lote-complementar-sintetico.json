@@ -1,0 +1,89 @@
+{
+  "banco": "Fixture sintética — lote complementar",
+  "itens": [
+    {
+      "id": "IAH-CH-911",
+      "versao": "1.0",
+      "area": "CH",
+      "tema": "Item sintético de teste — fontes",
+      "serie_sugerida": "1ª",
+      "habilidade_enem": {
+        "competencia": "C1",
+        "codigo": "H1",
+        "texto": "Texto sintético de teste da habilidade.",
+        "conferencia": "PENDENTE — texto da transcrição de referência"
+      },
+      "habilidade_bncc": {
+        "codigo": "EM13CHS101",
+        "texto": "Texto sintético."
+      },
+      "texto_base": "Linha 1 do texto-base sintético.\nLinha 2 do texto-base sintético.",
+      "comando": "Comando sintético:",
+      "alternativas": {
+        "A": "alternativa A",
+        "B": "alternativa B",
+        "C": "alternativa C",
+        "D": "alternativa D",
+        "E": "alternativa E"
+      },
+      "gabarito": "B",
+      "resolucao_comentada": "B está correta porque é o teste.",
+      "analise_distratores": {
+        "A": "A errada.",
+        "C": "C errada.",
+        "D": "D errada.",
+        "E": "E errada."
+      },
+      "dificuldade_estimada": "média",
+      "status_editorial": "pendente_revisao_docente",
+      "decisao_docente": null,
+      "verificacao_originalidade": {
+        "status": "sintético"
+      },
+      "fonte_texto_base": "Sintético."
+    },
+    {
+      "id": "IAH-CH-912",
+      "versao": "1.0",
+      "area": "CH",
+      "tema": "Item sintético de teste — fontes",
+      "serie_sugerida": "1ª",
+      "habilidade_enem": {
+        "competencia": "C1",
+        "codigo": "H1",
+        "texto": "Texto sintético de teste da habilidade."
+      },
+      "habilidade_bncc": {
+        "codigo": "EM13CHS101",
+        "texto": "Texto sintético."
+      },
+      "texto_base": "Linha 1 do texto-base sintético.\nLinha 2 do texto-base sintético.",
+      "comando": "Comando sintético:",
+      "alternativas": {
+        "A": "alternativa A",
+        "B": "alternativa B",
+        "C": "alternativa C",
+        "D": "alternativa D",
+        "E": "alternativa E"
+      },
+      "gabarito": "B",
+      "resolucao_comentada": "B está correta porque é o teste.",
+      "analise_distratores": {
+        "A": "A errada.",
+        "C": "C errada.",
+        "D": "D errada.",
+        "E": "E errada."
+      },
+      "dificuldade_estimada": "média",
+      "status_editorial": "aprovada",
+      "decisao_docente": {
+        "decisao": "aprovada",
+        "data_decisao": "2026-10-06"
+      },
+      "verificacao_originalidade": {
+        "status": "sintético"
+      },
+      "fonte_texto_base": "Sintético."
+    }
+  ]
+}
