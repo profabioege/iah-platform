@@ -36,7 +36,7 @@ export interface ImportExpectations {
   className: string;
   /** Total informado pela escola (lista institucional). */
   expectedTotal: number;
-  /** Domínios aceitos para o e-mail institucional (ex.: ["escola.edu.br"]). */
+  /** Domínios aceitos para o e-mail institucional (ex.: ["escola.example"]). */
   emailDomains: string[];
 }
 
@@ -52,7 +52,10 @@ export type IssueKind =
   | "outra_turma"
   | "total_divergente"
   | "dominios_nao_configurados"
-  | "nome_repetido";
+  | "nome_repetido"
+  | "conta_outra_instituicao"
+  | "conta_outro_papel"
+  | "conta_inativa";
 
 export interface ImportIssue {
   kind: IssueKind;
@@ -100,7 +103,7 @@ export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
-/** "maria.souza@escola.edu.br" → "ma***@escola.edu.br" (para relatórios). */
+/** "maria.souza@escola.example" → "ma***@escola.example" (para relatórios). */
 export function maskEmail(email: string): string {
   const [local, domain] = email.split("@");
   if (!domain) return "***";
@@ -400,9 +403,9 @@ export async function precheckAgainstDatabase(
   const block = (lines: number[], kind: IssueKind, message: string) => {
     if (lines.length > 0) issues.push({ kind, blocking: true, lines, message });
   };
-  block(byState.outra_instituicao, "email_repetido", "E-mail já usado por conta de OUTRA instituição.");
-  block(byState.outro_papel, "email_repetido", "E-mail já usado por conta de professor ou gestor nesta instituição.");
-  block(byState.inativa, "email_repetido", "Conta existente desativada — reativar exige decisão da escola.");
+  block(byState.outra_instituicao, "conta_outra_instituicao", "E-mail já usado por conta de OUTRA instituição.");
+  block(byState.outro_papel, "conta_outro_papel", "E-mail já usado por conta de professor ou gestor nesta instituição.");
+  block(byState.inativa, "conta_inativa", "Conta existente desativada — reativar exige decisão da escola.");
 
   return {
     byState,
