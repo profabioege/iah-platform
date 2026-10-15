@@ -1,0 +1,19 @@
+{
+  "institution": {
+    "id": "inst-beryon",
+    "name": "Colégio Beryon",
+    "slug": "colegio-beryon",
+    "domain": "PREENCHER-dominio-institucional"
+  },
+  "academicYear": { "id": "ay-beryon-2026", "label": "2026", "startsOn": "2026-02-01", "endsOn": "2026-12-15" },
+  "classroom": { "id": "class-beryon-2026-1a", "name": "1ª série A", "grade": "1ª série E.M." },
+  "teacher": { "id": "teacher-beryon-fabio", "name": "Prof. Fabio Ege", "email": "PREENCHER-email-institucional-do-professor" },
+  "managers": [
+    { "id": "manager-beryon-1", "name": "PREENCHER-nome-do-gestor", "email": "PREENCHER-email-institucional-do-gestor" }
+  ],
+  "expected": {
+    "className": "1ª série A",
+    "expectedTotal": 35,
+    "emailDomains": []
+  }
+}

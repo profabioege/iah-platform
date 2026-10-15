@@ -133,7 +133,11 @@ export function createLearningCycleService(repositories: PlatformRepositories) {
       deliveredAt: null,
       updatedAt: now,
     });
-    const work = await getStudentWork(scope);
+    // Estado derivado localmente do que acabou de ser gravado, sem reler a
+    // turma inteira (economiza uma rodada ao banco hospedado por ação —
+    // investigação de latência de 27/09, docs/operations/retomada-homologacao.md;
+    // porte do snapshot 4c0549d para o piloto da 1ª série A).
+    const work: StudentWork = { ...current, startedAt: now, updatedAt: now };
     await syncProgress(scope, work);
     return work;
   }
@@ -161,7 +165,16 @@ export function createLearningCycleService(repositories: PlatformRepositories) {
       deliveredAt: null,
       updatedAt: now,
     });
-    const work = await getStudentWork(scope);
+    // Estado derivado localmente do que acabou de ser gravado, sem reler a
+    // turma inteira (economiza uma rodada ao banco hospedado por ação —
+    // investigação de latência de 27/09, docs/operations/retomada-homologacao.md;
+    // porte do snapshot 4c0549d para o piloto da 1ª série A).
+    const work: StudentWork = {
+      ...current,
+      production: content,
+      startedAt: current.startedAt ?? now,
+      updatedAt: now,
+    };
     await syncProgress(scope, work);
     return work;
   }
@@ -199,7 +212,16 @@ export function createLearningCycleService(repositories: PlatformRepositories) {
       deliveredAt: null,
       updatedAt: now,
     });
-    const work = await getStudentWork(scope);
+    // Estado derivado localmente do que acabou de ser gravado, sem reler a
+    // turma inteira (economiza uma rodada ao banco hospedado por ação —
+    // investigação de latência de 27/09, docs/operations/retomada-homologacao.md;
+    // porte do snapshot 4c0549d para o piloto da 1ª série A).
+    const work: StudentWork = {
+      ...current,
+      aiEvidence: { ...EMPTY_AI_EVIDENCE, ...evidence },
+      startedAt: current.startedAt ?? now,
+      updatedAt: now,
+    };
     await syncProgress(scope, work);
     return work;
   }
@@ -232,7 +254,16 @@ export function createLearningCycleService(repositories: PlatformRepositories) {
       deliveredAt: delivered ? now : null,
       updatedAt: now,
     });
-    const work = await getStudentWork(scope);
+    // Estado derivado localmente do que acabou de ser gravado, sem reler a
+    // turma inteira (economiza uma rodada ao banco hospedado por ação —
+    // investigação de latência de 27/09, docs/operations/retomada-homologacao.md;
+    // porte do snapshot 4c0549d para o piloto da 1ª série A).
+    const work: StudentWork = {
+      ...current,
+      startedAt: current.startedAt ?? now,
+      productionDeliveredAt: delivered ? now : null,
+      updatedAt: now,
+    };
     await syncProgress(scope, work);
     return work;
   }
@@ -257,7 +288,11 @@ export function createLearningCycleService(repositories: PlatformRepositories) {
       recordedAt: current.reflectionRecordedAt,
       visibility: "shared_with_teacher",
     });
-    const work = await getStudentWork(scope);
+    // Estado derivado localmente do que acabou de ser gravado, sem reler a
+    // turma inteira (economiza uma rodada ao banco hospedado por ação —
+    // investigação de latência de 27/09, docs/operations/retomada-homologacao.md;
+    // porte do snapshot 4c0549d para o piloto da 1ª série A).
+    const work: StudentWork = { ...current, reflection: text };
     await syncProgress(scope, work);
     return work;
   }
@@ -271,6 +306,7 @@ export function createLearningCycleService(repositories: PlatformRepositories) {
     if (current.review) {
       throw new Error("Entrega já avaliada — a reflexão não pode mais mudar.");
     }
+    const recordedAt = recorded ? new Date().toISOString() : null;
     await repositories.reflections.save(scope.institutionId, {
       id: `reflection-${scope.studentId}-${scope.missionId}`,
       institutionId: scope.institutionId,
@@ -278,10 +314,14 @@ export function createLearningCycleService(repositories: PlatformRepositories) {
       studentId: scope.studentId,
       missionId: scope.missionId,
       text: current.reflection,
-      recordedAt: recorded ? new Date().toISOString() : null,
+      recordedAt,
       visibility: "shared_with_teacher",
     });
-    const work = await getStudentWork(scope);
+    // Estado derivado localmente do que acabou de ser gravado, sem reler a
+    // turma inteira (economiza uma rodada ao banco hospedado por ação —
+    // investigação de latência de 27/09, docs/operations/retomada-homologacao.md;
+    // porte do snapshot 4c0549d para o piloto da 1ª série A).
+    const work: StudentWork = { ...current, reflectionRecordedAt: recordedAt };
     await syncProgress(scope, work);
     return work;
   }
@@ -302,6 +342,7 @@ export function createLearningCycleService(repositories: PlatformRepositories) {
     if (!canTransitionSubmission(status, "reviewed")) {
       throw new Error("A entrega precisa estar concluída antes da avaliação.");
     }
+    const reviewedAt = new Date().toISOString();
     await repositories.missionReviews.save(scope.institutionId, {
       id: `review-${scope.studentId}-${scope.missionId}`,
       institutionId: scope.institutionId,
@@ -313,10 +354,25 @@ export function createLearningCycleService(repositories: PlatformRepositories) {
       feedback: review.feedback,
       reviewerId: review.reviewerId,
       reviewerName: review.reviewerName,
-      reviewedAt: new Date().toISOString(),
+      reviewedAt,
       axes: review.axes ?? null,
     });
-    const work = await getStudentWork(scope);
+    // Estado derivado localmente do que acabou de ser gravado, sem reler a
+    // turma inteira (economiza uma rodada ao banco hospedado por ação —
+    // investigação de latência de 27/09, docs/operations/retomada-homologacao.md;
+    // porte do snapshot 4c0549d para o piloto da 1ª série A).
+    const work: StudentWork = {
+      ...current,
+      review: {
+        grade: review.grade,
+        observedCriteria: review.observedCriteria,
+        feedback: review.feedback,
+        reviewedAt,
+        reviewerId: review.reviewerId,
+        reviewerName: review.reviewerName,
+        axes: review.axes ?? null,
+      },
+    };
     await syncProgress(scope, work);
     return work;
   }

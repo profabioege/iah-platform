@@ -172,7 +172,14 @@ export function createSeedRepositories(): PlatformRepositories {
         const index = productions.findIndex(
           (p) => p.institutionId === institutionId && p.id === item.id,
         );
-        if (index >= 0) productions[index] = { ...item, institutionId };
+        // Mesma semântica do upsert do banco: sem registro de IA na
+        // chamada, o registro já gravado é preservado.
+        if (index >= 0)
+          productions[index] = {
+            ...item,
+            aiEvidence: item.aiEvidence ?? productions[index].aiEvidence,
+            institutionId,
+          };
         else productions.push({ ...item, institutionId });
       },
     },

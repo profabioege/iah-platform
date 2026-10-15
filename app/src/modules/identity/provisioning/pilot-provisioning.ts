@@ -153,6 +153,19 @@ async function ensureAccount(
 ): Promise<ProvisionedAccount> {
   try {
     const existing = await findUserByEmail(db, plan.email);
+    if (existing && existing.institution_id !== institutionId) {
+      // O e-mail é único na plataforma inteira. Uma conta de OUTRA
+      // instituição nunca é "reaproveitada": o registro desta escola
+      // acabaria apontando para o usuário de outra (vazamento entre
+      // instituições). É divergência de identificação, a resolver antes.
+      return {
+        kind: plan.kind,
+        reference: plan.reference,
+        email: plan.email,
+        outcome: "falhou",
+        error: "O e-mail já pertence a uma conta de outra instituição.",
+      };
+    }
     if (existing) {
       // Reaproveitar uma conta existente só vale se ela for da MESMA
       // pessoa no mesmo papel. Um e-mail de aluno que já pertence ao
@@ -379,8 +392,19 @@ export async function provisionPilotClass(
 
     try {
       const existing = await findUserByEmail(db, email);
+      // Aluno já cadastrado nesta instituição com o mesmo e-mail (por
+      // exemplo, numa importação anterior com outro identificador): o
+      // registro existente é reaproveitado — nunca um segundo aluno.
+      const { data: alunoExistente, error: alunoErro } = await db
+        .from("students")
+        .select("id")
+        .eq("institution_id", roster.institution.id)
+        .eq("email", email)
+        .maybeSingle();
+      if (alunoErro) throw new Error(`students: ${alunoErro.message}`);
+      const studentId = (alunoExistente?.id as string | undefined) ?? student.externalId;
       await upsertRow(db, "students", {
-        id: student.externalId,
+        id: studentId,
         institution_id: roster.institution.id,
         name: student.name,
         email,
@@ -391,7 +415,7 @@ export async function provisionPilotClass(
         .select("id")
         .eq("institution_id", roster.institution.id)
         .eq("classroom_id", roster.classroom.id)
-        .eq("student_id", student.externalId)
+        .eq("student_id", studentId)
         .maybeSingle();
       if (enrollment) {
         enrollments.existing += 1;
@@ -400,7 +424,7 @@ export async function provisionPilotClass(
           id: newId("enroll"),
           institution_id: roster.institution.id,
           classroom_id: roster.classroom.id,
-          student_id: student.externalId,
+          student_id: studentId,
           status: "active",
           enrolled_at: new Date().toISOString(),
         });

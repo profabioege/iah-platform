@@ -90,7 +90,7 @@ export async function verifyCredentials(
     await recordLoginAttempt(db, email, originHash, false);
     return null;
   }
-  if (!verifyPassword(password, user.password_hash as string)) {
+  if (!(await verifyPassword(password, user.password_hash as string))) {
     await recordLoginAttempt(db, email, originHash, false);
     return null;
   }
