@@ -69,7 +69,7 @@ export const missionAFabricaDeNoticias: Mission = {
     "pessoas — e nem sempre é possível notar. Isso não significa que toda " +
     "notícia é falsa; significa que parecer verdadeiro deixou de ser prova de " +
     "que algo é verdadeiro. Você vai receber um Dossiê de Auditoria com quatro " +
-    "manchetes reais de investigação — parte delas seria publicável por " +
+    "manchetes criadas para esta investigação — parte delas seria publicável por " +
     "qualquer redação séria, parte foi construída para enganar. Antes de saber " +
     "qual é qual, você vai fazer o que todo auditor faz: registrar uma hipótese " +
     "inicial, aplicar um método e só então assinar um veredito.",
@@ -205,8 +205,8 @@ export const missionAFabricaDeNoticias: Mission = {
 
   // 10. Entrega
   delivery:
-    "O Relatório de Auditoria é registrado na plataforma (nesta fase, salvo " +
-    "localmente no seu dispositivo). Considera-se concluída quando as quatro " +
+    "O Relatório de Auditoria é registrado na plataforma e fica salvo na sua " +
+    "conta (você pode sair e continuar depois). Considera-se concluída quando as quatro " +
     "hipóteses e vereditos, a manchete gerada com sua análise, e a reflexão " +
     "estiverem preenchidos e entregues.",
 

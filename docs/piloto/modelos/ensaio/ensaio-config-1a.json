@@ -1,0 +1,38 @@
+{
+  "institution": {
+    "id": "inst-ensaio-1a",
+    "name": "Instituição sintética (ensaio)",
+    "slug": "inst-ensaio-1a",
+    "domain": "ensaio.example"
+  },
+  "academicYear": {
+    "id": "ay-ensaio-2026",
+    "label": "2026",
+    "startsOn": "2026-02-01",
+    "endsOn": "2026-12-15"
+  },
+  "classroom": {
+    "id": "class-ensaio-1a",
+    "name": "1ª série A",
+    "grade": "1ª série E.M."
+  },
+  "teacher": {
+    "id": "teacher-ensaio-1a",
+    "name": "Professor Sintético (ensaio)",
+    "email": "professor@ensaio.example"
+  },
+  "managers": [
+    {
+      "id": "manager-ensaio-1",
+      "name": "Gestão Sintética (ensaio)",
+      "email": "gestor@ensaio.example"
+    }
+  ],
+  "expected": {
+    "className": "1ª série A",
+    "expectedTotal": 35,
+    "emailDomains": [
+      "ensaio.example"
+    ]
+  }
+}

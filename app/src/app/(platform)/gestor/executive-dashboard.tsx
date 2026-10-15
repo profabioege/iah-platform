@@ -96,6 +96,12 @@ interface LearningCycleStats {
 }
 
 const IMPLEMENTATION_PROGRESS = 75;
+/**
+ * Modo real (piloto): nada de número demonstrativo na tela do gestor. O
+ * percentual de implantação acima é ilustrativo e só aparece no modo
+ * demonstração; no modo real os indicadores vêm das entregas gravadas.
+ */
+const REAL_MODE = isRealModeClient();
 
 const VIEW_LABEL: Record<ExecutiveView, string> = {
   overview: "Visão geral",
@@ -287,7 +293,7 @@ export function ExecutiveDashboard({
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <Badge variant="outline" className="gap-1.5 font-normal">
             <Clock3 className="size-3" />
-            Atualização demonstrativa
+            {REAL_MODE ? "Dados registrados na plataforma" : "Atualização demonstrativa"}
           </Badge>
           <Badge variant="outline" className="gap-1.5 font-normal">
             <CalendarDays className="size-3" />
@@ -394,15 +400,19 @@ function Overview({
                 </CardDescription>
               </div>
             </div>
-            <div className="flex flex-col items-start sm:items-end">
-              <span className="text-3xl font-semibold tabular-nums text-foreground md:text-4xl">
-                {IMPLEMENTATION_PROGRESS}%
-              </span>
-              <span className="text-xs text-muted-foreground">progresso demonstrativo</span>
-            </div>
+            {REAL_MODE ? null : (
+              <div className="flex flex-col items-start sm:items-end">
+                <span className="text-3xl font-semibold tabular-nums text-foreground md:text-4xl">
+                  {IMPLEMENTATION_PROGRESS}%
+                </span>
+                <span className="text-xs text-muted-foreground">progresso demonstrativo</span>
+              </div>
+            )}
           </CardHeader>
           <CardContent className="flex flex-col gap-5">
-            <ProgressBar value={IMPLEMENTATION_PROGRESS} label="Progresso da implantação" />
+            {REAL_MODE ? null : (
+              <ProgressBar value={IMPLEMENTATION_PROGRESS} label="Progresso da implantação" />
+            )}
             <div className="grid gap-2 sm:grid-cols-4">
               <Milestone index="01" label="Fundação" status="done" />
               <Milestone index="02" label="Configuração" status="done" />
@@ -431,7 +441,11 @@ function Overview({
                   ? `${inactiveStudents} alunos ainda não acessaram`
                   : "Todos os alunos já acessaram"
               }
-              description="Leitura da Mission ativa no ambiente demonstrativo."
+              description={
+                REAL_MODE
+                  ? "Leitura da missão publicada mais recentemente em cada turma."
+                  : "Leitura da Mission ativa no ambiente demonstrativo."
+              }
               emphasis={inactiveStudents > 0}
             />
             <AttentionItem
@@ -461,7 +475,7 @@ function Overview({
       </div>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Indicadores principais">
-        <MetricCard icon={Route} label="Implantação" value={`${IMPLEMENTATION_PROGRESS}%`} detail="Operação acompanhada" />
+        <MetricCard icon={Route} label="Implantação" value={REAL_MODE ? "Piloto" : `${IMPLEMENTATION_PROGRESS}%`} detail="Operação acompanhada" />
         <MetricCard icon={GraduationCap} label="Professor vinculado" value="1" detail={`${teacher.classroomCount} turmas sob condução`} />
         <MetricCard icon={Users} label="Alunos ativos" value={`${totals.activeStudents}`} detail={`${activeRate}% de ${totals.students} matriculados`} />
         <MetricCard
@@ -560,7 +574,11 @@ function Overview({
       </div>
 
       <footer className="flex flex-col gap-3 border-t border-border pt-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-        <p>Indicadores demonstrativos derivados do ciclo institucional compartilhado.</p>
+        <p>
+          {REAL_MODE
+            ? "Indicadores calculados a partir das entregas registradas na plataforma."
+            : "Indicadores demonstrativos derivados do ciclo institucional compartilhado."}
+        </p>
         <button type="button" disabled className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "opacity-50")}>
           <Download className="size-4" /> Exportar resumo executivo · Em breve
         </button>
@@ -592,7 +610,7 @@ function FocusedView({
 }) {
   const content = {
     implementation: {
-      badge: `Implantação · ${IMPLEMENTATION_PROGRESS}%`,
+      badge: REAL_MODE ? "Implantação · piloto" : `Implantação · ${IMPLEMENTATION_PROGRESS}%`,
       title: "Do Setup à operação acompanhada",
       description: "O que foi concluído, o que está em operação e qual é o próximo marco institucional.",
       rows: [

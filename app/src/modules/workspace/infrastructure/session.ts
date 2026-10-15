@@ -117,7 +117,12 @@ async function getRealWorkspaceContext(): Promise<WorkspaceContext | null> {
   const repositories = await getRequestRepositories();
   const db = await getScopedDatabaseClient(actor);
 
-  const [institution, academicYears, allClassrooms, { data: subjectRows }] =
+  // As 5 consultas sao independentes -- a matricula do aluno so e
+  // relevante quando o papel e "student", mas buscar em paralelo com as
+  // demais (em vez de depois, sequencialmente) poupa uma rodada redonda
+  // ao banco hospedado para a maioria das sessoes deste ensaio (45 dos
+  // 47 perfis sao alunos); ver docs/operations/retomada-homologacao.md.
+  const [institution, academicYears, allClassrooms, { data: subjectRows }, { data: enrollmentRows }] =
     await Promise.all([
       repositories.institutions.getById(user.institutionId),
       repositories.academicYears.listByInstitution(user.institutionId),
@@ -126,6 +131,14 @@ async function getRealWorkspaceContext(): Promise<WorkspaceContext | null> {
         .from("subjects")
         .select("id, institution_id, name")
         .eq("institution_id", user.institutionId),
+      user.role === "student" && user.studentId
+        ? db
+            .from("enrollments")
+            .select("classroom_id")
+            .eq("institution_id", user.institutionId)
+            .eq("student_id", user.studentId)
+            .eq("status", "active")
+        : Promise.resolve({ data: null }),
     ]);
   if (!institution) return null;
 
@@ -140,12 +153,6 @@ async function getRealWorkspaceContext(): Promise<WorkspaceContext | null> {
   // leciona; admin, todas as da instituição.
   let classrooms = allClassrooms;
   if (user.role === "student" && user.studentId) {
-    const { data: enrollmentRows } = await db
-      .from("enrollments")
-      .select("classroom_id")
-      .eq("institution_id", user.institutionId)
-      .eq("student_id", user.studentId)
-      .eq("status", "active");
     const enrolledIds = new Set(
       (enrollmentRows ?? []).map((row) => row.classroom_id as string),
     );

@@ -38,24 +38,33 @@ export default async function GestorPage({
     repositories.teachers.listByInstitution(context.institution.id),
     repositories.missions.list(),
   ]);
-  // Mission ativa lida do repositório institucional — nunca fixa em código.
-  const activeMissionId = missionRecords[0]?.id ?? "";
+  // Missão de referência do catálogo (fallback quando a turma ainda não
+  // tem publicação) — nunca fixa em código.
+  const catalogMissionId = missionRecords[0]?.id ?? "";
 
   const classroomData = await Promise.all(context.classrooms.map(async (classroom) => {
-    const [students, progress, assignments] = await Promise.all([
+    const [students, assignments] = await Promise.all([
       repositories.students.listByClassroom(context.institution.id, classroom.id),
-      activeMissionId
-        ? repositories.missionProgress.listByClassroomMission(
-            context.institution.id,
-            classroom.id,
-            activeMissionId,
-          )
-        : Promise.resolve([]),
       repositories.missionAssignments.listByClassroom(
         context.institution.id,
         classroom.id,
       ),
     ]);
+    // Missão ativa da TURMA: a publicada mais recentemente. Sem isso, a
+    // participação mostrada seria a da primeira missão do catálogo, que
+    // pode não ser a da aula.
+    const activeMissionId =
+      assignments
+        .filter((a) => a.status === "published")
+        .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))[0]?.missionId ??
+      catalogMissionId;
+    const progress = activeMissionId
+      ? await repositories.missionProgress.listByClassroomMission(
+          context.institution.id,
+          classroom.id,
+          activeMissionId,
+        )
+      : [];
     const activeCount = progress.filter(
       (item) => item.status !== "nao_acessou",
     ).length;

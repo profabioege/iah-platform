@@ -2,6 +2,24 @@
 
 Histórico de entregas em ordem cronológica reversa. Cada entrada corresponde a uma Sprint ou tarefa concluída. Para o estado atual, ver `STATUS.md`; para o histórico de decisões arquiteturais, ver `DECISIONS.md`.
 
+## 15/10/2026 — Preparação do primeiro piloto real, 1ª série A (branch não publicada)
+
+- Porte das correções de desempenho do snapshot de homologação `4c0549d`
+  (senha assíncrona, conferência do ator por requisição, estado do ciclo
+  sem releitura, matrícula em paralelo no contexto do aluno).
+- Importação CSV `nome,email_institucional,turma` com validação prévia
+  (`scripts/pilot-import-turma.mjs`); provisionamento não reaproveita
+  e-mail de outra instituição e não duplica aluno já cadastrado.
+- Painel do gestor sem números demonstrativos no modo real; participação
+  pela missão publicada na turma.
+- Missão 01: dois ajustes de texto (itens fictícios; entrega salva na conta).
+- Ensaio da aula (`scripts/pilot-ensaio-1a.mjs`, local e hospedado),
+  cópia/restauração lógica, indicadores agregados da aula e scripts CMD.
+- Documentação do piloto em `docs/piloto/` (D-056).
+- Testes: unitários 480/480, integração 92/92, homologação 64/64. Ensaio
+  local 35/25: 0 erros e integridade completa em 8 rodadas; gravação no
+  pico acima de 1,5 s em 3 delas (registrado; não mede a hospedagem).
+
 ## 14/10/2026 — Prontidão para o diagnóstico real (branch não publicada)
 
 - Carga do planejamento curricular da escola por planilha

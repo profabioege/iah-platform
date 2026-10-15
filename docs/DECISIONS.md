@@ -727,3 +727,24 @@ atualizados.
 5. **Lote complementar da 1ª série** (42 itens originais, 3 por habilidade das 14 da 1ª série do lote piloto), escrito antes do planejamento real porque as habilidades da BNCC do EM são por área, não por série. Entra **em revisão**, com fonte própria; o importador recusa itens sem o status correto em cada tipo de lote (piloto: `aprovada`; complementar: `pendente_revisao_docente`). Revisão independente por IA registrada, **sem valor de aprovação**.
 6. **Etapa sem demonstrativas quando possível**: com o mínimo de questões revisadas não sintéticas, a etapa usa só elas — condição para o diagnóstico nascer não demonstrativo sem mudança de código.
 7. **Migration 0023**: a etapa aceita questão com habilidade **confirmada por revisão humana** (correção da 0022, que recusava itens classificados pela Matriz do Enem com BNCC confirmada).
+
+---
+
+## D-056 — Preparação do primeiro piloto real (1ª série A, Colégio Beryon) (15/10/2026)
+
+**Status:** Proposto ao Founder (branch `pilot/beryon-1a-2026`, não publicada). Detalhes em `docs/piloto/`.
+
+**Contexto e problema:** A mantenedora autorizou uma aula com alunos reais da 1ª série A (35 alunos), com autenticação e persistência reais, sem o computador do professor como servidor. A linha mais recente (`c748c7e`) não tinha as correções de desempenho validadas em setembro (estavam só no snapshot `4c0549d`), nem importação por planilha simples, e o painel do gestor exibia números demonstrativos no modo real. O último ensaio hospedado (45 alunos, plano gratuito) reprovou nos limites de latência.
+
+**Decisão:**
+
+1. **Candidata** = `c748c7e` + porte das correções de desempenho de `4c0549d` (senha assíncrona; conferência do ator uma vez por requisição, consultas em paralelo; estado do ciclo derivado sem releitura, com teste de equivalência; matrícula do aluno em paralelo no contexto). Nada volta a `8f78857`.
+2. **Acesso** por e-mail institucional + senha provisória individual com troca obrigatória (mecanismo existente). O login Google **não** é usado: ele provisiona todo usuário como professor e exige liberação da TI; as variáveis Google ficam vazias no ambiente do piloto.
+3. **Importação** `nome,email_institucional,turma` com validação prévia obrigatória (total, turma, e-mails, domínio, contas existentes por instituição e papel) e importação só com zero divergências; identificador do aluno derivado de instituição + e-mail; e-mail de outra instituição nunca é reaproveitado.
+4. **Ambiente**: projeto Supabase e projeto Vercel **exclusivos do piloto**, ambos em São Paulo; ensaio com instituição sintética no mesmo projeto, desativada antes da aula; cópia lógica + restauração em banco vazio (o plano gratuito não oferece cópia baixável).
+5. **Ensaio** com critérios fixos (zero erros, integridade, p95 login ≤ 2 s, leitura da missão ≤ 1 s, gravação ≤ 1,5 s, professor ≤ 1,5 s); o limite de 25 alunos enviando é do gerador, nunca uma fila na aplicação.
+6. **Liberação condicionada** ao ensaio no endereço hospedado. Sem ele, a recomendação é adiar.
+
+**Alternativas descartadas:** *reusar `iah-beryon-homolog`* (em 0015, com contas de carga; segregação e exclusão final mais difíceis); *usar o projeto de produção* (precisa poder ser apagado no fim da retenção); *login Google para alunos* (não implementado para alunos; dependeria de TI); *fila artificial no servidor* (mascararia a capacidade real).
+
+**Impacto futuro:** Ampliar para a turma B (65 alunos) exige novo ensaio hospedado com 65; o resultado de 35 não vale como prova. O painel do gestor no modo real passa a mostrar só dados gravados.
