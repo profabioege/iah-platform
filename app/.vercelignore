@@ -1,0 +1,5 @@
+tests/
+db/
+.next/
+node_modules/
+*.tsbuildinfo
