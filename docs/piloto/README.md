@@ -11,6 +11,7 @@ Preparação do primeiro piloto com alunos reais (D-056). Branch `pilot/beryon-1
 | [05-registro-da-aula.md](05-registro-da-aula.md) | Ficha da aula, ocorrências (ausência × falha técnica), avaliação breve |
 | [06-relatorio-mantenedora-modelo.md](06-relatorio-mantenedora-modelo.md) | Relatório agregado para a mantenedora |
 | [07-tratamento-de-dados.md](07-tratamento-de-dados.md) | O que é coletado e as perguntas para a escola |
+| [08-estado-implantacao-16-10.md](08-estado-implantacao-16-10.md) | **Estado atual**: infraestrutura criada, validação da lista, bloqueios e próxima ação |
 | `modelos/` | CSV e configuração com dados **sintéticos** (inclui o kit do ensaio) |
 
 Scripts (em `app/scripts/`, wrappers CMD em `app/scripts/windows/piloto-*.cmd`): `pilot-import-turma.mjs`, `pilot-credential-reset.mjs`, `pilot-ensaio-1a.mjs`, `pilot-backup.mjs`, `pilot-restore.mjs`, `pilot-metricas-aula.mjs`.
