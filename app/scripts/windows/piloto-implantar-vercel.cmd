@@ -14,8 +14,8 @@ call npx --yes vercel whoami >nul 2>&1 || call npx --yes vercel login || exit /b
 echo == 2/4 Variaveis secretas do projeto (so as que faltarem)
 call npx --yes vercel env ls production > "%TEMP%\iah-envs.txt" 2>&1
 findstr /c:"AUTH_SECRET" "%TEMP%\iah-envs.txt" >nul || (
-  for /f %%s in ('node -e "process.stdout.write(require('crypto').randomBytes(32).toString('base64url'))"') do (
-    echo %%s| call npx --yes vercel env add AUTH_SECRET production --sensitive >nul
+  for /f "usebackq" %%s in (`node -e "process.stdout.write(require('crypto').randomBytes(32).toString('base64url'))"`) do (
+    echo %%s| npx --yes vercel env add AUTH_SECRET production --sensitive >nul
   )
   echo    AUTH_SECRET gerado e gravado (nao exibido^).
 )
