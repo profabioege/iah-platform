@@ -56,7 +56,7 @@ export function MissionFlow({
   mission: Mission;
   source: StudentWorkSource;
 }) {
-  const { work, update, flush, saveStatus, delivered, recorded, submissionStatus } =
+  const { work, update, flush, saveStatusOf, delivered, recorded, submissionStatus } =
     useStudentWork(source, mission.id);
   const reviewed = submissionStatus === "reviewed";
   const parsed = React.useMemo(
@@ -215,10 +215,14 @@ export function MissionFlow({
                   className="w-full resize-y rounded-lg border border-input bg-background/60 p-3 text-sm leading-relaxed text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-ring focus:ring-2 focus:ring-ring/30 read-only:opacity-80"
                   aria-label="Texto do Relatório de Auditoria"
                 />
-                <p className="mt-2 text-xs text-muted-foreground">
+                <p
+                  role="status"
+                  aria-live="polite"
+                  className={`mt-2 text-xs ${!delivered && saveStatusOf("production") === "error" ? "text-destructive" : "text-muted-foreground"}`}
+                >
                   {delivered
                     ? "Já entregue — reabra na etapa Entrega para editar."
-                    : saveStatusLabel(saveStatus, "Salvo automaticamente enquanto você escreve.")}
+                    : saveStatusLabel(saveStatusOf("production"))}
                 </p>
               </CardContent>
             </Card>
@@ -241,7 +245,7 @@ export function MissionFlow({
               statusLabel={
                 delivered
                   ? "Já entregue — reabra na etapa Entrega para editar."
-                  : saveStatusLabel(saveStatus, "Salvo automaticamente enquanto você escreve.")
+                  : saveStatusLabel(saveStatusOf("aiEvidence"))
               }
             />
             <MissionNavigation onBack={() => goTo(S.production)} onNext={() => goTo(S.criteria)} />
@@ -352,6 +356,8 @@ export function MissionFlow({
               value={work.reflection}
               onChange={(value) => update({ reflection: value })}
               onBlur={flush}
+              saveStatus={saveStatusOf("reflection")}
+              saveStatusLabel={saveStatusLabel(saveStatusOf("reflection"))}
               recorded={recorded}
               delivered={delivered}
               recordedAt={work.reflectionRecordedAt}
@@ -564,11 +570,18 @@ function formatDate(iso: string | null): string {
   return new Date(iso).toLocaleDateString("pt-BR");
 }
 
-/** Nunca anuncia sucesso antes da confirmação do servidor (modo real, M22). */
-function saveStatusLabel(status: WorkSaveStatus, idleLabel: string): string {
+/**
+ * Nunca anuncia sucesso antes da confirmação do servidor (modo real, M22):
+ * "Salvo" só depois que o servidor confirmou a versão mais recente do texto.
+ */
+function saveStatusLabel(status: WorkSaveStatus): string {
+  if (status === "pending") return "Alterações ainda não salvas…";
   if (status === "saving") return "Salvando…";
-  if (status === "error") return "Não foi possível salvar agora — sua última alteração pode não ter sido salva.";
-  return idleLabel;
+  if (status === "saved") return "Salvo.";
+  if (status === "error") {
+    return "Não foi possível salvar. Seu texto continua aqui — não feche a página; verifique a conexão e clique fora do campo (ou continue escrevendo) para tentar de novo.";
+  }
+  return "Seu texto será salvo automaticamente enquanto você escreve.";
 }
 
 function FlowSkeleton() {

@@ -13,7 +13,7 @@ Cenário: **35 alunos + professor + gestor** conectados; no máximo **25 alunos 
 | p95 de gravação (cada chamada, incluindo salvamento automático) | ≤ 1500 ms |
 | p95 de leitura do professor | ≤ 1500 ms |
 
-O limite de 25 é do **gerador** (simula a sala); a aplicação não tem fila. O relatório separa: pico de **alunos enviando**, pico de **requisições HTTP em voo**, **espera no gerador** e **tempo percebido** por aluno. O resultado **não** comprova capacidade para 65 alunos.
+O limite de 25 é do **gerador** (simula a sala); a aplicação não tem fila. O relatório separa: pico de **alunos enviando**, pico de **requisições HTTP em voo**, **espera no gerador** e **tempo percebido** por aluno. O resultado **não** comprova capacidade para os 32 alunos da 1ª série A (escopo atual do piloto). O campo `alcance` do relatório deixa explícito quantos alunos sintéticos rodaram, a concorrência observada, a espera no gerador, o tempo completo de envio e se o salvamento automático por digitação foi verificado.
 
 ## 2. Ensaio local (executado nesta preparação)
 
@@ -82,3 +82,22 @@ Bloqueios: não existe aplicação hospedada do piloto; o ambiente desta prepara
 | 3 | | | | | | | | | | | |
 
 Referência anterior (setembro, 45 alunos, sem as correções portadas, app no Windows → banco hospedado): **reprovado** — login 2957 ms, leitura 5484 ms, gravação 3978 ms, professor 4909 ms; saturação da API do plano gratuito.
+
+## 5. Salvamento automático — o que o aluno vê (Produção, Uso da IA e Reflexão)
+
+Não há botão "salvar": o texto é enviado 800 ms depois da última edição, ao sair do campo e ao trocar de etapa
+(`app/src/app/(platform)/missoes/[id]/mission-flow/use-student-work.ts`). O aviso abaixo do campo segue o estado
+de cada campo, e só afirma gravação depois da confirmação do servidor:
+
+| Estado | Aviso |
+|---|---|
+| Nada editado nesta visita | "Seu texto será salvo automaticamente enquanto você escreve." |
+| Editado, aguardando envio | "Alterações ainda não salvas…" |
+| Envio em andamento | "Salvando…" |
+| Servidor confirmou a versão mais recente | "Salvo." |
+| Falha | Erro em destaque; o texto continua no editor e é reenviado ao sair do campo ou na próxima edição |
+
+As gravações passam por uma fila única (a mais nova chega por último ao banco). A resposta de um envio antigo não
+marca "Salvo" nem substitui no editor um texto alterado depois dele. Antes desta correção (deploy
+`dpl_5K7TWwDUFvTCG8RrHRTtPGj8BX85`), a Produção voltava ao texto inicial depois de gravar e a Reflexão não mostrava
+indicador algum.

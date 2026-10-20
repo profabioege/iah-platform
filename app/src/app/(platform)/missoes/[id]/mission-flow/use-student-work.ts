@@ -29,7 +29,28 @@ export type StudentWorkSource =
   | { kind: "real"; initialWork: StudentWork }
   | { kind: "demo"; scope: StudentWorkScope | null };
 
-export type WorkSaveStatus = "idle" | "saving" | "saved" | "error";
+/**
+ * Estado do salvamento automático de UM campo de texto (modo real):
+ * - `idle`: nada editado nesta visita — não afirma gravação;
+ * - `pending`: há alteração local aguardando o debounce (ou um envio anterior);
+ * - `saving`: a versão mais recente está a caminho do servidor;
+ * - `saved`: o servidor confirmou a versão MAIS RECENTE do texto;
+ * - `error`: a última gravação falhou — o texto continua no editor e será
+ *   reenviado no próximo blur ou na próxima edição.
+ */
+export type WorkSaveStatus = "idle" | "pending" | "saving" | "saved" | "error";
+
+type DraftField = "production" | "reflection" | "aiEvidence";
+type PendingDraft =
+  | { field: "production" | "reflection"; value: string }
+  | { field: "aiEvidence"; value: AiUseEvidence };
+
+const DRAFT_FIELDS: readonly DraftField[] = ["production", "reflection", "aiEvidence"];
+const IDLE_STATUS: Record<DraftField, WorkSaveStatus> = {
+  production: "idle",
+  reflection: "idle",
+  aiEvidence: "idle",
+};
 
 const DRAFT_DEBOUNCE_MS = 800;
 
@@ -42,20 +63,29 @@ const DRAFT_DEBOUNCE_MS = 800;
  * registrar reflexão) é uma Server Action imediata; o texto da Produção/
  * Reflexão usa autosave otimista com debounce — a textarea nunca trava
  * esperando a rede, mas nada é considerado salvo antes da confirmação do
- * servidor (`saveStatus`). `flush()` força o envio pendente (chamado no
+ * servidor (`saveStatusOf`). `flush()` força o envio pendente (chamado no
  * blur das textareas) para nunca perder as últimas teclas digitadas.
+ *
+ * Toda gravação passa por UMA fila: a escrita mais nova é sempre a última
+ * a chegar ao banco. Cada campo tem uma versão; a resposta de um envio só
+ * marca "salvo" (e só substitui o texto do editor) se nenhuma edição
+ * aconteceu depois daquele envio.
  */
 export function useStudentWork(source: StudentWorkSource, missionId: string) {
   const [work, setWork] = React.useState<StudentWork | null>(
     source.kind === "real" ? source.initialWork : null,
   );
-  const [saveStatus, setSaveStatus] = React.useState<WorkSaveStatus>("idle");
+  const [fieldStatus, setFieldStatus] = React.useState<Record<DraftField, WorkSaveStatus>>(IDLE_STATUS);
   const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingRef = React.useRef<
-    | { field: "production" | "reflection"; value: string }
-    | { field: "aiEvidence"; value: AiUseEvidence }
-    | null
-  >(null);
+  const pendingRef = React.useRef<PendingDraft | null>(null);
+  // Versão da edição local por campo × última versão confirmada pelo servidor.
+  const versionRef = React.useRef<Record<DraftField, number>>({ production: 0, reflection: 0, aiEvidence: 0 });
+  const confirmedRef = React.useRef<Record<DraftField, number>>({ production: 0, reflection: 0, aiEvidence: 0 });
+  const queueRef = React.useRef<Promise<void>>(Promise.resolve());
+
+  const setStatus = React.useCallback((field: DraftField, status: WorkSaveStatus) => {
+    setFieldStatus((current) => (current[field] === status ? current : { ...current, [field]: status }));
+  }, []);
 
   React.useEffect(() => {
     if (source.kind === "real") {
@@ -65,24 +95,77 @@ export function useStudentWork(source: StudentWorkSource, missionId: string) {
     setWork(source.scope ? loadStudentWork(source.scope, missionId) : emptyStudentWork(missionId));
   }, [source, missionId]);
 
-  const persistReal = React.useCallback(async (action: () => Promise<StudentWork>) => {
-    setSaveStatus("saving");
-    try {
-      const result = await action();
-      setWork(result);
-      setSaveStatus("saved");
-    } catch {
-      setSaveStatus("error");
-    }
+  /** Resultado do servidor sem apagar texto local que ainda não foi confirmado. */
+  const applyServerWork = React.useCallback((result: StudentWork) => {
+    setWork((current) => {
+      if (!current) return result;
+      const merged: StudentWork = { ...result };
+      for (const field of DRAFT_FIELDS) {
+        if (versionRef.current[field] !== confirmedRef.current[field]) {
+          Object.assign(merged, { [field]: current[field] });
+        }
+      }
+      return merged;
+    });
   }, []);
+
+  /** Coloca uma operação na fila única de gravações e devolve sua conclusão. */
+  const enqueue = React.useCallback((task: () => Promise<void>) => {
+    const next = queueRef.current.then(task, task);
+    queueRef.current = next.catch(() => {});
+    return next;
+  }, []);
+
+  const persistReal = React.useCallback(
+    (action: () => Promise<StudentWork>) =>
+      enqueue(async () => {
+        try {
+          applyServerWork(await action());
+        } catch {
+          // Transições (iniciar/entregar/registrar) mantêm o comportamento
+          // anterior: o estado otimista fica; nada é apagado do editor.
+        }
+      }),
+    [enqueue, applyServerWork],
+  );
+
+  const saveDraft = React.useCallback(
+    (draft: PendingDraft) =>
+      enqueue(async () => {
+        const version = versionRef.current[draft.field];
+        setStatus(draft.field, "saving");
+        try {
+          const result =
+            draft.field === "aiEvidence"
+              ? await saveAiEvidenceDraftAction(missionId, draft.value)
+              : draft.field === "production"
+                ? await saveProductionDraftAction(missionId, draft.value)
+                : await saveReflectionDraftAction(missionId, draft.value);
+          const latest = versionRef.current[draft.field] === version;
+          if (latest) confirmedRef.current[draft.field] = version;
+          applyServerWork(result);
+          // Houve edição depois deste envio: a versão nova ainda não foi
+          // confirmada — continua pendente até a própria gravação dela.
+          setStatus(draft.field, latest ? "saved" : "pending");
+        } catch {
+          if (versionRef.current[draft.field] === version) {
+            // Nada mais novo: guarda para reenviar no próximo blur/edição.
+            if (!pendingRef.current || pendingRef.current.field === draft.field) pendingRef.current = draft;
+            setStatus(draft.field, "error");
+          } else {
+            setStatus(draft.field, "pending");
+          }
+        }
+      }),
+    [enqueue, applyServerWork, missionId, setStatus],
+  );
 
   /**
    * Envia o rascunho pendente AGORA (chamado no blur das textareas e antes
    * de qualquer transição discreta — entregar/reabrir/registrar). Devolve
-   * a promessa: quem chama entregar/registrar precisa aguardá-la antes de
-   * disparar a própria ação, senão as duas gravações correm em paralelo e
-   * a que perder a corrida pode sobrescrever o texto com uma versão velha
-   * (exatamente o "perder trabalho do aluno" que a Sprint pede para evitar).
+   * a promessa da fila: quem chama entregar/registrar precisa aguardá-la
+   * antes de disparar a própria ação, senão uma versão velha do texto
+   * poderia chegar ao banco depois da nova.
    */
   const flushPendingDraft = React.useCallback(async () => {
     if (debounceRef.current) {
@@ -91,15 +174,9 @@ export function useStudentWork(source: StudentWorkSource, missionId: string) {
     }
     const pending = pendingRef.current;
     pendingRef.current = null;
-    if (!pending) return;
-    await persistReal(() =>
-      pending.field === "aiEvidence"
-        ? saveAiEvidenceDraftAction(missionId, pending.value)
-        : pending.field === "production"
-          ? saveProductionDraftAction(missionId, pending.value)
-          : saveReflectionDraftAction(missionId, pending.value),
-    );
-  }, [missionId, persistReal]);
+    if (pending) await saveDraft(pending);
+    else await queueRef.current;
+  }, [saveDraft]);
 
   // Envia o rascunho pendente ao desmontar (ex.: navegação entre etapas
   // sem esperar o debounce) — melhor esforço, sem bloquear a saída.
@@ -110,29 +187,21 @@ export function useStudentWork(source: StudentWorkSource, missionId: string) {
   }, [flushPendingDraft]);
 
   const scheduleDraftSave = React.useCallback(
-    (
-      pending:
-        | { field: "production" | "reflection"; value: string }
-        | { field: "aiEvidence"; value: AiUseEvidence },
-    ) => {
+    (pending: PendingDraft) => {
       // Um rascunho de OUTRO campo ainda pendente sai antes (sem esperar o
       // debounce), para nunca ser descartado pela troca de campo.
       const previous = pendingRef.current;
       if (previous && previous.field !== pending.field) {
         pendingRef.current = null;
-        void persistReal(() =>
-          previous.field === "aiEvidence"
-            ? saveAiEvidenceDraftAction(missionId, previous.value)
-            : previous.field === "production"
-              ? saveProductionDraftAction(missionId, previous.value)
-              : saveReflectionDraftAction(missionId, previous.value),
-        );
+        void saveDraft(previous);
       }
+      versionRef.current[pending.field] += 1;
+      setStatus(pending.field, "pending");
       pendingRef.current = pending;
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(flushPendingDraft, DRAFT_DEBOUNCE_MS);
     },
-    [flushPendingDraft, missionId, persistReal],
+    [flushPendingDraft, saveDraft, setStatus],
   );
 
   const update = React.useCallback(
@@ -185,11 +254,16 @@ export function useStudentWork(source: StudentWorkSource, missionId: string) {
     [source, missionId, persistReal, flushPendingDraft, scheduleDraftSave],
   );
 
+  const saveStatusOf = React.useCallback(
+    (field: DraftField): WorkSaveStatus => (source.kind === "real" ? fieldStatus[field] : "idle"),
+    [source.kind, fieldStatus],
+  );
+
   return {
     work,
     update,
     flush: flushPendingDraft,
-    saveStatus: source.kind === "real" ? saveStatus : "idle",
+    saveStatusOf,
     delivered: work ? isProductionDelivered(work) : false,
     recorded: work ? isReflectionRecorded(work) : false,
     completed: work ? isMissionCompleted(work) : false,

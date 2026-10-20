@@ -10,6 +10,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+import type { WorkSaveStatus } from "./use-student-work";
+
 /**
  * Cartão de reflexão do Diário do Auditor — mesma regra de sempre
  * (só habilita depois da produção entregue; registro é definitivo até
@@ -20,6 +22,8 @@ export function ReflectionCard({
   value,
   onChange,
   onBlur,
+  saveStatus,
+  saveStatusLabel,
   recorded,
   delivered,
   recordedAt,
@@ -30,6 +34,9 @@ export function ReflectionCard({
   value: string;
   onChange: (value: string) => void;
   onBlur?: () => void;
+  /** Estado do salvamento automático do texto (só confirmado pelo servidor). */
+  saveStatus: WorkSaveStatus;
+  saveStatusLabel: string;
   recorded: boolean;
   delivered: boolean;
   recordedAt: string | null;
@@ -83,11 +90,15 @@ export function ReflectionCard({
               Registrar reflexão
             </Button>
           )}
-          <span className="text-xs text-muted-foreground">
+          <span
+            role="status"
+            aria-live="polite"
+            className={`text-xs ${!recorded && delivered && saveStatus === "error" ? "text-destructive" : "text-muted-foreground"}`}
+          >
             {recorded
               ? "Sua reflexão fica guardada no Diário do Auditor."
               : delivered
-                ? "O texto é salvo automaticamente enquanto você escreve."
+                ? saveStatusLabel
                 : "Entregue sua produção antes de registrar a reflexão."}
           </span>
         </div>
