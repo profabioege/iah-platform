@@ -33,6 +33,18 @@
  *                     senhas trocadas no preparo) e, para conferir a
  *                     integridade, NEXT_PUBLIC_SUPABASE_URL +
  *                     SUPABASE_SERVICE_ROLE_KEY + --confirm-project.
+ *   Controles do gerador (pilot-gerador-controles.mjs):
+ *   --max-rps=<n>     teto global de requisições/s de TODO o gerador (balde
+ *                     de fichas); 0 ou ausente = sem teto (o relatório diz).
+ *   --rps-burst=<n>   rajada do balde (padrão 1): até n saem juntas; em T s,
+ *                     no máximo n + rps×T. Diferente de --peak-submitters
+ *                     (alunos enviando) e das requisições em voo (medidas).
+ *   --timeout-ms=<n>  limite por requisição, inclusive o corpo (padrão 30000).
+ *   --max-duration-s=<n>  duração máxima da rodada (padrão: sem limite).
+ *   Parada: o 1º erro inesperado (429, 5xx fora dos controles negativos,
+ *   timeout, erro de rede, falha registrada no fluxo), o operador (Ctrl+C)
+ *   ou a duração máxima impedem NOVAS requisições; o relatório sai parcial,
+ *   com motivo, amostras e o que estava em voo, e nunca aprovado.
  *   --somente-isolamento-turmas  com --modo=hospedado, roda só o isolamento
  *                     entre a turma e a turma extra sobre o trabalho já
  *                     gravado por uma rodada completa (sem escrever nele).
@@ -51,6 +63,15 @@ import { createHash } from "node:crypto";
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 
 import { SessaoHttp, acaoRecusada, valorDaAcao } from "../tests/e2e/support/http-client.mjs";
+import {
+  PREFIXO_PARADA,
+  comoRecusaEsperada,
+  criarControle,
+  criarLimitador,
+  criarTransporte,
+  medirComEspera,
+  relatorioInterrompido,
+} from "./pilot-gerador-controles.mjs";
 
 const LIMITES = {
   errosDeEscrita: 0,
@@ -82,27 +103,46 @@ const SAIDA = arg("out");
 // Só o isolamento entre turmas, sobre o trabalho já gravado por uma rodada
 // completa anterior: não escreve produção, reflexão nem devolutiva.
 const SOMENTE_ISOLAMENTO = process.argv.includes("--somente-isolamento-turmas");
+// Controles do gerador (pilot-gerador-controles.mjs). Sem `--max-rps` não há
+// teto de requisições por segundo; o relatório diz isso explicitamente.
+const MAX_RPS = Number(arg("max-rps", "0"));
+const RAJADA_RPS = Number(arg("rps-burst", "1"));
+const TIMEOUT_MS = Number(arg("timeout-ms", "30000"));
+const DURACAO_MAX_S = Number(arg("max-duration-s", "0"));
 
 // ------------------------------------------------------------ instrumentos
-let emVoo = 0;
-let picoEmVoo = 0;
 let enviando = 0;
 let picoEnviando = 0;
 const amostrasEmVoo = [];
+let faseAtual = "preparo";
+
+const controle = criarControle({ duracaoMaximaMs: DURACAO_MAX_S * 1000 });
+const limitador = criarLimitador({ rps: MAX_RPS, rajada: RAJADA_RPS });
+const transporte = criarTransporte({
+  controle,
+  limitador,
+  timeoutMs: TIMEOUT_MS,
+  aoEsperar: (ms) => metricas.esperaLimitador.push(ms),
+  faseAtual: () => faseAtual,
+});
 
 class SessaoMedida extends SessaoHttp {
   async requisitar(caminho, options = {}) {
-    emVoo += 1;
-    picoEmVoo = Math.max(picoEmVoo, emVoo);
     // Navegadores mandam Origin em todo POST; o Next confere Origin × Host
     // nas Server Actions. Mandar aqui deixa o ensaio igual ao uso real.
     const comOrigem =
       options.method === "POST" ? { ...options, headers: { ...(options.headers ?? {}), origin: this.baseUrl } } : options;
-    try {
-      return await super.requisitar(caminho, comOrigem);
-    } finally {
-      emVoo -= 1;
-    }
+    const resposta = await transporte(
+      `${this.baseUrl}${caminho}`,
+      {
+        ...comOrigem,
+        redirect: "manual",
+        headers: { ...(comOrigem.headers ?? {}), ...(this.cookies.size ? { cookie: this.cabecalhoCookie() } : {}) },
+      },
+      { caminho, sessao: this.rotulo, acao: comOrigem.headers?.["next-action"] ? "Server Action" : null },
+    );
+    this.guardarCookies(resposta);
+    return resposta;
   }
 }
 
@@ -117,24 +157,54 @@ const metricas = {
   devolutiva: [],
   esperaGerador: [],
   tempoPercebidoEnvio: [],
+  // Espera imposta pelo limitador de req/s (por requisição) e tempo completo
+  // de cada operação medida (rede + servidor + esperas do gerador).
+  esperaLimitador: [],
+  tempoCompletoOperacao: [],
 };
 const erros = [];
 const verificacoes = [];
 
+/**
+ * Erro INESPERADO: registra e para a rodada (nenhuma requisição nova começa).
+ * Uma requisição recusada só porque o gerador já parou não é erro novo.
+ * Recusas ESPERADAS (controles negativos) não passam por aqui.
+ */
 function registrarErro(quem, etapa, detalhe) {
+  if (String(detalhe).startsWith(PREFIXO_PARADA)) return;
   erros.push({ quem, etapa, detalhe: String(detalhe).slice(0, 160) });
+  controle.parar("erro inesperado", `${quem} · ${etapa}: ${detalhe}`, faseAtual);
 }
 function verificar(nome, ok, detalhe = "") {
   verificacoes.push({ verificacao: nome, resultado: ok ? "ok" : "FALHOU", detalhe });
 }
 
+/**
+ * A amostra de cada etapa (julgada pelos LIMITES) exclui a espera que o
+ * próprio gerador impôs (limitador de req/s); o tempo completo vai à parte.
+ */
 async function medir(lista, fn) {
-  const t = performance.now();
+  let medicao;
   try {
-    return await fn();
+    const r = await medirComEspera(fn);
+    medicao = r;
+    return r.valor;
+  } catch (e) {
+    // Requisição que nem saiu porque o gerador já tinha parado não é amostra.
+    medicao = String(e?.message ?? "").startsWith(PREFIXO_PARADA) ? null : e?.medicao;
+    throw e;
   } finally {
-    lista.push(performance.now() - t);
+    if (medicao) {
+      lista.push(medicao.totalMs - medicao.esperaMs);
+      metricas.tempoCompletoOperacao.push(medicao.totalMs);
+    }
   }
+}
+
+/** Interrompe o fluxo principal assim que o gerador parou. */
+class InterrupcaoDaRodada extends Error {}
+function checarParada() {
+  if (controle.parada) throw new InterrupcaoDaRodada(controle.parada.motivo);
 }
 
 function percentil(valores, p) {
@@ -240,7 +310,8 @@ async function descobrirAcoesRemotas(baseUrl, sessao, caminhos) {
     for (const m of html.matchAll(/\/_next\/static\/chunks\/[^"']+\.js/g)) chunks.add(m[0]);
   }
   for (const c of chunks) {
-    const r = await fetch(`${baseUrl}${c}`);
+    // Pelo transporte do gerador: o arquivo estático também conta no teto de req/s.
+    const r = await transporte(`${baseUrl}${c}`, { method: "GET" }, { caminho: c, sessao: "descoberta de ações" });
     const js = await r.text();
     const re = /createServerReference\)?\("([0-9a-f]{40,})"[^)]*?"([A-Za-z0-9_]+)"\)/g;
     let m;
@@ -288,7 +359,9 @@ async function verificarIsolamentoEntreTurmas({ amb, sProf, actions, professorEx
 
   // Professor da 1ª A tenta atribuir à turma extra: o retorno e o banco decidem.
   const antes = await atribuicoesNaExtra();
-  const tentativa = valorDaAcao((await sProf.acao(TRILHA, actions.assignAiMissionAction, [{ classroomId: amb.turmaExtra, missionId: MISSAO }])).texto);
+  const tentativa = valorDaAcao(
+    (await comoRecusaEsperada(() => sProf.acao(TRILHA, actions.assignAiMissionAction, [{ classroomId: amb.turmaExtra, missionId: MISSAO }]))).texto,
+  );
   const depois = await atribuicoesNaExtra();
   verificar(
     "professor da 1ª A NÃO atribui à turma extra (turma existente)",
@@ -439,8 +512,24 @@ async function prepararConta(amb, conta) {
 async function main() {
   const amb = MODO === "hospedado" ? await prepararHospedado() : await prepararLocal();
   const inicioGeral = new Date().toISOString();
+  // Operador: o 1º Ctrl+C para os NOVOS envios e gera o relatório parcial; o 2º sai na hora.
+  const aoInterromper = () => {
+    if (controle.parar("intervenção do operador (Ctrl+C)", "", faseAtual)) {
+      console.log("\n■ Parada pedida pelo operador: nenhuma requisição nova; aguardando as que estão em voo...");
+    } else {
+      console.log("\n■ Segunda interrupção: saindo sem relatório.");
+      process.exit(130);
+    }
+  };
+  process.on("SIGINT", aoInterromper);
+  const relogioDuracao =
+    DURACAO_MAX_S > 0 ? setTimeout(() => controle.parar("duração máxima da rodada", `${DURACAO_MAX_S} s`, faseAtual), DURACAO_MAX_S * 1000) : null;
+  relogioDuracao?.unref?.();
+  console.log(`Gerador: limitador ${limitador.descricao}; timeout ${TIMEOUT_MS} ms por requisição; duração máxima ${DURACAO_MAX_S > 0 ? `${DURACAO_MAX_S} s` : "sem limite"}.`);
+  const parcial = { alunos: [] };
   try {
     const alunos = amb.contas.filter((c) => c.perfil === "aluno").slice(0, ALUNOS);
+    parcial.alunos = alunos;
     const professor = amb.contas.find((c) => c.perfil === "professor");
     const gestor = amb.contas.find((c) => c.perfil === "gestor");
     const professorExtra = amb.contas.find((c) => c.perfil === "professor-extra");
@@ -457,8 +546,11 @@ async function main() {
       } catch (e) {
         registrarErro(c.email, "preparo", e instanceof Error ? e.message : e);
       }
+      if (controle.parada) break;
     }
+    checarParada();
 
+    faseAtual = "leitura das ações e atribuição";
     const sProf = new SessaoMedida(amb.baseUrl, "professor");
     const eProf = await sProf.entrar(professor.email, senhas.get(professor.email));
     if (!eProf.ok) throw new Error("Professor sintético não entrou.");
@@ -476,6 +568,7 @@ async function main() {
       const estadoAntes = await estadoDaTurma(amb);
       await verificarIsolamentoEntreTurmas({ amb, sProf, actions, professorExtra, senhas, alunos });
       const estadoDepois = await estadoDaTurma(amb);
+      checarParada();
       verificar(
         "trabalho da 1ª A preservado nesta rodada",
         estadoAntes !== null && JSON.stringify(estadoAntes) === JSON.stringify(estadoDepois),
@@ -511,7 +604,9 @@ async function main() {
       { classroomId: amb.classroomId, missionId: MISSAO },
     ]);
     verificar("professor atribui a Missão 01 à 1ª A", atrib?.ok === true);
-    const extraAtrib = await sProf.acao(TRILHA, actions.assignAiMissionAction, [{ classroomId: amb.turmaExtra, missionId: MISSAO }]);
+    const extraAtrib = await comoRecusaEsperada(() =>
+      sProf.acao(TRILHA, actions.assignAiMissionAction, [{ classroomId: amb.turmaExtra, missionId: MISSAO }]),
+    );
     verificar("professor da 1ª A NÃO atribui à turma sintética extra", valorDaAcao(extraAtrib.texto)?.ok !== true);
 
     // Ações do aluno: lidas com a sessão de um aluno, na página da missão —
@@ -525,13 +620,15 @@ async function main() {
     }
     exigir(["startMissionAction", "saveProductionDraftAction", "saveAiEvidenceDraftAction", "setProductionDeliveredAction", "saveReflectionDraftAction", "setReflectionRecordedAction"]);
 
+    checarParada();
     const inicio = performance.now();
     // ---- Fase 1: entrada distribuída e leitura da missão (todos os alunos).
+    faseAtual = "fase 1 (entrada)";
     console.log("Fase 1: entrada e leitura da missão...");
     const sessoes = new Map();
     await Promise.all(
       alunos.map(async (c, i) => {
-        await new Promise((r) => setTimeout(r, (i / alunos.length) * JANELA_S * 1000));
+        if (!(await controle.pausa((i / alunos.length) * JANELA_S * 1000))) return;
         const s = new SessaoMedida(amb.baseUrl, c.email);
         const e = await medir(metricas.login, () => s.entrar(c.email, senhas.get(c.email) ?? "")).catch((err) => ({ ok: false, erro: err.message }));
         if (!e.ok) return registrarErro(c.email, "login", e.erro ?? "sem sessão");
@@ -541,31 +638,33 @@ async function main() {
         if (html && !html.includes("EM13CHS101")) registrarErro(c.email, "leitura da missão", "missão sem os dois eixos");
       }),
     );
+    checarParada();
 
     // ---- Professor e gestor acompanham enquanto os alunos enviam.
     const sGest = new SessaoMedida(amb.baseUrl, "gestor");
     await sGest.entrar(gestor.email, senhas.get(gestor.email));
     let envioTerminou = false;
     const acompanhamento = (async () => {
-      while (!envioTerminou) {
+      while (!envioTerminou && !controle.parada) {
         await ler(sProf, "professor", "acompanhamento", metricas.leituraProfessor, `/professor/turmas?turma=${encodeURIComponent(amb.classroomId)}`);
         await ler(sProf, "professor", "painel da trilha", metricas.leituraProfessor, TRILHA);
         await ler(sGest, "gestor", "painel do gestor", metricas.leituraGestor, "/gestor");
-        amostrasEmVoo.push(emVoo);
-        await new Promise((r) => setTimeout(r, 2000));
+        amostrasEmVoo.push(controle.quantidadeEmAndamento);
+        await controle.pausa(2000);
       }
     })();
 
     // ---- Fase 1b: digitação com salvamento automático (opcional).
     if (DIGITACAO_MIN > 0) {
+      faseAtual = "fase 1b (digitação)";
       console.log(`Fase 1b: ${DIGITACAO_MIN} min de digitação com salvamento automático...`);
       const fimDigitacao = performance.now() + DIGITACAO_MIN * 60_000;
       await Promise.all(
         [...sessoes.entries()].map(async ([email, s]) => {
           await chamar(s, email, "iniciar", metricas.gravacao, PAGINA, actions.startMissionAction, [MISSAO]);
           let n = 0;
-          while (performance.now() < fimDigitacao) {
-            await new Promise((r) => setTimeout(r, 8000 + Math.random() * 4000));
+          while (performance.now() < fimDigitacao && !controle.parada) {
+            if (!(await controle.pausa(8000 + Math.random() * 4000))) break;
             n += 1;
             await chamar(s, email, "salvamento automático", metricas.autosave, PAGINA, actions.saveProductionDraftAction, [
               MISSAO,
@@ -577,11 +676,13 @@ async function main() {
     }
 
     // ---- Fase 2: envio com no máximo PICO alunos ao mesmo tempo (gerador).
+    faseAtual = "fase 2 (envio)";
     console.log(`Fase 2: envio (≤ ${PICO} alunos ao mesmo tempo)...`);
     const fila = [...sessoes.entries()];
     const inicioEnvio = performance.now();
     async function trabalhador() {
       for (;;) {
+        if (controle.parada) return; // nenhum aluno novo começa a enviar depois da parada
         const proximo = fila.shift();
         if (!proximo) return;
         const [email, s] = proximo;
@@ -611,8 +712,10 @@ async function main() {
     await Promise.all(Array.from({ length: Math.min(PICO, sessoes.size) }, trabalhador));
     envioTerminou = true;
     await acompanhamento;
+    checarParada();
 
     // ---- Professor devolve orientação a alguns alunos.
+    faseAtual = "fase 3 (devolutivas)";
     console.log("Fase 3: devolutivas do professor...");
     // Eixos da Missão 01 (src/content/missions/01-a-fabrica-de-noticias.ts);
     // o servidor confere contra o arquivo da missão e recusa se divergirem.
@@ -645,6 +748,8 @@ async function main() {
     const duracaoS = Math.round((performance.now() - inicio) / 1000);
 
     // ---- Persistência em nova sessão + isolamento entre alunos.
+    checarParada();
+    faseAtual = "verificações";
     console.log("Verificações: nova sessão, isolamento e computador compartilhado...");
     const [a1, a2] = alunos;
     const nova = new SessaoMedida(amb.baseUrl, a1.email);
@@ -658,20 +763,22 @@ async function main() {
     // não pode executar — o banco é quem confirma, logo abaixo.
     const colega = alunos[Math.min(DEVOLUTIVAS, alunos.length - 1)];
     const idColega = idsAlunos.get(colega.email) ?? colega.referencia;
-    const revisaoAluno = await nova.acao(PAGINA, actions.reviewSubmissionAction, [
-      {
-        classroomId: amb.classroomId,
-        studentId: idColega,
-        missionId: MISSAO,
-        grade: "Tentativa do aluno",
-        observedCriteria: [],
-        feedback: "Tentativa indevida (ensaio).",
-        axes: {
-          discipline: { level: "atingido", observedCriteria: [], note: "", skillCode: axes.discipline.skill.code },
-          ai: { level: "atingido", observedCriteria: [], note: "", competencyIds: [...axes.ai.competencyIds] },
+    const revisaoAluno = await comoRecusaEsperada(() =>
+      nova.acao(PAGINA, actions.reviewSubmissionAction, [
+        {
+          classroomId: amb.classroomId,
+          studentId: idColega,
+          missionId: MISSAO,
+          grade: "Tentativa do aluno",
+          observedCriteria: [],
+          feedback: "Tentativa indevida (ensaio).",
+          axes: {
+            discipline: { level: "atingido", observedCriteria: [], note: "", skillCode: axes.discipline.skill.code },
+            ai: { level: "atingido", observedCriteria: [], note: "", competencyIds: [...axes.ai.competencyIds] },
+          },
         },
-      },
-    ]);
+      ]),
+    );
     const executou = Boolean(valorDaAcao(revisaoAluno.texto)?.review);
     let gravouRevisaoIndevida = false;
     if (amb.admin) {
@@ -689,13 +796,14 @@ async function main() {
     );
     // Computador compartilhado: sair e entrar com outro aluno no mesmo "navegador".
     await nova.sair();
-    const depoisDeSair = await nova.acao(PAGINA, actions.startMissionAction, [MISSAO]);
+    const depoisDeSair = await comoRecusaEsperada(() => nova.acao(PAGINA, actions.startMissionAction, [MISSAO]));
     verificar("depois de sair, a sessão anterior não acessa nada", acaoRecusada(depoisDeSair) || !valorDaAcao(depoisDeSair.texto)?.production);
     await nova.entrar(a2.email, senhas.get(a2.email));
     const t2 = await chamar(nova, a2.email, "troca de aluno", [], PAGINA, actions.startMissionAction, [MISSAO]);
     verificar("troca de aluno no mesmo navegador mostra só o trabalho do novo aluno", t2?.production === `Produção final ${marcador(a2.email)}`);
     await verificarIsolamentoEntreTurmas({ amb, sProf, actions, professorExtra, senhas, alunos });
 
+    checarParada();
     // ---- Integridade: decide o banco, não a tela.
     let integridade = null;
     if (amb.admin) {
@@ -718,18 +826,7 @@ async function main() {
     }
 
     // ---- Relatório.
-    const etapas = [
-      resumo("login", metricas.login),
-      resumo("leitura da missão", metricas.leituraMissao),
-      resumo("painel do aluno", metricas.leituraPainelAluno),
-      resumo("gravação (por chamada)", metricas.gravacao),
-      resumo("salvamento automático (digitação)", metricas.autosave),
-      resumo("leitura do professor", metricas.leituraProfessor),
-      resumo("painel do gestor", metricas.leituraGestor),
-      resumo("devolutiva do professor", metricas.devolutiva),
-      resumo("espera no gerador (fila da simulação)", metricas.esperaGerador),
-      resumo("tempo percebido de envio por aluno", metricas.tempoPercebidoEnvio),
-    ];
+    const etapas = montarEtapas();
     const reprov = [];
     if (erros.length > LIMITES.errosDeEscrita) reprov.push(`${erros.length} erro(s)`);
     const cmp = [
@@ -756,12 +853,10 @@ async function main() {
     const resultado = {
       modo: amb.rotulo,
       inicio: inicioGeral,
-      cenario: { digitacaoMin: DIGITACAO_MIN, alunos: ALUNOS, picoEnviandoConfigurado: PICO, janelaEntradaS: JANELA_S, rascunhosPorAluno: RASCUNHOS, devolutivas: DEVOLUTIVAS },
-      concorrencia: {
-        picoAlunosEnviando: picoEnviando,
-        picoRequisicoesHttpEmVoo: picoEmVoo,
-        mediaRequisicoesEmVooAmostrada: amostrasEmVoo.length ? Math.round((amostrasEmVoo.reduce((a, b) => a + b, 0) / amostrasEmVoo.length) * 10) / 10 : 0,
-      },
+      cenario: cenarioDaRodada(),
+      geradorControles: controlesDoGerador(),
+      concorrencia: concorrenciaDaRodada(),
+      interrompido: false,
       duracaoS,
       etapas,
       integridade,
@@ -785,9 +880,117 @@ async function main() {
     console.log(resultado.ressalva);
     if (SAIDA) writeFileSync(SAIDA, `${JSON.stringify(resultado, null, 2)}\n`);
     if (reprov.length > 0) process.exitCode = 1;
+  } catch (e) {
+    // Rodada interrompida (erro inesperado, operador ou duração máxima): relatório
+    // PARCIAL, nunca aprovado. Outros erros (configuração) seguem para fora.
+    if (!(e instanceof InterrupcaoDaRodada) && !controle.parada) throw e;
+    if (!controle.parada) controle.parar("erro inesperado", e instanceof Error ? e.message : String(e), faseAtual);
+    await escreverRelatorioInterrompido({ amb, inicioGeral, alunos: parcial.alunos, erroFinal: e });
   } finally {
+    if (relogioDuracao) clearTimeout(relogioDuracao);
+    process.off("SIGINT", aoInterromper);
     await amb.encerrar();
   }
+}
+
+function montarEtapas() {
+  return [
+    resumo("login", metricas.login),
+    resumo("leitura da missão", metricas.leituraMissao),
+    resumo("painel do aluno", metricas.leituraPainelAluno),
+    resumo("gravação (por chamada)", metricas.gravacao),
+    resumo("salvamento automático (digitação)", metricas.autosave),
+    resumo("leitura do professor", metricas.leituraProfessor),
+    resumo("painel do gestor", metricas.leituraGestor),
+    resumo("devolutiva do professor", metricas.devolutiva),
+    resumo("espera no gerador (fila da simulação)", metricas.esperaGerador),
+    resumo("tempo percebido de envio por aluno", metricas.tempoPercebidoEnvio),
+    resumo("espera no limitador de req/s (por requisição)", metricas.esperaLimitador),
+    resumo("tempo completo por operação (com esperas do gerador)", metricas.tempoCompletoOperacao),
+  ];
+}
+
+function cenarioDaRodada() {
+  return { digitacaoMin: DIGITACAO_MIN, alunos: ALUNOS, picoEnviandoConfigurado: PICO, janelaEntradaS: JANELA_S, rascunhosPorAluno: RASCUNHOS, devolutivas: DEVOLUTIVAS };
+}
+
+/** Os três limites do gerador, separados (ver pilot-gerador-controles.mjs). */
+function controlesDoGerador() {
+  return {
+    alunosEnviandoNoMaximo: PICO,
+    limiteRequisicoesPorSegundo: MAX_RPS > 0 ? { rps: MAX_RPS, rajada: RAJADA_RPS, descricao: limitador.descricao } : "sem limite (não informado como teto)",
+    requisicoesSimultaneas: "não limitadas diretamente; medidas em concorrencia.picoRequisicoesHttpEmVoo",
+    timeoutPorRequisicaoMs: TIMEOUT_MS,
+    duracaoMaximaS: DURACAO_MAX_S > 0 ? DURACAO_MAX_S : "sem limite",
+    latenciasJulgadasSemEsperaDoGerador: true,
+  };
+}
+
+function concorrenciaDaRodada() {
+  return {
+    picoAlunosEnviando: picoEnviando,
+    picoRequisicoesHttpEmVoo: controle.picoEmAndamento,
+    mediaRequisicoesEmVooAmostrada: amostrasEmVoo.length ? Math.round((amostrasEmVoo.reduce((a, b) => a + b, 0) / amostrasEmVoo.length) * 10) / 10 : 0,
+  };
+}
+
+/** Contagem de leitura no banco (só se houver acesso administrativo); não muda nada. */
+async function integridadeParcial(amb, alunos) {
+  if (!amb.admin || alunos.length === 0) return null;
+  const { data: est } = await amb.admin.from("students").select("id").eq("institution_id", amb.institutionId).in("email", alunos.map((a) => a.email));
+  const ids = (est ?? []).map((r) => r.id);
+  if (ids.length === 0) return { alunos: 0 };
+  const contar = async (tabela, filtro) => {
+    const { count } = await filtro(amb.admin.from(tabela).select("id", { count: "exact", head: true }).eq("classroom_id", amb.classroomId).eq("mission_id", MISSAO).in("student_id", ids));
+    return count ?? 0;
+  };
+  return {
+    alunos: ids.length,
+    producoesEntregues: await contar("productions", (q) => q.not("delivered_at", "is", null)),
+    reflexoesRegistradas: await contar("reflections", (q) => q.not("recorded_at", "is", null)),
+    devolutivas: await contar("mission_reviews", (q) => q),
+  };
+}
+
+async function escreverRelatorioInterrompido({ amb, inicioGeral, alunos, erroFinal }) {
+  const p = controle.parada;
+  console.log(`\n■ Rodada INTERROMPIDA na ${p.fase ?? faseAtual}: ${p.motivo}${p.detalhe ? ` — ${p.detalhe}` : ""}`);
+  console.log(`  Em voo no instante da parada: ${p.emAndamentoNaParada.length}. Aguardando até ${Math.min(TIMEOUT_MS, 15000)} ms...`);
+  const emAndamentoAoFinal = await controle.aguardarEmAndamento(Math.min(TIMEOUT_MS, 15000));
+  let integridade = null;
+  try {
+    integridade = await integridadeParcial(amb, alunos);
+  } catch (e) {
+    integridade = { erro: e instanceof Error ? e.message : String(e) };
+  }
+  const etapas = montarEtapas();
+  const resultado = relatorioInterrompido({
+    controle,
+    emAndamentoAoFinal,
+    base: {
+      modo: amb.rotulo,
+      inicio: inicioGeral,
+      cenario: cenarioDaRodada(),
+      geradorControles: controlesDoGerador(),
+      concorrencia: concorrenciaDaRodada(),
+      etapas,
+      integridadeParcial: integridade,
+      verificacoes,
+      erros: erros.slice(0, 50),
+      totalErros: erros.length,
+      ultimoErroDoFluxo: erroFinal instanceof InterrupcaoDaRodada ? null : String(erroFinal?.message ?? erroFinal ?? "").slice(0, 200),
+      limites: LIMITES,
+      reprovacoes: [],
+      ressalva: `${RESSALVA} Rodada interrompida: os números valem só até a parada e não aprovam nada.`,
+    },
+  });
+  resultado.alcance = alcanceDaRodada(etapas, resultado.concorrencia);
+  console.table(etapas);
+  console.log("Requisições não iniciadas por causa da parada:", resultado.requisicoesNaoIniciadasPorCausaDaParada);
+  console.log("Ainda em voo ao final da espera:", emAndamentoAoFinal.length);
+  console.log(`\n✖ REPROVADO: ${resultado.reprovacoes.join("; ")}`);
+  if (SAIDA) writeFileSync(SAIDA, `${JSON.stringify(resultado, null, 2)}\n`);
+  process.exitCode = 1;
 }
 
 main().catch((e) => {

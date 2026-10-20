@@ -107,3 +107,35 @@ As gravações passam por uma fila única (a mais nova chega por último ao banc
 marca "Salvo" nem substitui no editor um texto alterado depois dele. Antes desta correção (deploy
 `dpl_5K7TWwDUFvTCG8RrHRTtPGj8BX85`), a Produção voltava ao texto inicial depois de gravar e a Reflexão não mostrava
 indicador algum.
+
+## 6. Controles do gerador (só do lado de quem gera o tráfego)
+
+`app/scripts/pilot-ensaio-1a.mjs` usa `app/scripts/pilot-gerador-controles.mjs`. Nada disso roda na aplicação.
+
+| Parâmetro | Efeito |
+|---|---|
+| `--peak-submitters=<n>` | alunos **enviando** ao mesmo tempo (fila de trabalhadores; padrão 25) |
+| `--max-rps=<n>` | teto global de **requisições por segundo** de todo o gerador (balde de fichas); ausente = sem teto, e o relatório diz isso |
+| `--rps-burst=<n>` | rajada do balde (padrão 1): até `n` saem juntas; em T s, no máximo `n + rps×T` |
+| `--timeout-ms=<n>` | limite por requisição, inclusive a leitura do corpo (padrão 30000) |
+| `--max-duration-s=<n>` | duração máxima da rodada (padrão: sem limite) |
+
+As requisições **simultâneas** (em voo) não têm teto próprio: são medidas (`concorrencia.picoRequisicoesHttpEmVoo`).
+
+**Parada automática de novos envios:** 429; 5xx fora dos controles negativos; tempo esgotado; erro de rede;
+qualquer erro registrado no fluxo; Ctrl+C do operador (o segundo Ctrl+C sai sem relatório); duração máxima.
+Recusas **esperadas** dos controles negativos (aluno avaliando colega, professor atribuindo a outra turma,
+sessão encerrada) não param a rodada. Depois da parada nenhuma requisição nova começa; as que estavam em voo
+terminam ou caem no timeout.
+
+**Relatório parcial** (`--out`): `interrompido: true`, motivo, fase, amostras até a parada, requisições em voo
+na parada e ao final, requisições não iniciadas, integridade lida no banco quando houver acesso de leitura.
+Rodada interrompida **nunca** é aprovada.
+
+**Medições:** as latências julgadas pelos limites da seção 1 excluem só a espera imposta pelo próprio gerador
+(limitador de req/s); essa espera e o tempo completo de cada operação aparecem em etapas próprias. A espera na
+fila de alunos e o tempo percebido de envio por aluno continuam como antes.
+
+**Validação:** `tests/pilot-gerador-controles.test.mjs` (unidade) e `tests/pilot-gerador-simulado.test.mjs`
+(o gerador inteiro com `fetch` simulado em `https://gerador-simulado.invalid`, sem rede e sem banco). Validam o
+gerador; não dizem nada sobre a capacidade da hospedagem.
