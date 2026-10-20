@@ -33,6 +33,9 @@
  *                     senhas trocadas no preparo) e, para conferir a
  *                     integridade, NEXT_PUBLIC_SUPABASE_URL +
  *                     SUPABASE_SERVICE_ROLE_KEY + --confirm-project.
+ *   --somente-isolamento-turmas  com --modo=hospedado, roda só o isolamento
+ *                     entre a turma e a turma extra sobre o trabalho já
+ *                     gravado por uma rodada completa (sem escrever nele).
  *
  *   node --experimental-strip-types scripts/pilot-ensaio-1a.mjs --modo=local
  *   node --experimental-strip-types scripts/pilot-ensaio-1a.mjs --modo=hospedado \
@@ -76,6 +79,9 @@ const DEVOLUTIVAS = Number(arg("reviews", "5"));
 // durante N minutos, todos ao mesmo tempo, antes do envio final.
 const DIGITACAO_MIN = Number(arg("autosave-min", "0"));
 const SAIDA = arg("out");
+// Só o isolamento entre turmas, sobre o trabalho já gravado por uma rodada
+// completa anterior: não escreve produção, reflexão nem devolutiva.
+const SOMENTE_ISOLAMENTO = process.argv.includes("--somente-isolamento-turmas");
 
 // ------------------------------------------------------------ instrumentos
 let emVoo = 0;
@@ -217,10 +223,18 @@ async function prepararLocal() {
   };
 }
 
-async function descobrirAcoesRemotas(baseUrl, sessao) {
+/**
+ * Lê os IDs das Server Actions nos chunks do build PUBLICADO (os IDs mudam
+ * a cada build). Cada página só é alcançada pelo próprio papel
+ * (src/auth.config.ts: `/missoes` só para aluno, `/professor` só para
+ * professor); com o papel errado o middleware redireciona e o chunk da
+ * página nunca é lido. Por isso a descoberta recebe a sessão e as páginas
+ * daquele papel.
+ */
+async function descobrirAcoesRemotas(baseUrl, sessao, caminhos) {
   const encontrados = new Map();
   const chunks = new Set();
-  for (const caminho of [PAGINA, TRILHA, "/professor/turmas", "/entrar/nova-senha"]) {
+  for (const caminho of caminhos) {
     const { resposta } = await sessao.navegar(caminho);
     const html = await resposta.text();
     for (const m of html.matchAll(/\/_next\/static\/chunks\/[^"']+\.js/g)) chunks.add(m[0]);
@@ -234,6 +248,117 @@ async function descobrirAcoesRemotas(baseUrl, sessao) {
   }
   return Object.fromEntries(encontrados);
 }
+
+/**
+ * Isolamento entre turmas da mesma instituição sintética (1ª A × turma
+ * extra). Os controles positivos vêm antes dos negativos — o professor
+ * extra entra e vê a PRÓPRIA turma; o professor da 1ª A vê as entregas
+ * dela — senão um teste negativo passaria com uma sessão que nem entrou.
+ * Confere o conteúdo devolvido e o banco, não só o status HTTP.
+ */
+async function verificarIsolamentoEntreTurmas({ amb, sProf, actions, professorExtra, senhas, alunos }) {
+  const paginaTurma = (id) => `/professor/turmas?turma=${encodeURIComponent(id)}`;
+  const marcadores = alunos.map((a) => marcador(a.email));
+  const atribuicoesNaExtra = async () => {
+    if (!amb.admin) return null;
+    const { count, error } = await amb.admin
+      .from("mission_assignments")
+      .select("id", { count: "exact", head: true })
+      .eq("classroom_id", amb.turmaExtra);
+    return error ? null : (count ?? 0);
+  };
+
+  // Estrutura no banco: turma extra na mesma instituição; professor extra só nela.
+  let nomeTurmaExtra = null;
+  if (amb.admin) {
+    const { data: turma } = await amb.admin.from("classrooms").select("institution_id, name").eq("id", amb.turmaExtra).maybeSingle();
+    nomeTurmaExtra = turma?.name ?? null;
+    verificar("turma extra existe na mesma instituição sintética", turma?.institution_id === amb.institutionId, turma ? "" : "turma ausente no banco");
+    const { data: prof } = professorExtra
+      ? await amb.admin.from("teachers").select("id").eq("institution_id", amb.institutionId).eq("email", professorExtra.email).maybeSingle()
+      : { data: null };
+    const { data: vinculos } = prof ? await amb.admin.from("classroom_teachers").select("classroom_id").eq("teacher_id", prof.id) : { data: [] };
+    const turmas = (vinculos ?? []).map((v) => v.classroom_id);
+    verificar(
+      "professor extra vinculado somente à turma extra",
+      turmas.length === 1 && turmas[0] === amb.turmaExtra,
+      prof ? `${turmas.length} vínculo(s)` : "professor extra ausente no banco",
+    );
+  }
+
+  // Professor da 1ª A tenta atribuir à turma extra: o retorno e o banco decidem.
+  const antes = await atribuicoesNaExtra();
+  const tentativa = valorDaAcao((await sProf.acao(TRILHA, actions.assignAiMissionAction, [{ classroomId: amb.turmaExtra, missionId: MISSAO }])).texto);
+  const depois = await atribuicoesNaExtra();
+  verificar(
+    "professor da 1ª A NÃO atribui à turma extra (turma existente)",
+    tentativa?.ok !== true && depois !== null && depois === antes,
+    `retorno ok=${tentativa?.ok ?? "vazio"}${tentativa?.error ? ` (${String(tentativa.error).slice(0, 80)})` : ""}; atribuições na turma extra ${antes}→${depois} (banco)`,
+  );
+
+  // Controle positivo: os marcadores da 1ª A aparecem para o professor dela.
+  const htmlProf = await (await sProf.navegar(paginaTurma(amb.classroomId))).resposta.text();
+  const controle = marcadores.every((m) => htmlProf.includes(m));
+  verificar("controle: professor da 1ª A vê as entregas da 1ª A", controle, `${marcadores.filter((m) => htmlProf.includes(m)).length} de ${marcadores.length} marcadores`);
+
+  if (!professorExtra || !senhas.get(professorExtra.email)) {
+    verificar("professor extra autentica", false, professorExtra ? "senha não preparada (ver erros de preparo)" : "conta professor-extra ausente");
+    verificar("professor extra NÃO vê as entregas da 1ª A", false, "não executado: professor extra sem sessão");
+    return;
+  }
+  const sx = new SessaoMedida(amb.baseUrl, "professor-extra");
+  const ex = await sx.entrar(professorExtra.email, senhas.get(professorExtra.email));
+  verificar("professor extra autentica", ex.ok === true, ex.ok ? "" : `status ${ex.status}`);
+  if (!ex.ok) {
+    verificar("professor extra NÃO vê as entregas da 1ª A", false, "não executado: professor extra sem sessão");
+    return;
+  }
+  const propria = await sx.navegar(paginaTurma(amb.turmaExtra));
+  const htmlPropria = await propria.resposta.text();
+  const vePropria =
+    propria.resposta.status === 200 && propria.caminhoFinal.startsWith("/professor/turmas") && Boolean(nomeTurmaExtra) && htmlPropria.includes(nomeTurmaExtra);
+  verificar("professor extra acessa a própria turma", vePropria, `HTTP ${propria.resposta.status} → ${propria.caminhoFinal}${vePropria ? "" : "; nome da turma extra ausente na resposta"}`);
+
+  const alheia = await sx.navegar(paginaTurma(amb.classroomId));
+  const htmlAlheia = await alheia.resposta.text();
+  const vazados = marcadores.filter((m) => htmlAlheia.includes(m)).length;
+  verificar(
+    "professor extra NÃO vê as entregas da 1ª A",
+    controle && vePropria && vazados === 0,
+    `HTTP ${alheia.resposta.status} → ${alheia.caminhoFinal}; ${vazados} de ${marcadores.length} marcadores da 1ª A na resposta${controle && vePropria ? "" : "; inconclusivo sem os controles positivos"}`,
+  );
+  await sx.sair();
+}
+
+/** Contagens da 1ª A que uma rodada só de isolamento não pode alterar. */
+async function estadoDaTurma(amb) {
+  if (!amb.admin) return null;
+  const contar = async (tabela, filtro = (q) => q) => {
+    const { count } = await filtro(amb.admin.from(tabela).select("id", { count: "exact", head: true }).eq("classroom_id", amb.classroomId));
+    return count ?? 0;
+  };
+  return {
+    atribuicoes: await contar("mission_assignments"),
+    producoesEntregues: await contar("productions", (q) => q.not("delivered_at", "is", null)),
+    reflexoesRegistradas: await contar("reflections", (q) => q.not("recorded_at", "is", null)),
+    devolutivas: await contar("mission_reviews"),
+  };
+}
+
+/** O que a rodada mede e o que NÃO mede — vai explícito no relatório. */
+function alcanceDaRodada(etapas, concorrencia) {
+  const p95 = (nome) => etapas?.find((e) => e.etapa === nome)?.p95 ?? null;
+  return {
+    alunosSinteticos: ALUNOS,
+    concorrenciaObservada: concorrencia ?? "não medida nesta rodada",
+    esperaNoGeradorP95Ms: p95("espera no gerador (fila da simulação)") ?? "não medida nesta rodada",
+    tempoCompletoDeEnvioP95Ms: p95("tempo percebido de envio por aluno") ?? "não medido nesta rodada",
+    salvamentoAutomaticoPorDigitacao: DIGITACAO_MIN > 0 ? `verificado (${DIGITACAO_MIN} min)` : "NÃO verificado (--autosave-min=0)",
+  };
+}
+
+const RESSALVA =
+  "Resultado de UM ensaio com contas sintéticas. Não comprova capacidade para os 32 alunos da 1ª série A nem eficácia pedagógica.";
 
 async function prepararHospedado() {
   const baseUrl = arg("base-url");
@@ -337,9 +462,48 @@ async function main() {
     const sProf = new SessaoMedida(amb.baseUrl, "professor");
     const eProf = await sProf.entrar(professor.email, senhas.get(professor.email));
     if (!eProf.ok) throw new Error("Professor sintético não entrou.");
-    const actions = amb.actions ?? (await descobrirAcoesRemotas(amb.baseUrl, sProf));
-    for (const nome of ["assignAiMissionAction", "startMissionAction", "saveProductionDraftAction", "saveAiEvidenceDraftAction", "setProductionDeliveredAction", "saveReflectionDraftAction", "setReflectionRecordedAction", "reviewSubmissionAction"]) {
-      if (!actions[nome]) throw new Error(`Server Action ${nome} não encontrada no build.`);
+    // Ações do professor: lidas com a sessão do professor, nas páginas dele.
+    const actions = amb.actions ?? (await descobrirAcoesRemotas(amb.baseUrl, sProf, [TRILHA, "/professor/turmas"]));
+    const exigir = (nomes) => {
+      for (const nome of nomes) {
+        if (!actions[nome]) throw new Error(`Server Action ${nome} não encontrada no build.`);
+      }
+    };
+    exigir(["assignAiMissionAction", "reviewSubmissionAction"]);
+
+    if (SOMENTE_ISOLAMENTO) {
+      console.log("Rodada só de isolamento entre turmas (sem escrita no trabalho da 1ª A)...");
+      const estadoAntes = await estadoDaTurma(amb);
+      await verificarIsolamentoEntreTurmas({ amb, sProf, actions, professorExtra, senhas, alunos });
+      const estadoDepois = await estadoDaTurma(amb);
+      verificar(
+        "trabalho da 1ª A preservado nesta rodada",
+        estadoAntes !== null && JSON.stringify(estadoAntes) === JSON.stringify(estadoDepois),
+        JSON.stringify(estadoDepois),
+      );
+      const reprov = [
+        ...verificacoes.filter((v) => v.resultado !== "ok").map((v) => `verificação: ${v.verificacao}`),
+        ...(erros.length > 0 ? [`${erros.length} erro(s) no preparo`] : []),
+      ];
+      const resultado = {
+        modo: `${amb.rotulo} — somente isolamento entre turmas`,
+        inicio: inicioGeral,
+        alcance: alcanceDaRodada(null, null),
+        estadoDaTurma1A: estadoDepois,
+        verificacoes,
+        erros: erros.slice(0, 50),
+        totalErros: erros.length,
+        aprovado: reprov.length === 0,
+        reprovacoes: reprov,
+        ressalva: `${RESSALVA} Esta rodada cobre só o isolamento entre turmas; fluxo e tempos vêm da rodada completa anterior.`,
+      };
+      console.table(verificacoes);
+      console.log("Erros:", erros.length === 0 ? "nenhum" : erros.slice(0, 10));
+      console.log(reprov.length === 0 ? "\n✔ APROVADO nas verificações de isolamento." : `\n✖ REPROVADO: ${reprov.join("; ")}`);
+      console.log(resultado.ressalva);
+      if (SAIDA) writeFileSync(SAIDA, `${JSON.stringify(resultado, null, 2)}\n`);
+      if (reprov.length > 0) process.exitCode = 1;
+      return;
     }
 
     // ---- Professor atribui à 1ª A (e não alcança a turma extra).
@@ -349,6 +513,17 @@ async function main() {
     verificar("professor atribui a Missão 01 à 1ª A", atrib?.ok === true);
     const extraAtrib = await sProf.acao(TRILHA, actions.assignAiMissionAction, [{ classroomId: amb.turmaExtra, missionId: MISSAO }]);
     verificar("professor da 1ª A NÃO atribui à turma sintética extra", valorDaAcao(extraAtrib.texto)?.ok !== true);
+
+    // Ações do aluno: lidas com a sessão de um aluno, na página da missão —
+    // que só existe para ele depois da atribuição (missoes/[id]/page.tsx).
+    if (!amb.actions) {
+      const sDesc = new SessaoMedida(amb.baseUrl, "descoberta (aluno)");
+      const eDesc = await sDesc.entrar(alunos[0].email, senhas.get(alunos[0].email) ?? "");
+      if (!eDesc.ok) throw new Error("Aluno sintético não entrou para a leitura das ações da missão.");
+      Object.assign(actions, await descobrirAcoesRemotas(amb.baseUrl, sDesc, [PAGINA]));
+      await sDesc.sair();
+    }
+    exigir(["startMissionAction", "saveProductionDraftAction", "saveAiEvidenceDraftAction", "setProductionDeliveredAction", "saveReflectionDraftAction", "setReflectionRecordedAction"]);
 
     const inicio = performance.now();
     // ---- Fase 1: entrada distribuída e leitura da missão (todos os alunos).
@@ -519,14 +694,7 @@ async function main() {
     await nova.entrar(a2.email, senhas.get(a2.email));
     const t2 = await chamar(nova, a2.email, "troca de aluno", [], PAGINA, actions.startMissionAction, [MISSAO]);
     verificar("troca de aluno no mesmo navegador mostra só o trabalho do novo aluno", t2?.production === `Produção final ${marcador(a2.email)}`);
-    if (professorExtra && senhas.get(professorExtra.email)) {
-      const sx = new SessaoMedida(amb.baseUrl, "professor-extra");
-      await sx.entrar(professorExtra.email, senhas.get(professorExtra.email));
-      const htmlX = await (await sx.navegar(`/professor/turmas?turma=${encodeURIComponent(amb.classroomId)}`)).resposta.text();
-      verificar("professor de outra turma não vê as entregas da 1ª A", !htmlX.includes(marcador(a1.email)));
-    } else {
-      verificar("professor de outra turma não vê as entregas da 1ª A", false, "conta professor-extra ausente");
-    }
+    await verificarIsolamentoEntreTurmas({ amb, sProf, actions, professorExtra, senhas, alunos });
 
     // ---- Integridade: decide o banco, não a tela.
     let integridade = null;
@@ -603,11 +771,13 @@ async function main() {
       limites: LIMITES,
       aprovado: reprov.length === 0,
       reprovacoes: reprov,
-      ressalva: "Resultado de UM ensaio com contas sintéticas. Não comprova capacidade para 65 alunos nem eficácia pedagógica.",
+      ressalva: RESSALVA,
     };
+    resultado.alcance = alcanceDaRodada(etapas, resultado.concorrencia);
     console.log(`\n== Ensaio 1ª A — ${duracaoS}s`);
     console.table(etapas);
     console.log("Concorrência:", resultado.concorrencia);
+    console.log("Alcance:", resultado.alcance);
     console.log("Integridade:", integridade);
     console.table(verificacoes);
     console.log("Erros:", erros.length === 0 ? "nenhum" : erros.slice(0, 10));
