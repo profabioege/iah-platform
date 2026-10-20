@@ -8,6 +8,8 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  EsperaCancelada,
+  PREFIXO_PARADA,
   ParadaDoGerador,
   comoRecusaEsperada,
   criarControle,
@@ -218,4 +220,126 @@ test("relatório de rodada interrompida: nunca aprovado; motivo, amostras e o qu
   assert.equal(r.emAndamentoNaParada.length, 1);
   assert.equal(r.emAndamentoNaParada[0].caminho, "/missoes/01");
   assert.equal(r.etapas[0].amostras, 12, "as amostras coletadas até a parada ficam no relatório");
+});
+
+// ---------------------------------------------------------------------------
+// Regressão (revisão externa sobre 4331ac6): requisições à espera de ficha
+// continuavam esperando o escoamento do balde depois da parada (~1,7 s com
+// 8 chamadas, 4 req/s). Relógio CONTROLADO: o tempo só anda quando o teste manda.
+
+function relogioControlado() {
+  let t = 0;
+  let seq = 0;
+  const timers = new Map();
+  const liberar = () => new Promise((r) => setImmediate(r)); // esvazia as microtarefas pendentes
+  return {
+    agora: () => t,
+    agendar: (fn, ms) => {
+      const id = ++seq;
+      timers.set(id, { quando: t + Math.max(0, ms), fn });
+      return id;
+    },
+    desagendar: (id) => timers.delete(id),
+    pendentes: () => timers.size,
+    liberar,
+    async avancar(ms) {
+      const alvo = t + ms;
+      for (;;) {
+        await liberar();
+        const [id, prox] = [...timers.entries()].filter(([, x]) => x.quando <= alvo).sort((a, b) => a[1].quando - b[1].quando)[0] ?? [];
+        if (!prox) break;
+        timers.delete(id);
+        t = prox.quando;
+        prox.fn();
+      }
+      t = alvo;
+      await liberar();
+    },
+  };
+}
+
+function cenarioComFila({ duracaoMaximaMs = 0 } = {}) {
+  const relogio = relogioControlado();
+  const controle = criarControle({ ...relogio, duracaoMaximaMs, faseAtual: () => "fase 2 (envio)" });
+  const limitador = criarLimitador({ rps: 4, rajada: 1, ...relogio });
+  const esperas = [];
+  let noFetch = 0;
+  const transporte = criarTransporte({
+    controle,
+    limitador,
+    timeoutMs: 0,
+    aoEsperar: (ms) => esperas.push(ms),
+    fetch: async () => {
+      noFetch += 1;
+      return new Response("ok");
+    },
+  });
+  const resultados = [];
+  const chamadas = Array.from({ length: 8 }, (_, i) =>
+    transporte(`https://simulado.invalid/r${i}`, { method: "POST" }, { caminho: `/r${i}` }).then(
+      (r) => resultados.push({ i, ok: r.status }),
+      (e) => resultados.push({ i, erro: e }),
+    ),
+  );
+  return { relogio, controle, esperas, chamadas, resultados, noFetch: () => noFetch };
+}
+
+test("parada antecipada cancela na hora as esperas por ficha: nada novo sai e o encerramento não espera o balde", async () => {
+  const c = cenarioComFila();
+  await c.relogio.avancar(20); // 1ª chamada usou a única ficha; 7 esperam (a próxima ficha só em t=250 ms)
+  assert.equal(c.noFetch(), 1);
+  assert.equal(c.resultados.length, 1);
+  assert.ok(c.relogio.pendentes() > 0, "há temporizador do limitador esperando a próxima ficha");
+
+  assert.equal(c.controle.parar("intervenção do operador (Ctrl+C)"), true);
+  await c.relogio.liberar(); // nenhum avanço de tempo: o encerramento não depende do balde
+  assert.equal(c.resultados.length, 8, "todas as 8 chamadas terminaram sem o relógio andar");
+  assert.equal(c.relogio.agora(), 20);
+  const recusadas = c.resultados.filter((r) => r.erro);
+  assert.equal(recusadas.length, 7);
+  assert.ok(recusadas.every((r) => r.erro instanceof ParadaDoGerador && r.erro.message.startsWith(PREFIXO_PARADA)), "vira ParadaDoGerador (excluída das amostras de latência)");
+  assert.equal(c.controle.naoIniciadas, 7);
+  assert.equal(c.relogio.pendentes(), 0, "temporizadores do limitador desfeitos");
+  assert.equal(c.esperas.length, 1, "só a chamada que saiu registra espera do limitador");
+
+  await c.relogio.avancar(5000); // mesmo com tempo de sobra, nada mais sai
+  assert.equal(c.noFetch(), 1);
+  assert.equal(c.controle.parada.motivo, "intervenção do operador (Ctrl+C)");
+});
+
+test("parada por duração máxima também cancela as esperas por ficha", async () => {
+  const c = cenarioComFila({ duracaoMaximaMs: 300 });
+  await c.relogio.avancar(299);
+  assert.equal(c.noFetch(), 2, "fichas em t=0 e t=250 ms");
+  await c.relogio.avancar(1); // t=300: o controle para sozinho
+  assert.equal(c.controle.parada.motivo, "duração máxima da rodada");
+  assert.equal(c.controle.parada.fase, "fase 2 (envio)");
+  assert.equal(c.resultados.length, 8, "as 6 restantes saem da fila na hora");
+  assert.equal(c.controle.naoIniciadas, 6);
+  assert.equal(c.relogio.pendentes(), 0);
+  await c.relogio.avancar(5000);
+  assert.equal(c.noFetch(), 2);
+});
+
+test("a primeira causa da parada é preservada; a duração máxima depois não a substitui", async () => {
+  const c = cenarioComFila({ duracaoMaximaMs: 300 });
+  await c.relogio.avancar(20);
+  c.controle.parar("erro inesperado", "aluno 3 · entrega: HTTP 500");
+  await c.relogio.avancar(1000);
+  assert.equal(c.controle.parada.motivo, "erro inesperado");
+  assert.equal(c.controle.parada.detalhe, "aluno 3 · entrega: HTTP 500");
+  assert.equal(c.relogio.pendentes(), 0, "o temporizador da duração máxima foi desfeito na parada");
+  assert.equal(c.controle.naoIniciadas, 7);
+});
+
+test("limitador: espera cancelada rejeita com EsperaCancelada e libera a fila", async () => {
+  const relogio = relogioControlado();
+  const controle = criarControle(relogio);
+  const l = criarLimitador({ rps: 1, rajada: 1, ...relogio });
+  await l.aguardar(controle.cancelamento); // ficha imediata
+  const fila = [l.aguardar(controle.cancelamento), l.aguardar(controle.cancelamento), l.aguardar(controle.cancelamento)];
+  controle.parar("intervenção do operador (Ctrl+C)");
+  const r = await Promise.allSettled(fila);
+  assert.ok(r.every((x) => x.status === "rejected" && x.reason instanceof EsperaCancelada));
+  assert.equal(relogio.pendentes(), 0);
 });

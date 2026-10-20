@@ -116,7 +116,8 @@ let picoEnviando = 0;
 const amostrasEmVoo = [];
 let faseAtual = "preparo";
 
-const controle = criarControle({ duracaoMaximaMs: DURACAO_MAX_S * 1000 });
+// O próprio controle agenda a parada por duração máxima (e cancela as esperas do limitador).
+const controle = criarControle({ duracaoMaximaMs: DURACAO_MAX_S * 1000, faseAtual: () => faseAtual });
 const limitador = criarLimitador({ rps: MAX_RPS, rajada: RAJADA_RPS });
 const transporte = criarTransporte({
   controle,
@@ -522,9 +523,6 @@ async function main() {
     }
   };
   process.on("SIGINT", aoInterromper);
-  const relogioDuracao =
-    DURACAO_MAX_S > 0 ? setTimeout(() => controle.parar("duração máxima da rodada", `${DURACAO_MAX_S} s`, faseAtual), DURACAO_MAX_S * 1000) : null;
-  relogioDuracao?.unref?.();
   console.log(`Gerador: limitador ${limitador.descricao}; timeout ${TIMEOUT_MS} ms por requisição; duração máxima ${DURACAO_MAX_S > 0 ? `${DURACAO_MAX_S} s` : "sem limite"}.`);
   const parcial = { alunos: [] };
   try {
@@ -887,7 +885,7 @@ async function main() {
     if (!controle.parada) controle.parar("erro inesperado", e instanceof Error ? e.message : String(e), faseAtual);
     await escreverRelatorioInterrompido({ amb, inicioGeral, alunos: parcial.alunos, erroFinal: e });
   } finally {
-    if (relogioDuracao) clearTimeout(relogioDuracao);
+    controle.encerrar();
     process.off("SIGINT", aoInterromper);
     await amb.encerrar();
   }

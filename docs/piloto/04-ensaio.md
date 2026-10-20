@@ -126,7 +126,8 @@ As requisições **simultâneas** (em voo) não têm teto próprio: são medidas
 qualquer erro registrado no fluxo; Ctrl+C do operador (o segundo Ctrl+C sai sem relatório); duração máxima.
 Recusas **esperadas** dos controles negativos (aluno avaliando colega, professor atribuindo a outra turma,
 sessão encerrada) não param a rodada. Depois da parada nenhuma requisição nova começa; as que estavam em voo
-terminam ou caem no timeout.
+terminam ou caem no timeout. Quem ainda esperava ficha do limitador sai da fila na hora da parada (sem esperar o
+escoamento do balde) e conta como requisição não iniciada; a duração máxima é agendada pelo próprio controle.
 
 **Relatório parcial** (`--out`): `interrompido: true`, motivo, fase, amostras até a parada, requisições em voo
 na parada e ao final, requisições não iniciadas, integridade lida no banco quando houver acesso de leitura.

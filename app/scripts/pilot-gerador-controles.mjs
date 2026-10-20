@@ -56,9 +56,27 @@ export async function medirComEspera(fn, agora = () => performance.now()) {
   }
 }
 
-const dormirReal = (ms) => new Promise((r) => setTimeout(r, ms));
+/** A espera por ficha foi cancelada porque o gerador parou. */
+export class EsperaCancelada extends Error {
+  constructor() {
+    super("espera por ficha cancelada: o gerador parou");
+    this.name = "EsperaCancelada";
+  }
+}
 
-export function criarLimitador({ rps = 0, rajada = 1, agora = () => performance.now(), dormir = dormirReal } = {}) {
+/**
+ * Relógio usado pelos controles. Os testes injetam um relógio controlado
+ * (`agora`, `agendar`, `desagendar`) para não depender do tempo real.
+ */
+const relogioReal = { agora: () => performance.now(), agendar: (fn, ms) => setTimeout(fn, ms), desagendar: (id) => clearTimeout(id) };
+
+/**
+ * `cancelamento` (opcional, ver `criarControle().cancelamento`): quando dispara,
+ * quem dorme esperando ficha acorda na hora com `EsperaCancelada`, o temporizador
+ * é desfeito, e quem ainda estava na fila também sai com `EsperaCancelada`, sem
+ * esperar o escoamento do balde.
+ */
+export function criarLimitador({ rps = 0, rajada = 1, agora = relogioReal.agora, agendar = relogioReal.agendar, desagendar = relogioReal.desagendar } = {}) {
   if (!(rps > 0)) return { ativo: false, descricao: "sem limite de requisições por segundo", aguardar: async () => 0 };
   if (!(rajada >= 1)) throw new Error("--rps-burst precisa ser ≥ 1.");
   let fichas = rajada;
@@ -69,22 +87,40 @@ export function criarLimitador({ rps = 0, rajada = 1, agora = () => performance.
     fichas = Math.min(rajada, fichas + ((t - ultimo) * rps) / 1000);
     ultimo = t;
   };
-  const tomar = async () => {
+  const dormir = (ms, cancelamento) =>
+    new Promise((resolve, reject) => {
+      if (cancelamento?.cancelado) {
+        reject(new EsperaCancelada());
+        return;
+      }
+      let desinscrever = () => {};
+      const id = agendar(() => {
+        desinscrever();
+        resolve();
+      }, ms);
+      desinscrever =
+        cancelamento?.inscrever(() => {
+          desagendar(id);
+          reject(new EsperaCancelada());
+        }) ?? (() => {});
+    });
+  const tomar = async (cancelamento) => {
     for (;;) {
+      if (cancelamento?.cancelado) throw new EsperaCancelada();
       repor();
       if (fichas >= 1) {
         fichas -= 1;
         return;
       }
-      await dormir(((1 - fichas) * 1000) / rps);
+      await dormir(((1 - fichas) * 1000) / rps, cancelamento);
     }
   };
   return {
     ativo: true,
     descricao: `${rps} req/s sustentadas; rajada de até ${rajada} (no máximo ${rajada} + ${rps}×T requisições em T segundos)`,
-    async aguardar() {
+    async aguardar(cancelamento) {
       const t0 = agora();
-      const minha = fila.then(tomar);
+      const minha = fila.then(() => tomar(cancelamento));
       fila = minha.catch(() => {});
       await minha;
       return agora() - t0;
@@ -92,7 +128,18 @@ export function criarLimitador({ rps = 0, rajada = 1, agora = () => performance.
   };
 }
 
-export function criarControle({ agora = () => performance.now(), duracaoMaximaMs = 0 } = {}) {
+/**
+ * Controle da rodada. Com `duracaoMaximaMs`, o próprio controle agenda a parada
+ * por duração máxima (e a confere a cada requisição). `faseAtual` identifica a
+ * fase na parada. `encerrar()` desfaz o temporizador ao fim da rodada.
+ */
+export function criarControle({
+  agora = relogioReal.agora,
+  agendar = relogioReal.agendar,
+  desagendar = relogioReal.desagendar,
+  duracaoMaximaMs = 0,
+  faseAtual = () => null,
+} = {}) {
   const inicio = agora();
   const emAndamento = new Map();
   let seq = 0;
@@ -103,6 +150,8 @@ export function criarControle({ agora = () => performance.now(), duracaoMaximaMs
   const quandoParar = new Promise((r) => {
     avisarParada = r;
   });
+  const aoParar = new Set();
+  let relogioDuracao = null;
   const instantaneo = () =>
     [...emAndamento.values()].map((r) => ({ ...r, ha: Math.round(agora() - r.inicioMs), inicioMs: Math.round(r.inicioMs - inicio) }));
   const controle = {
@@ -119,24 +168,43 @@ export function criarControle({ agora = () => performance.now(), duracaoMaximaMs
     get quantidadeEmAndamento() {
       return emAndamento.size;
     },
-    parar(motivo, detalhe = "", fase = null) {
+    /** A primeira parada vale; as seguintes são ignoradas. */
+    parar(motivo, detalhe = "", fase = faseAtual()) {
       if (parada) return false;
       parada = { motivo, detalhe: String(detalhe).slice(0, 200), fase, aposMs: Math.round(agora() - inicio), emAndamentoNaParada: instantaneo() };
+      controle.encerrar();
       avisarParada(parada);
+      for (const fn of [...aoParar]) fn();
+      aoParar.clear();
       return true;
     },
     /** Resolve quando o gerador para (por qualquer motivo). */
     quandoParar,
+    /** Sinal de cancelamento das esperas do limitador (dispara na parada). */
+    cancelamento: {
+      get cancelado() {
+        return parada !== null;
+      },
+      inscrever(fn) {
+        aoParar.add(fn);
+        return () => aoParar.delete(fn);
+      },
+    },
+    /** Desfaz o temporizador da duração máxima (fim da rodada ou parada). */
+    encerrar() {
+      if (relogioDuracao !== null) desagendar(relogioDuracao);
+      relogioDuracao = null;
+    },
     /** Pausa de `ms` que termina antes se o gerador parar. Devolve `false` se parou. */
     async pausa(ms) {
       if (parada) return false;
-      let relogio;
-      await Promise.race([new Promise((r) => (relogio = setTimeout(r, ms))), quandoParar]);
-      clearTimeout(relogio);
+      let id;
+      await Promise.race([new Promise((r) => (id = agendar(r, ms))), quandoParar]);
+      desagendar(id);
       return !parada;
     },
     conferirDuracao() {
-      if (duracaoMaximaMs > 0 && agora() - inicio > duracaoMaximaMs) {
+      if (duracaoMaximaMs > 0 && agora() - inicio >= duracaoMaximaMs) {
         controle.parar("duração máxima da rodada", `${Math.round(duracaoMaximaMs / 1000)} s`);
       }
       return !parada;
@@ -155,12 +223,16 @@ export function criarControle({ agora = () => performance.now(), duracaoMaximaMs
       emAndamento.delete(id);
     },
     emAndamentoAgora: instantaneo,
-    async aguardarEmAndamento(limiteMs, dormir = dormirReal) {
+    async aguardarEmAndamento(limiteMs) {
       const fim = agora() + limiteMs;
-      while (emAndamento.size > 0 && agora() < fim) await dormir(Math.min(50, Math.max(1, fim - agora())));
+      while (emAndamento.size > 0 && agora() < fim) await new Promise((r) => agendar(r, Math.min(50, Math.max(1, fim - agora()))));
       return instantaneo();
     },
   };
+  if (duracaoMaximaMs > 0) {
+    relogioDuracao = agendar(() => controle.parar("duração máxima da rodada", `${Math.round(duracaoMaximaMs / 1000)} s`), duracaoMaximaMs);
+    relogioDuracao?.unref?.(); // não segura o processo vivo
+  }
   return controle;
 }
 
@@ -187,7 +259,14 @@ export function criarTransporte({
   return async function requisitarControlado(url, options = {}, info = {}) {
     const ctx = contexto.getStore() ?? {};
     if (controle.parada || !controle.conferirDuracao()) controle.recusarInicio();
-    const espera = await limitador.aguardar();
+    let espera;
+    try {
+      // A espera por ficha é cancelada na hora se o gerador parar.
+      espera = await limitador.aguardar(controle.cancelamento);
+    } catch (erro) {
+      if (erro instanceof EsperaCancelada) controle.recusarInicio();
+      throw erro;
+    }
     if (ctx.marcador) ctx.marcador.esperaMs += espera;
     aoEsperar?.(espera);
     if (controle.parada || !controle.conferirDuracao()) controle.recusarInicio();
