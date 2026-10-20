@@ -220,6 +220,46 @@ test("10. repetir o envio não duplica entrega", async () => {
   assert.equal(count, 1, "o progresso também não duplica");
 });
 
+test("11. gravação antiga que chega depois de entregar/registrar é recusada e não sobrescreve", async () => {
+  // A tela envia o rascunho pendente ANTES de entregar/registrar; se uma
+  // gravação velha ainda assim chegar depois, o banco não pode trocar o
+  // texto final por ela.
+  await novaSessao(aluno02);
+  const cycle = await learningCycle();
+  const { data: antes } = await adminDb
+    .from("productions")
+    .select("content, status")
+    .eq("student_id", ID_ALUNO_02)
+    .maybeSingle();
+  assert.equal(antes.status, "delivered");
+  await assert.rejects(
+    () => cycle.saveProductionDraft(escopo(ID_ALUNO_02), "versão antiga da produção"),
+    /já foi entregue/,
+  );
+
+  await cycle.saveReflectionDraft(escopo(ID_ALUNO_02), "reflexão final do aluno 02");
+  await cycle.setReflectionRecorded(escopo(ID_ALUNO_02), true);
+  await assert.rejects(
+    () => cycle.saveReflectionDraft(escopo(ID_ALUNO_02), "versão antiga da reflexão"),
+    /já foi registrada/,
+  );
+
+  const { data: producao } = await adminDb
+    .from("productions")
+    .select("content, status")
+    .eq("student_id", ID_ALUNO_02)
+    .maybeSingle();
+  assert.equal(producao.content, antes.content, "a entrega guarda o texto final");
+  assert.equal(producao.status, "delivered");
+  const { data: reflexoes } = await adminDb
+    .from("reflections")
+    .select("text, recorded_at")
+    .eq("student_id", ID_ALUNO_02);
+  assert.equal(reflexoes.length, 1);
+  assert.equal(reflexoes[0].text, "reflexão final do aluno 02", "o registro guarda o texto final");
+  assert.ok(reflexoes[0].recorded_at);
+});
+
 test("os registros não se misturam entre alunos", async () => {
   const { data } = await adminDb
     .from("productions")

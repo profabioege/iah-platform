@@ -97,6 +97,12 @@ de cada campo, e só afirma gravação depois da confirmação do servidor:
 | Servidor confirmou a versão mais recente | "Salvo." |
 | Falha | Erro em destaque; o texto continua no editor e é reenviado ao sair do campo ou na próxima edição |
 
+Entregar, registrar a reflexão e reabrir não são otimistas: o botão mostra "Entregando…", "Registrando…" ou
+"Reabrindo…" e a tela só muda ("Entregue em", "Registrada em") depois da confirmação do servidor. Entregar e
+registrar primeiro enviam o rascunho pendente e só seguem se o servidor confirmou a versão mais recente do texto;
+se algo falhar, aparece uma mensagem com orientação, o texto continua no editor e o mesmo botão tenta de novo.
+O servidor recusa rascunho depois de entregue/registrado (teste de integração `pilot-lifecycle` nº 11).
+
 As gravações passam por uma fila única (a mais nova chega por último ao banco). A resposta de um envio antigo não
 marca "Salvo" nem substitui no editor um texto alterado depois dele. Antes desta correção (deploy
 `dpl_5K7TWwDUFvTCG8RrHRTtPGj8BX85`), a Produção voltava ao texto inicial depois de gravar e a Reflexão não mostrava

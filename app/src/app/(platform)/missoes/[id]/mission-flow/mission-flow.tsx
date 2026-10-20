@@ -39,6 +39,8 @@ import { AiEvidenceForm, AxesObjectives, AxesReviewCards } from "./two-axes";
 import {
   useStudentWork,
   type StudentWorkSource,
+  type Transition,
+  type TransitionKind,
   type WorkSaveStatus,
 } from "./use-student-work";
 
@@ -56,8 +58,9 @@ export function MissionFlow({
   mission: Mission;
   source: StudentWorkSource;
 }) {
-  const { work, update, flush, saveStatusOf, delivered, recorded, submissionStatus } =
+  const { work, update, flush, saveStatusOf, transition, delivered, recorded, submissionStatus } =
     useStudentWork(source, mission.id);
+  const running = (kind: TransitionKind) => transition?.kind === kind && transition.status === "running";
   const reviewed = submissionStatus === "reviewed";
   const parsed = React.useMemo(
     () => parseMissionContent(mission.didacticMaterials),
@@ -208,7 +211,7 @@ export function MissionFlow({
                   value={work.production}
                   onChange={(e) => update({ production: e.target.value })}
                   onBlur={flush}
-                  readOnly={delivered}
+                  readOnly={delivered || running("deliver")}
                   autoFocus={!delivered}
                   rows={12}
                   placeholder={mission.productionPlaceholder ?? "Escreva aqui a sua produção…"}
@@ -295,9 +298,10 @@ export function MissionFlow({
                           variant="outline"
                           size="sm"
                           onClick={() => update({ productionDeliveredAt: null })}
+                          disabled={running("reopenProduction")}
                         >
                           <Undo2 className="size-4" />
-                          Reabrir para editar
+                          {running("reopenProduction") ? "Reabrindo…" : "Reabrir para editar"}
                         </Button>
                       )}
                     </div>
@@ -308,12 +312,13 @@ export function MissionFlow({
                     onClick={() =>
                       update({ productionDeliveredAt: new Date().toISOString() })
                     }
-                    disabled={work.production.trim().length === 0 || !evidenceReady}
+                    disabled={work.production.trim().length === 0 || !evidenceReady || running("deliver")}
                   >
                     <CheckCircle2 className="size-4" />
-                    Entregar relatório
+                    {running("deliver") ? "Entregando…" : "Entregar relatório"}
                   </Button>
                 )}
+                <TransitionError transition={transition} kinds={["deliver", "reopenProduction"]} />
                 {!delivered && !evidenceReady ? (
                   <p className="text-xs text-muted-foreground">
                     Falta completar o registro de uso da IA (etapa anterior a Critérios).
@@ -358,6 +363,9 @@ export function MissionFlow({
               onBlur={flush}
               saveStatus={saveStatusOf("reflection")}
               saveStatusLabel={saveStatusLabel(saveStatusOf("reflection"))}
+              recording={running("record")}
+              reopening={running("reopenReflection")}
+              transitionError={<TransitionError transition={transition} kinds={["record", "reopenReflection"]} />}
               recorded={recorded}
               delivered={delivered}
               recordedAt={work.reflectionRecordedAt}
@@ -568,6 +576,35 @@ function InvestigationStep({
 function formatDate(iso: string | null): string {
   if (!iso) return "";
   return new Date(iso).toLocaleDateString("pt-BR");
+}
+
+const TRANSITION_ERROR: Record<TransitionKind, Record<"text" | "action", string>> = {
+  deliver: {
+    text: "A entrega não foi feita: a última versão do seu relatório ainda não foi salva. Seu texto continua aqui — verifique a conexão e clique em “Entregar relatório” de novo.",
+    action: "Não foi possível entregar agora. Seu relatório continua salvo como rascunho — verifique a conexão e clique em “Entregar relatório” de novo.",
+  },
+  reopenProduction: {
+    text: "Não foi possível reabrir agora. Sua entrega continua registrada — tente de novo.",
+    action: "Não foi possível reabrir agora. Sua entrega continua registrada — tente de novo.",
+  },
+  record: {
+    text: "A reflexão não foi registrada: a última versão do texto ainda não foi salva. Seu texto continua aqui — verifique a conexão e clique em “Registrar reflexão” de novo.",
+    action: "Não foi possível registrar a reflexão agora. Seu texto continua aqui como rascunho — verifique a conexão e clique em “Registrar reflexão” de novo.",
+  },
+  reopenReflection: {
+    text: "Não foi possível reabrir agora. Sua reflexão continua registrada — tente de novo.",
+    action: "Não foi possível reabrir agora. Sua reflexão continua registrada — tente de novo.",
+  },
+};
+
+/** Falha de entregar/registrar/reabrir: nada mudou no servidor; o botão permite tentar de novo. */
+function TransitionError({ transition, kinds }: { transition: Transition | null; kinds: TransitionKind[] }) {
+  if (!transition || transition.status !== "error" || !kinds.includes(transition.kind)) return null;
+  return (
+    <p role="alert" className="text-xs text-destructive">
+      {TRANSITION_ERROR[transition.kind][transition.reason]}
+    </p>
+  );
 }
 
 /**

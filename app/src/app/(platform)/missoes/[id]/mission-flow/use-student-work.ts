@@ -54,6 +54,16 @@ const IDLE_STATUS: Record<DraftField, WorkSaveStatus> = {
 
 const DRAFT_DEBOUNCE_MS = 800;
 
+/** Ações finais do aluno, confirmadas pelo servidor antes de mudar a tela. */
+export type TransitionKind = "deliver" | "reopenProduction" | "record" | "reopenReflection";
+/**
+ * `reason: "text"` — a versão mais recente do texto não foi confirmada, então
+ * a ação nem foi enviada; `"action"` — o servidor não confirmou a ação.
+ */
+export type Transition =
+  | { kind: TransitionKind; status: "running" }
+  | { kind: TransitionKind; status: "error"; reason: "text" | "action" };
+
 /**
  * Mesmo StudentWork de sempre — só extraído para hook para ser
  * compartilhado pelas etapas Produção, Critérios, Entrega e Reflexão do
@@ -82,6 +92,8 @@ export function useStudentWork(source: StudentWorkSource, missionId: string) {
   const versionRef = React.useRef<Record<DraftField, number>>({ production: 0, reflection: 0, aiEvidence: 0 });
   const confirmedRef = React.useRef<Record<DraftField, number>>({ production: 0, reflection: 0, aiEvidence: 0 });
   const queueRef = React.useRef<Promise<void>>(Promise.resolve());
+  const [transition, setTransition] = React.useState<Transition | null>(null);
+  const transitionRef = React.useRef<Transition | null>(null);
 
   const setStatus = React.useCallback((field: DraftField, status: WorkSaveStatus) => {
     setFieldStatus((current) => (current[field] === status ? current : { ...current, [field]: status }));
@@ -122,8 +134,8 @@ export function useStudentWork(source: StudentWorkSource, missionId: string) {
         try {
           applyServerWork(await action());
         } catch {
-          // Transições (iniciar/entregar/registrar) mantêm o comportamento
-          // anterior: o estado otimista fica; nada é apagado do editor.
+          // Só "Começar" passa por aqui (entregar/registrar/reabrir usam
+          // `runTransition`): o estado otimista fica; nada é apagado do editor.
         }
       }),
     [enqueue, applyServerWork],
@@ -162,12 +174,12 @@ export function useStudentWork(source: StudentWorkSource, missionId: string) {
 
   /**
    * Envia o rascunho pendente AGORA (chamado no blur das textareas e antes
-   * de qualquer transição discreta — entregar/reabrir/registrar). Devolve
-   * a promessa da fila: quem chama entregar/registrar precisa aguardá-la
-   * antes de disparar a própria ação, senão uma versão velha do texto
-   * poderia chegar ao banco depois da nova.
+   * de qualquer transição discreta — entregar/reabrir/registrar) e espera a
+   * fila esvaziar. Devolve `true` só se o servidor confirmou a versão mais
+   * recente de TODOS os campos: entregar/registrar não seguem sem isso, senão
+   * o servidor registraria o texto antigo que está no banco.
    */
-  const flushPendingDraft = React.useCallback(async () => {
+  const flushPendingDraft = React.useCallback(async (): Promise<boolean> => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
       debounceRef.current = null;
@@ -176,6 +188,13 @@ export function useStudentWork(source: StudentWorkSource, missionId: string) {
     pendingRef.current = null;
     if (pending) await saveDraft(pending);
     else await queueRef.current;
+    // Um envio que estava em andamento pode ter falhado e voltado a pendente.
+    const retry = pendingRef.current;
+    if (retry) {
+      pendingRef.current = null;
+      await saveDraft(retry);
+    }
+    return DRAFT_FIELDS.every((field) => versionRef.current[field] === confirmedRef.current[field]);
   }, [saveDraft]);
 
   // Envia o rascunho pendente ao desmontar (ex.: navegação entre etapas
@@ -204,6 +223,40 @@ export function useStudentWork(source: StudentWorkSource, missionId: string) {
     [flushPendingDraft, saveDraft, setStatus],
   );
 
+  /**
+   * Entregar, registrar e reabrir: NÃO otimistas. A tela só muda de estado
+   * depois que o servidor confirmou; até lá `transition` diz "em andamento"
+   * e, se falhar, "erro" (o texto continua no editor e o botão permite tentar
+   * de novo). Entregar/registrar exigem antes a confirmação da versão mais
+   * recente do texto.
+   */
+  const runTransition = React.useCallback(
+    async (kind: TransitionKind, requireSavedText: boolean, action: () => Promise<StudentWork>) => {
+      if (transitionRef.current?.status === "running") return;
+      const start = { kind, status: "running" as const };
+      transitionRef.current = start;
+      setTransition(start);
+      const finish = (next: Transition | null) => {
+        transitionRef.current = next;
+        setTransition(next);
+      };
+      const saved = await flushPendingDraft();
+      if (requireSavedText && !saved) {
+        finish({ kind, status: "error", reason: "text" });
+        return;
+      }
+      await enqueue(async () => {
+        try {
+          applyServerWork(await action());
+          finish(null);
+        } catch {
+          finish({ kind, status: "error", reason: "action" });
+        }
+      });
+    },
+    [applyServerWork, enqueue, flushPendingDraft],
+  );
+
   const update = React.useCallback(
     (partial: Partial<StudentWork>) => {
       if (source.kind === "demo") {
@@ -215,27 +268,26 @@ export function useStudentWork(source: StudentWorkSource, missionId: string) {
         return;
       }
 
-      // Modo real: otimista primeiro (a textarea não trava), persiste depois.
-      setWork((current) => (current ? { ...current, ...partial } : current));
-
-      if ("startedAt" in partial) {
-        void persistReal(() => startMissionAction(missionId));
-        return;
-      }
       if ("productionDeliveredAt" in partial) {
         const delivered = partial.productionDeliveredAt !== null;
-        void (async () => {
-          await flushPendingDraft();
-          await persistReal(() => setProductionDeliveredAction(missionId, delivered));
-        })();
+        void runTransition(delivered ? "deliver" : "reopenProduction", delivered, () =>
+          setProductionDeliveredAction(missionId, delivered),
+        );
         return;
       }
       if ("reflectionRecordedAt" in partial) {
         const recordedFlag = partial.reflectionRecordedAt !== null;
-        void (async () => {
-          await flushPendingDraft();
-          await persistReal(() => setReflectionRecordedAction(missionId, recordedFlag));
-        })();
+        void runTransition(recordedFlag ? "record" : "reopenReflection", recordedFlag, () =>
+          setReflectionRecordedAction(missionId, recordedFlag),
+        );
+        return;
+      }
+
+      // Texto e início: otimista primeiro (a textarea não trava), persiste depois.
+      setWork((current) => (current ? { ...current, ...partial } : current));
+
+      if ("startedAt" in partial) {
+        void persistReal(() => startMissionAction(missionId));
         return;
       }
       if (typeof partial.production === "string") {
@@ -251,7 +303,7 @@ export function useStudentWork(source: StudentWorkSource, missionId: string) {
         return;
       }
     },
-    [source, missionId, persistReal, flushPendingDraft, scheduleDraftSave],
+    [source, missionId, persistReal, runTransition, scheduleDraftSave],
   );
 
   const saveStatusOf = React.useCallback(
@@ -264,6 +316,7 @@ export function useStudentWork(source: StudentWorkSource, missionId: string) {
     update,
     flush: flushPendingDraft,
     saveStatusOf,
+    transition: source.kind === "real" ? transition : null,
     delivered: work ? isProductionDelivered(work) : false,
     recorded: work ? isReflectionRecorded(work) : false,
     completed: work ? isMissionCompleted(work) : false,

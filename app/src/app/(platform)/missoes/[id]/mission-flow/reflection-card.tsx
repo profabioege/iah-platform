@@ -1,3 +1,4 @@
+import type * as React from "react";
 import { CheckCircle2, NotebookPen, Undo2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +25,9 @@ export function ReflectionCard({
   onBlur,
   saveStatus,
   saveStatusLabel,
+  recording,
+  reopening,
+  transitionError,
   recorded,
   delivered,
   recordedAt,
@@ -37,6 +41,11 @@ export function ReflectionCard({
   /** Estado do salvamento automático do texto (só confirmado pelo servidor). */
   saveStatus: WorkSaveStatus;
   saveStatusLabel: string;
+  /** Registro/reabertura enviados e ainda sem confirmação do servidor. */
+  recording: boolean;
+  reopening: boolean;
+  /** Mensagem de falha do registro/reabertura (nada mudou no servidor). */
+  transitionError: React.ReactNode;
   recorded: boolean;
   delivered: boolean;
   recordedAt: string | null;
@@ -67,7 +76,7 @@ export function ReflectionCard({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onBlur={onBlur}
-          readOnly={recorded}
+          readOnly={recorded || recording}
           rows={5}
           placeholder="Registre aqui a sua reflexão pessoal sobre esta investigação…"
           className="w-full resize-y rounded-lg border border-input bg-background/60 p-3 text-sm leading-relaxed text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-ring focus:ring-2 focus:ring-ring/30 read-only:opacity-80"
@@ -75,19 +84,19 @@ export function ReflectionCard({
         />
         <div className="flex flex-wrap items-center gap-3">
           {recorded ? (
-            <Button variant="outline" size="sm" onClick={onReopen}>
+            <Button variant="outline" size="sm" onClick={onReopen} disabled={reopening}>
               <Undo2 className="size-4" />
-              Reabrir para editar
+              {reopening ? "Reabrindo…" : "Reabrir para editar"}
             </Button>
           ) : (
             <Button
               size="sm"
               variant="secondary"
               onClick={onRecord}
-              disabled={!delivered || value.trim().length === 0}
+              disabled={!delivered || value.trim().length === 0 || recording}
             >
               <CheckCircle2 className="size-4" />
-              Registrar reflexão
+              {recording ? "Registrando…" : "Registrar reflexão"}
             </Button>
           )}
           <span
@@ -102,6 +111,7 @@ export function ReflectionCard({
                 : "Entregue sua produção antes de registrar a reflexão."}
           </span>
         </div>
+        {transitionError}
       </CardContent>
     </Card>
   );
