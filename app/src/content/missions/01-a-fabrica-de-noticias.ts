@@ -11,29 +11,48 @@ import type { Mission } from "@/modules/library";
  * ------------------------------------------------------------------
  * CHAVE DO PROFESSOR (não exibida ao aluno — uso exclusivo de quem
  * conduz a aula). Os quatro itens do Dossiê são fictícios, escritos
- * para esta Missão; nenhum se refere a fato, veículo, instituição ou
- * pessoa real.
+ * para esta Missão (SIMULAÇÃO DIDÁTICA); nenhum se refere a fato,
+ * veículo, instituição ou pessoa real. Por isso nenhum deles pode ser
+ * declarado verdadeiro ou falso: a chave orienta a ANÁLISE — o que o
+ * texto mostra, o que ele não permite saber e o que precisaria ser
+ * checado fora dele se fosse uma notícia real. Não exija pesquisar as
+ * instituições: elas não existem.
  *
- *   Manchete 1 (merenda com IA)      → tratar como REAL na dinâmica.
- *     Tells de autenticidade: órgão público nomeável, escopo modesto
- *     e verificável (6 escolas, piloto de 60 dias), fonte atribuída
- *     a um cargo, ausência de urgência ou apelo emocional.
- *   Manchete 2 (estudo do IBEE)       → tratar como REAL na dinâmica.
- *     Tells: metodologia declarada (amostra, margem de erro, período),
- *     instituição nomeada, conclusão qualificada ("uso crescente"),
- *     não uma afirmação absoluta.
- *   Manchete 3 (97% dos professores substituídos) → FABRICADA.
- *     Tells: estatística extrema e redonda sem metodologia, fonte
- *     vaga ("especialistas apontam"), apelo de urgência/compartilhamento,
- *     escopo nacional sem nenhuma atribuição checável.
- *   Manchete 4 (robô que aprova o ENEM sozinho) → FABRICADA.
- *     Tells: fonte vaga ("página de tecnologia"), afirmação
- *     desproporcional (100% sozinho), inconsistência clássica de
- *     imagem gerada por IA (mão/garra com dedos a mais, sombra
- *     incoerente com a luz da cena) descrita no próprio texto.
+ *   Item 1 (merenda com IA em Vale Novo) — reúne mais indícios.
+ *     Indícios: órgão público nomeado (Secretaria de Educação), escopo
+ *     modesto e checável (6 escolas, piloto de 60 dias), avaliação
+ *     anunciada antes de expandir, tom informativo, sem urgência.
+ *     Limites: não traz data, nome de quem falou nem documento oficial.
+ *     Checagem numa notícia real: publicação oficial da prefeitura
+ *     (site, diário oficial) e outro veículo local.
+ *   Item 2 (estudo do IBEE) — reúne mais indícios.
+ *     Indícios: metodologia declarada (amostra, faixa etária, período,
+ *     margem de erro), instituição nomeada, conclusão qualificada
+ *     ("uso crescente"), não absoluta.
+ *     Limites: não informa o percentual nem como a amostra foi escolhida;
+ *     a nota técnica não é apresentada.
+ *     Checagem numa notícia real: a nota técnica original no site do
+ *     instituto e a existência e o histórico do instituto.
+ *   Item 3 (97% dos professores substituídos) — reúne mais alertas.
+ *     Alertas: estatística extrema sem metodologia, fonte vaga
+ *     ("especialistas"), apelo de urgência ("compartilhe antes que
+ *     apaguem"), escopo nacional sem atribuição, sem veículo.
+ *     Limites: nada no texto permite localizar a pesquisa.
+ *     Checagem numa notícia real: a pesquisa original e agências de
+ *     checagem; o próprio texto não oferece por onde começar.
+ *   Item 4 (robô que aprova o ENEM sozinho) — reúne mais alertas.
+ *     Alertas: afirmação desproporcional (100%, sozinho), página sem
+ *     editor, escola e aluno não identificados, imagem com
+ *     inconsistência física (garra de seis dedos, sombra contra a luz).
+ *     Limites: o texto não diz quem fez a foto nem a prova aplicada.
+ *     Checagem numa notícia real: busca reversa da imagem e fontes
+ *     oficiais sobre o resultado do exame.
  *
- * Use esta chave para mediar o debate após a entrega — nunca para
- * "corrigir" o aluno antes da investigação.
+ * Aceite qualquer conclusão SUSTENTADA por indícios ou alertas do texto
+ * e que nomeie um limite e uma checagem. "Reúne mais indícios" não é
+ * "é verdadeiro"; "reúne mais alertas" não é "é falso". Use esta chave
+ * para mediar o debate após a entrega — nunca para "corrigir" o aluno
+ * antes da investigação.
  * ------------------------------------------------------------------
  */
 export const missionAFabricaDeNoticias: Mission = {
@@ -49,12 +68,13 @@ export const missionAFabricaDeNoticias: Mission = {
   // 2. Objetivo
   objective:
     "Compreender que a Inteligência Artificial generativa é capaz de produzir " +
-    "textos convincentes e, ainda assim, falsos — e desenvolver os primeiros " +
-    "critérios objetivos para verificar a confiabilidade de uma informação, " +
-    "antes de formar opinião sobre ela. Ao final, o estudante assume, pela " +
-    "primeira vez, a postura de Auditor da Realidade: alguém que não aceita um " +
-    "conteúdo por parecer verdadeiro, e sabe nomear, com evidência, por que " +
-    "confia ou desconfia dele.",
+    "textos convincentes sem nenhuma garantia de verdade — e desenvolver os " +
+    "primeiros critérios objetivos para avaliar a confiabilidade de uma " +
+    "informação antes de formar opinião sobre ela. Ao final, o estudante " +
+    "assume, pela primeira vez, a postura de Auditor da Realidade: alguém que " +
+    "não aceita um conteúdo por parecer verdadeiro, sabe nomear os indícios e " +
+    "os sinais de alerta que encontrou e reconhece o que ainda precisaria ser " +
+    "checado.",
 
   // 3. Pergunta Norteadora
   guidingQuestion:
@@ -68,11 +88,14 @@ export const missionAFabricaDeNoticias: Mission = {
     "de qualquer jornal. Parte do que circula nas redes já não foi escrita por " +
     "pessoas — e nem sempre é possível notar. Isso não significa que toda " +
     "notícia é falsa; significa que parecer verdadeiro deixou de ser prova de " +
-    "que algo é verdadeiro. Você vai receber um Dossiê de Auditoria com quatro " +
-    "manchetes criadas para esta investigação — parte delas seria publicável por " +
-    "qualquer redação séria, parte foi construída para enganar. Antes de saber " +
-    "qual é qual, você vai fazer o que todo auditor faz: registrar uma hipótese " +
-    "inicial, aplicar um método e só então assinar um veredito.",
+    "que algo é verdadeiro. Esta missão é uma SIMULAÇÃO DIDÁTICA: os quatro " +
+    "textos do Dossiê de Auditoria foram criados para esta investigação, e as " +
+    "cidades, instituições e pessoas citadas são fictícias — não adianta " +
+    "procurá-las. Seu trabalho não é descobrir qual texto é verdadeiro, e sim " +
+    "fazer o que todo auditor faz: registrar uma hipótese inicial, aplicar um " +
+    "método e chegar a uma conclusão fundamentada — os indícios de " +
+    "confiabilidade, os sinais de alerta e os limites do que o texto permite " +
+    "saber.",
 
   // 5. Material Didático — o Dossiê de Auditoria completo
   didacticMaterials: [
@@ -109,8 +132,10 @@ export const missionAFabricaDeNoticias: Mission = {
       "cena. A matéria não identifica a escola nem o nome completo do aluno.",
 
     "GUIA DE INVESTIGAÇÃO · Fonte — Pergunta: Quem assina esta informação? " +
-      "| Explicação: Verifique se a pessoa, veículo ou instituição realmente " +
-      "existe e pode ser encontrada fora daquele conteúdo. " +
+      "| Explicação: Veja se o texto identifica a pessoa, o cargo, o veículo ou " +
+      "a instituição responsável. Numa notícia real, o passo seguinte seria " +
+      "confirmar, fora do texto, que essa fonte existe e disse isso; nesta " +
+      "simulação, anote o que o texto informa e o que precisaria ser conferido. " +
       '| Sinal de alerta: Expressões como "especialistas dizem" ou "estudo ' +
       'aponta" sem identificar a fonte. ' +
       '| Exemplo: Uma notícia cita "pesquisadores", mas não informa nomes, ' +
@@ -118,8 +143,8 @@ export const missionAFabricaDeNoticias: Mission = {
 
     "GUIA DE INVESTIGAÇÃO · Data e escopo — Pergunta: Quando e onde isso " +
       "aconteceu? " +
-      "| Explicação: Procure datas, lugares e recortes específicos que possam " +
-      "ser verificados. " +
+      "| Explicação: Procure datas, lugares e recortes específicos que " +
+      "poderiam ser verificados. " +
       '| Sinal de alerta: Expressões vagas como "no país", "recentemente" ou ' +
       '"todo mundo". ' +
       '| Exemplo: O texto afirma que algo ocorreu "em várias escolas", mas ' +
@@ -127,8 +152,9 @@ export const missionAFabricaDeNoticias: Mission = {
 
     "GUIA DE INVESTIGAÇÃO · Evidência — Pergunta: Que prova sustenta essa " +
       "afirmação? " +
-      "| Explicação: Verifique a origem dos números, o método utilizado e se " +
-      "outras fontes confirmam a informação. " +
+      "| Explicação: Observe se o texto informa a origem dos números e o " +
+      "método usado. Pergunte também o que precisaria ser confirmado em outras " +
+      "fontes, se fosse uma notícia real. " +
       "| Sinal de alerta: Percentuais muito precisos sem metodologia, amostra " +
       "ou margem de erro. " +
       '| Exemplo: A manchete apresenta "97% das pessoas", mas não informa ' +
@@ -151,28 +177,33 @@ export const missionAFabricaDeNoticias: Mission = {
       "| Exemplo: Uma imagem apresenta sombras em direções incompatíveis ou " +
       "textos deformados dentro da cena.",
 
-    "CRITÉRIOS DE AUDITORIA · Conta como evidência válida: fonte identificável " +
-      "e localizável fora do texto, dado com metodologia declarada (amostra, " +
-      "data, margem de erro), escopo específico e verificável.",
+    "CRITÉRIOS DE AUDITORIA · Indícios de confiabilidade: fonte identificada " +
+      "(pessoa, cargo, veículo ou instituição), dado com metodologia declarada " +
+      "(amostra, período, margem de erro), escopo específico, tom informativo.",
 
-    "CRITÉRIOS DE AUDITORIA · Não conta como evidência: \"especialistas " +
-      'dizem" sem nome, estatística extrema sem metodologia, apelo para ' +
-      "compartilhar com urgência, imagem com detalhe fisicamente inconsistente.",
+    "CRITÉRIOS DE AUDITORIA · Sinais de alerta: \"especialistas dizem\" sem " +
+      "nome, estatística extrema sem metodologia, apelo para compartilhar com " +
+      "urgência, imagem com detalhe fisicamente inconsistente.",
 
-    "CRITÉRIOS DE AUDITORIA · Regra de ouro: um veredito de \"real\" exige " +
-      "pelo menos dois critérios de evidência válida presentes; a ausência " +
-      "de fonte identificável, sozinha, já é suficiente para um veredito de " +
-      '"fabricada".',
+    "CRITÉRIOS DE AUDITORIA · Limites e checagem: o que o texto não permite " +
+      "saber e o que precisaria ser conferido fora dele — documento original, " +
+      "outra fonte independente, busca da imagem — se fosse uma notícia real.",
+
+    "CRITÉRIOS DE AUDITORIA · Regra de ouro: nenhum texto se prova verdadeiro " +
+      "ou falso só pela aparência. Uma conclusão válida nomeia pelo menos um " +
+      "indício ou sinal de alerta presente no texto, um limite da informação " +
+      "disponível e a checagem que uma notícia real exigiria. Nesta simulação, " +
+      "não é preciso pesquisar as instituições citadas: elas são fictícias.",
   ],
 
   // 6. Ferramentas de IA
   aiTools: [
-    "Assistente de IA de texto — usado depois da auditoria, para você mesmo " +
-      "gerar uma manchete falsa e observar, na prática, como ela soa " +
-      "convincente. Aqui a IA é objeto de estudo, não fonte de resposta: " +
-      "você não pergunta a ela se uma manchete é real.",
-    "Ferramenta de busca/verificação — para confrontar cada item do Dossiê " +
-      "com outras fontes e checar se a instituição ou o veículo citado existe.",
+    "Assistente de IA de texto aprovado pela escola — usado depois da " +
+      "auditoria, para gerar uma manchete de SIMULAÇÃO DIDÁTICA sobre a cidade " +
+      "fictícia de Vale Novo e analisar por que ela soa convincente. Aqui a IA " +
+      "é objeto de estudo, não fonte de resposta. Sem ferramenta disponível " +
+      "para os alunos, o professor faz a geração na tela (Plano B) e cada " +
+      "aluno analisa o texto projetado.",
   ],
 
   // 7. Desafio
@@ -180,53 +211,83 @@ export const missionAFabricaDeNoticias: Mission = {
     "Audite o Dossiê em duas passadas. Primeiro, para cada um dos 4 itens, " +
     "registre sua hipótese inicial — o que seu instinto diz antes de investigar, " +
     "em uma frase. Depois, aplique o Guia de Investigação e os Critérios de " +
-    'Auditoria item por item e dê o seu veredito final ("real" ou "fabricada"), ' +
-    "justificado com pelo menos um critério de evidência do material didático — " +
-    'nunca com "achismo". Por fim, use o assistente de IA para criar você mesmo ' +
-    "uma manchete falsa sobre a sua cidade ou escola e explique, em duas frases, " +
-    "o que a torna crível — e qual critério de auditoria a denunciaria.",
+    "Auditoria item por item e escreva uma conclusão fundamentada: os indícios " +
+    "de confiabilidade e os sinais de alerta que o texto apresenta, o que ele " +
+    "não permite saber e qual checagem uma notícia real exigiria — nunca " +
+    'com "achismo". Por fim, gere com o assistente de IA (ou acompanhe a ' +
+    "geração feita pelo professor) uma manchete de SIMULAÇÃO DIDÁTICA sobre a " +
+    "cidade fictícia de Vale Novo, só com instituições e personagens " +
+    "fictícios, e explique o que a torna crível e qual critério de auditoria " +
+    "a denunciaria.",
 
   // 8. Produção do Aluno
   studentProduction:
-    "Um Relatório de Auditoria contendo, para cada um dos 4 itens do Dossiê: " +
-    "(a) sua hipótese inicial; (b) o veredito final, com o(s) critério(s) de " +
-    "evidência que sustentam essa decisão. Ao final do relatório: (c) a " +
-    "manchete falsa que você mesmo gerou com IA; (d) a análise de por que ela " +
-    "engana e qual critério de auditoria a denunciaria. Texto objetivo, em " +
-    "primeira pessoa de auditor.",
+    "Um Relatório de Auditoria curto. (a) Suas 4 hipóteses iniciais — você as " +
+    "registra na Investigação e elas entram sozinhas no topo do relatório. " +
+    "(b) Para cada item: um indício ou sinal de alerta, um limite com a " +
+    "checagem necessária e a sua conclusão, uma frase cada. A análise da " +
+    "manchete gerada com IA vai no registro da próxima etapa, Uso da IA.",
 
   // 9. Reflexão no Diário do Auditor
   reflection:
-    "Sua hipótese inicial bateu com o seu veredito final em todos os itens? " +
-    "Nos casos em que não bateu, o que mudou sua opinião — e o que isso revela " +
-    "sobre a diferença entre a primeira impressão e uma investigação de " +
-    "verdade? O que muda na forma como você vai ler a próxima notícia que " +
-    "aparecer no seu celular?",
+    "Sua hipótese inicial se manteve depois da análise em todos os itens? " +
+    "Em que item a análise mudou ou matizou sua primeira impressão — e o que " +
+    "isso revela sobre a diferença entre a primeira impressão e uma " +
+    "investigação de verdade? Diante de uma notícia real no seu celular, que " +
+    "checagem você faria antes de acreditar nela ou de compartilhá-la?",
 
   // 10. Entrega
   delivery:
     "O Relatório de Auditoria é registrado na plataforma e fica salvo na sua " +
     "conta (você pode sair e continuar depois). Considera-se concluída quando as quatro " +
-    "hipóteses e vereditos, a manchete gerada com sua análise, e a reflexão " +
-    "estiverem preenchidos e entregues.",
+    "hipóteses e conclusões, o registro de uso da IA e a reflexão estiverem " +
+    "preenchidos e entregues.",
 
   // 11. Competências Desenvolvidas
   competencies: [
     "Pensamento crítico e ceticismo saudável",
     "Formulação e teste de hipóteses",
-    "Verificação de fontes e checagem de evidências",
+    "Análise de fontes e de evidências",
     "Uso ético e crítico da Inteligência Artificial",
     "Argumentação baseada em evidências",
     "Letramento midiático e digital",
   ],
 
-  productionPlaceholder:
-    "a) Vereditos das 4 manchetes, com evidências…\n" +
-    "b) A manchete falsa que você gerou…\n" +
-    "c) Por que ela engana — e o que a denuncia…",
+  // Modelo do Relatório (D-057): as linhas de hipótese entram antes deste
+  // texto, geradas pelo Mission Flow a partir dos campos da Investigação.
+  productionTemplate:
+    "ANÁLISE — uma frase por campo\n" +
+    "Item 1 — indício ou sinal de alerta:\n" +
+    "Item 1 — limite e checagem necessária:\n" +
+    "Item 1 — conclusão:\n" +
+    "Item 2 — indício ou sinal de alerta:\n" +
+    "Item 2 — limite e checagem necessária:\n" +
+    "Item 2 — conclusão:\n" +
+    "Item 3 — indício ou sinal de alerta:\n" +
+    "Item 3 — limite e checagem necessária:\n" +
+    "Item 3 — conclusão:\n" +
+    "Item 4 — indício ou sinal de alerta:\n" +
+    "Item 4 — limite e checagem necessária:\n" +
+    "Item 4 — conclusão:",
   hypothesisPrompt:
-    "Antes de aplicar o guia: essa manchete parece real ou fabricada, e por quê? Anote sua hipótese — você vai usá-la no Relatório.",
-  criteriaTitle: "O que torna um veredito válido",
+    "Antes de aplicar o guia: este texto parece confiável ou suspeito, e por quê? Registre sua hipótese em uma frase — ela entra no seu Relatório.",
+  criteriaTitle: "O que torna uma conclusão válida",
+
+  // Estimativa por etapa (piloto 1ª série A, docs/piloto/03-missao-e-roteiro.md):
+  // ~36 min de atividade, dentro da faixa de 35–40 min. Estimativa, ainda não
+  // validada com alunos.
+  stepMinutes: [
+    0.5, // 1. Capa
+    1.5, // 2. Contexto (simulação didática)
+    1, // 3. Objetivo e dois eixos
+    8, // 4. Guia + 4 hipóteses registradas
+    1, // 5. Comparação
+    12, // 6. Relatório (análise dos 4 itens)
+    6, // 7. Uso da IA (geração ou Plano B + registro)
+    1, // 8. Critérios
+    1, // 9. Entrega
+    4, // 10. Reflexão
+  ],
 
   // Dois eixos (D-053) — avaliados separadamente pelo professor.
   axes: {
@@ -234,9 +295,10 @@ export const missionAFabricaDeNoticias: Mission = {
       area: "CHS",
       component: "História",
       objective:
-        "Comparar fontes e narrativas sobre um mesmo fato, identificando quem " +
-        "produziu cada uma, com que intenção e com que evidências, para distinguir " +
-        "informação verificável de conteúdo fabricado.",
+        "Analisar quatro textos noticiosos simulados, identificando a autoria, a " +
+        "origem, a intenção e as evidências de cada um, e explicitar os limites " +
+        "do que eles permitem afirmar — distinguindo indícios de confiabilidade " +
+        "de sinais de alerta.",
       skill: {
         framework: "bncc",
         code: "EM13CHS101",
@@ -251,40 +313,51 @@ export const missionAFabricaDeNoticias: Mission = {
       },
       criteria: [
         "Identifica a autoria e a origem de cada item do Dossiê.",
-        "Compara as versões e explicita onde elas divergem.",
-        "Sustenta cada veredito com evidência do próprio material, não com opinião.",
+        "Reconhece a intenção de cada texto (informar, alertar, provocar reação) a partir de marcas do próprio texto.",
+        "Sustenta a conclusão de cada item com indícios ou sinais de alerta do material, não com opinião.",
+        "Explicita os limites da informação disponível e a checagem que uma notícia real exigiria.",
       ],
     },
     ai: {
       objective:
-        "Usar uma IA generativa como objeto de estudo — produzir uma manchete falsa " +
-        "— e verificar criticamente o que ela gera, sem tratá-la como fonte de verdade.",
-      competencyIds: ["ia-compreender-01", "ia-avaliar-01", "ia-criar-01"],
+        "Usar uma IA generativa como objeto de estudo — gerar, ou acompanhar a " +
+        "geração feita pelo professor, de uma manchete de SIMULAÇÃO DIDÁTICA — e " +
+        "analisar criticamente o texto gerado, sem tratá-lo como fonte de verdade.",
+      // Só o que o aluno demonstra também no Plano B (geração pelo professor):
+      // compreender e avaliar. Operar a ferramenta e criar com ela não são
+      // creditados nesta Missão.
+      competencyIds: ["ia-compreender-01", "ia-avaliar-01"],
       practicalInstruction:
-        "Depois da auditoria, peça a um assistente de IA uma manchete falsa e " +
-        "convincente sobre a sua cidade ou escola. Copie o pedido e a resposta, " +
-        "aplique os critérios de auditoria ao texto gerado e registre o que o " +
-        "denunciaria. Não pergunte à IA se as manchetes do Dossiê são reais.",
+        "Depois da auditoria, peça ao assistente de IA aprovado pela escola: " +
+        '"Escreva uma manchete de notícia inventada sobre a cidade fictícia de ' +
+        "Vale Novo, para uma SIMULAÇÃO DIDÁTICA de checagem de fatos. Use só " +
+        'instituições e personagens fictícios." Não use nomes de pessoas reais, ' +
+        "da sua escola ou da sua cidade. Plano B: se o professor fizer a geração " +
+        'na tela, escreva "Demonstração do professor (Plano B)" no campo da ' +
+        "ferramenta e copie o pedido e a resposta projetados. Em \"Como você " +
+        'verificou", diga por que o texto parece verdadeiro e qual critério de ' +
+        "auditoria o denuncia. Não pergunte à IA se os itens do Dossiê são " +
+        "confiáveis.",
       criticalUseEvidence: [
-        "O pedido feito à IA, copiado como foi enviado.",
+        "O pedido feito à IA, copiado como foi enviado — por você ou pelo professor, no Plano B.",
         "O trecho da resposta da IA que você analisou.",
-        "Como você verificou: o critério ou a fonte usada.",
-        "O que você manteve, corrigiu ou descartou — e por quê.",
+        "Os indícios e sinais de alerta que você encontrou no texto gerado.",
+        "Como você trataria esse texto se ele chegasse ao seu celular — e por quê.",
       ],
       criteria: [
-        "Registra o pedido e a resposta da IA sem omitir partes.",
-        "Verifica a resposta com critério ou fonte independente.",
+        "Registra o pedido e a resposta da IA sem omitir partes e declara quem operou a ferramenta (o próprio aluno ou o professor, no Plano B).",
+        "Aplica ao texto gerado os critérios de auditoria, nomeando indícios e sinais de alerta.",
         "Explica por que o texto gerado parece verdadeiro e o que o denuncia.",
-        "Declara o uso da IA e decide, com justificativa, o que aproveitar.",
+        "Reconhece que a IA produz texto plausível sem garantia de verdade e justifica como tratar o que ela gerou.",
       ],
     },
     reflectionCriteria: [
-      "Compara a hipótese inicial com o veredito final.",
-      "Nomeia o que mudou a própria opinião.",
-      "Indica uma mudança concreta na forma de ler notícias.",
+      "Compara a hipótese inicial com a conclusão da análise.",
+      "Nomeia o que mudou ou confirmou a própria opinião.",
+      "Indica uma checagem concreta que faria diante de uma notícia real.",
     ],
   },
 
   createdAt: new Date("2026-07-14"),
-  updatedAt: new Date("2026-07-16"),
+  updatedAt: new Date("2026-10-20"),
 };

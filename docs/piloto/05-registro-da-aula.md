@@ -11,7 +11,7 @@ Três fontes, cada uma com o seu papel:
 | Campo | Valor |
 |---|---|
 | Data / horário de início e fim | |
-| Matriculados na 1ª A (lista importada) | 35 |
+| Matriculados na 1ª A (lista importada) | total oficial a confirmar (31 registros recebidos × 32 planejados) |
 | **Presentes** (chamada) | |
 | Ausentes | |
 | Presentes que **entraram** na plataforma | (do relatório automático) |

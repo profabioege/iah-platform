@@ -68,6 +68,22 @@ export interface Mission {
   hypothesisPrompt?: string;
   criteriaTitle?: string;
 
+  /**
+   * Modelo do Relatório (D-057). Presente, a etapa Investigação ganha um
+   * campo de hipótese por item do Dossiê, gravado em linhas próprias no
+   * topo do texto da Produção (mesmo rascunho e salvamento automático), e
+   * este modelo entra no texto logo abaixo, na primeira hipótese
+   * registrada. Também é o texto de exemplo da Produção vazia.
+   */
+  productionTemplate?: string;
+
+  /**
+   * Estimativa própria de minutos por etapa do Mission Flow (posição 0 =
+   * etapa 1), quando a heurística geral de `mission-timing.ts` não serve
+   * à Missão. Estimativa de planejamento, não medição com alunos.
+   */
+  stepMinutes?: number[];
+
   /** Posição da Missão na sequência do módulo. */
   order: number;
 

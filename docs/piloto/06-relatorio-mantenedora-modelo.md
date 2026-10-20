@@ -5,7 +5,7 @@
 **Período:** [data da aula] · **Turma:** 1ª série A (Ensino Médio) · **Condução:** Prof. Fabio Ege · **Missão:** 01 — A Fábrica de Notícias (História · EM13CHS101 + competência em IA)
 
 ## 1. Resumo em cinco linhas
-- [__] de [35] alunos matriculados estavam presentes; [__] entraram na plataforma ([__]% dos presentes).
+- [__] de [total oficial a confirmar] alunos matriculados estavam presentes; [__] entraram na plataforma ([__]% dos presentes).
 - [__] concluíram a missão (produção + registro de uso da IA + reflexão) — [__]% dos presentes.
 - Tempo mediano de realização: [__] min (p90: [__] min).
 - Ocorrências técnicas: [__] (credencial [__], plataforma [__], rede [__], equipamento [__], ferramenta de IA [__]); plano de continuidade acionado: [sim/não].
@@ -14,7 +14,7 @@
 ## 2. Participação
 | Indicador | Valor | Fonte |
 |---|---|---|
-| Matriculados | 35 | lista importada |
+| Matriculados | total oficial a confirmar (31 registros recebidos × 32 planejados) | lista importada |
 | Presentes | | chamada |
 | Entraram na plataforma | | banco |
 | Presentes sem acesso por causa técnica | | registro da aula |

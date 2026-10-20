@@ -183,3 +183,7 @@ Antes de marcar `status: published`, a Missão passa por todos estes testes:
 Cada Missão é **um arquivo de conteúdo** em `app/src/content/missions/`, que implementa a entidade `Mission` (os 11 blocos + metadados mapeiam 1:1 nos campos do tipo). O arquivo é registrado no índice `app/src/content/missions/index.ts`, e o `MissionReader` local o serve à interface.
 
 **Adicionar uma nova Missão = criar um novo arquivo de conteúdo e registrá-lo no índice.** Nenhum componente de interface muda. Ver [04_ARCHITECTURE.md](04_ARCHITECTURE.md) e o histórico em [07_DECISIONS.md](07_DECISIONS.md).
+
+Campos opcionais do Mission Flow (D-057, [DECISIONS.md](DECISIONS.md)):
+- `productionTemplate` — modelo do Relatório. Presente, a Investigação ganha um campo de hipótese por item do Dossiê, gravado em linhas `Item N — hipótese: …` no topo do texto da Produção; o modelo entra logo abaixo, na primeira hipótese registrada. Sem tabela ou coluna própria: é o mesmo rascunho da Produção.
+- `stepMinutes` — estimativa de minutos por etapa (uma posição por etapa do fluxo), quando a heurística geral não serve à Missão. É estimativa de planejamento, não medição com alunos.

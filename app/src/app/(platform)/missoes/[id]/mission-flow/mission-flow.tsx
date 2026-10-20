@@ -35,6 +35,12 @@ import {
   splitQuestions,
 } from "./parse-mission-content";
 import { minutesRemainingFrom, totalMissionMinutes, totalSteps } from "./mission-timing";
+import {
+  hasReportContent,
+  initialReport,
+  readHypotheses,
+  setHypothesis,
+} from "./report-hypotheses";
 import { AiEvidenceForm, AxesObjectives, AxesReviewCards } from "./two-axes";
 import {
   useStudentWork,
@@ -88,18 +94,33 @@ export function MissionFlow({
   };
   const evidenceReady = !twoAxes || (work ? isAiEvidenceComplete(work.aiEvidence) : false);
 
+  // Hipóteses registradas na Investigação, guardadas no topo do texto da
+  // Produção (D-057) — só nas Missões com modelo de Relatório.
+  const template = mission.productionTemplate;
+  const evidenceCount = parsed.evidences.length;
+  const hypotheses = template && work ? readHypotheses(work.production, evidenceCount) : null;
+
   const [step, setStep] = React.useState<number | null>(null);
   const [evidenceIndex, setEvidenceIndex] = React.useState(0);
 
   // Retomada inteligente: deriva a etapa inicial do StudentWork que já
   // existe — sem persistir nenhum dado novo (só decisão de apresentação).
+  // Quem só registrou parte das hipóteses volta ao primeiro item sem
+  // hipótese; quem já escreveu o relatório volta à Produção.
   React.useEffect(() => {
     if (step !== null || !work) return;
     if (recorded) setStep(S.reflection);
     else if (delivered) setStep(S.delivery);
-    else if (work.production.trim().length > 0) setStep(S.production);
-    else setStep(1);
-  }, [step, work, delivered, recorded, S.reflection, S.delivery, S.production]);
+    else if (hasReportContent(work.production, template)) setStep(S.production);
+    else if (template && work.production.trim().length > 0) {
+      const firstEmpty = readHypotheses(work.production, evidenceCount).findIndex((h) => !h.trim());
+      if (firstEmpty === -1) setStep(S.production);
+      else {
+        setStep(4);
+        setEvidenceIndex(firstEmpty + 1);
+      }
+    } else setStep(1);
+  }, [step, work, delivered, recorded, template, evidenceCount, S.reflection, S.delivery, S.production]);
 
   if (step === null) return <FlowSkeleton />;
 
@@ -115,14 +136,14 @@ export function MissionFlow({
         title={mission.title}
         step={step}
         totalSteps={TOTAL_STEPS}
-        minutesRemaining={minutesRemainingFrom(step, twoAxes)}
+        minutesRemaining={minutesRemainingFrom(step, twoAxes, mission.stepMinutes)}
       />
 
       <StepTransition stepKey={`${step}:${step === 4 ? evidenceIndex : 0}`}>
         {step === 1 && (
           <CoverStep
             mission={mission}
-            totalMinutes={totalMissionMinutes(twoAxes)}
+            totalMinutes={totalMissionMinutes(twoAxes, mission.stepMinutes)}
             onStart={() => {
               if (work && !work.startedAt) {
                 update({ startedAt: new Date().toISOString() });
@@ -181,6 +202,23 @@ export function MissionFlow({
             setEvidenceIndex={setEvidenceIndex}
             onBack={() => goTo(3)}
             onDone={() => goTo(5)}
+            hypothesis={
+              template && work && hypotheses && evidenceIndex > 0
+                ? {
+                    value: hypotheses[evidenceIndex - 1] ?? "",
+                    onChange: (value) =>
+                      update({
+                        production: setHypothesis(work.production, evidenceIndex, value, evidenceCount, template),
+                      }),
+                    onBlur: flush,
+                    readOnly: delivered || running("deliver"),
+                    statusLabel: delivered
+                      ? "Já entregue — reabra na etapa Entrega para editar."
+                      : saveStatusLabel(saveStatusOf("production")),
+                    statusError: !delivered && saveStatusOf("production") === "error",
+                  }
+                : undefined
+            }
           />
         )}
 
@@ -188,7 +226,7 @@ export function MissionFlow({
           <MissionStep
             eyebrow="Comparação"
             title={`Reveja as ${parsed.evidences.length} evidências lado a lado`}
-            description="Compare padrões antes de fechar seu veredito."
+            description="Compare padrões antes de fechar sua conclusão."
           >
             <div className="grid gap-3 sm:grid-cols-2">
               {parsed.evidences.map((evidence) => (
@@ -214,7 +252,11 @@ export function MissionFlow({
                   readOnly={delivered || running("deliver")}
                   autoFocus={!delivered}
                   rows={12}
-                  placeholder={mission.productionPlaceholder ?? "Escreva aqui a sua produção…"}
+                  placeholder={
+                    template
+                      ? initialReport(evidenceCount, template)
+                      : (mission.productionPlaceholder ?? "Escreva aqui a sua produção…")
+                  }
                   className="w-full resize-y rounded-lg border border-input bg-background/60 p-3 text-sm leading-relaxed text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-ring focus:ring-2 focus:ring-ring/30 read-only:opacity-80"
                   aria-label="Texto do Relatório de Auditoria"
                 />
@@ -492,7 +534,7 @@ function CoverStep({
       </div>
       <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
         <Clock className="size-3.5" />
-        Cerca de {totalMinutes} minutos de investigação
+        Tempo estimado: cerca de {totalMinutes} minutos de investigação
       </div>
       <div className="flex max-w-md flex-wrap justify-center gap-2">
         {mission.competencies.map((competency) => (
@@ -509,6 +551,16 @@ function CoverStep({
   );
 }
 
+/** Campo da hipótese de um item (D-057): grava no texto da Produção. */
+interface HypothesisField {
+  value: string;
+  onChange: (value: string) => void;
+  onBlur: () => void;
+  readOnly: boolean;
+  statusLabel: string;
+  statusError: boolean;
+}
+
 function InvestigationStep({
   parsed,
   hypothesisPrompt,
@@ -516,6 +568,7 @@ function InvestigationStep({
   setEvidenceIndex,
   onBack,
   onDone,
+  hypothesis,
 }: {
   parsed: ReturnType<typeof parseMissionContent>;
   hypothesisPrompt?: string;
@@ -523,6 +576,7 @@ function InvestigationStep({
   setEvidenceIndex: (i: number) => void;
   onBack: () => void;
   onDone: () => void;
+  hypothesis?: HypothesisField;
 }) {
   // 0 = introdução com o Guia de Investigação; 1..N = uma evidência por tela.
   const isIntro = evidenceIndex === 0;
@@ -556,6 +610,31 @@ function InvestigationStep({
           "Antes de aplicar o guia: anote sua hipótese sobre este item — você vai usá-la no Relatório."
         }
       />
+      {hypothesis ? (
+        <Card>
+          <CardContent className="py-2">
+            <label className="flex flex-col gap-1.5 text-sm font-medium">
+              Sua hipótese sobre o item {evidenceIndex}
+              <input
+                value={hypothesis.value}
+                onChange={(e) => hypothesis.onChange(e.target.value)}
+                onBlur={hypothesis.onBlur}
+                readOnly={hypothesis.readOnly}
+                maxLength={300}
+                placeholder="Uma frase: parece confiável ou suspeito, e por quê?"
+                className="w-full rounded-lg border border-input bg-background/60 px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-ring focus:ring-2 focus:ring-ring/30 read-only:opacity-80"
+              />
+            </label>
+            <p
+              role="status"
+              aria-live="polite"
+              className={`mt-2 text-xs ${hypothesis.statusError ? "text-destructive" : "text-muted-foreground"}`}
+            >
+              {hypothesis.statusLabel}
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
       <MissionNavigation
         onBack={() =>
           evidenceIndex === 1 ? setEvidenceIndex(0) : setEvidenceIndex(evidenceIndex - 1)

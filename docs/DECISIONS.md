@@ -748,3 +748,20 @@ atualizados.
 **Alternativas descartadas:** *reusar `iah-beryon-homolog`* (em 0015, com contas de carga; segregação e exclusão final mais difíceis); *usar o projeto de produção* (precisa poder ser apagado no fim da retenção); *login Google para alunos* (não implementado para alunos; dependeria de TI); *fila artificial no servidor* (mascararia a capacidade real).
 
 **Impacto futuro:** Ampliar para a turma B (65 alunos) exige novo ensaio hospedado com 65; o resultado de 35 não vale como prova. O painel do gestor no modo real passa a mostrar só dados gravados.
+
+## D-057 — Revisão pontual da Missão 01 para o piloto individual da 1ª série A (20/10/2026)
+
+**Status:** Proposto ao Founder (branch `pilot/beryon-1a-2026`, não publicada; o deploy do piloto continua em `c997299`). Detalhes em `docs/piloto/03-missao-e-roteiro.md`, seção 6.
+
+**Contexto e problema:** O parecer pedagógico de 20/10 comprovou inconsistências na Missão 01: os quatro textos são fictícios, mas o aluno era obrigado a classificá-los em "real" ou "fabricada", e a regra de ouro exigia uma fonte "localizável fora do texto" — quem buscasse o IBEE ou Vale Novo seria levado a contrariar a chave do professor. Além disso, a etapa de hipótese não tinha onde registrar a hipótese; o critério de História pedia comparar versões de um mesmo fato que o Dossiê não oferece; a atividade com IA pedia uma notícia falsa sobre a cidade ou a escola real; no Plano B a plataforma creditava `ia-criar-01` sem criação pelo aluno; e a tela mostrava "cerca de 14 minutos" para uma atividade planejada em 35–40.
+
+**Decisão:**
+
+1. **Simulação didática declarada e conclusão fundamentada**: mesmos quatro textos; sem classificação obrigatória; cada item recebe indício ou sinal de alerta, limite com a checagem que uma notícia real exigiria e conclusão. A chave orienta a análise e não declara verdade nem falsidade. A busca deixa de ser ferramenta da missão.
+2. **Hipóteses no texto do Relatório** (`Mission.productionTemplate`, `report-hypotheses.ts`): uma linha `Item N — hipótese: …` por item no topo do texto da Produção, seguida do modelo da Missão. Reaproveita o rascunho, o salvamento automático, a fila e a confirmação da Produção — **nenhuma tabela, coluna ou migration**. Funções puras que nunca apagam texto do aluno; a retomada volta ao primeiro item sem hipótese. Missões sem modelo não mudam.
+3. **Eixo História** ajustado ao trabalho pedido (autoria, origem, intenção, evidências, limites), com o texto oficial da EM13CHS101 intacto. **Eixo IA** só com cenário fictício identificado; Plano B registrado como "Demonstração do professor (Plano B)"; competências avaliadas reduzidas a `ia-compreender-01` e `ia-avaliar-01`, as que o aluno demonstra também no Plano B. A regra de avaliação (`assertAxesReview`) não muda.
+4. **Estimativa de tempo por Missão** (`Mission.stepMinutes`): substitui só os minutos da heurística geral; a Missão 01 estima ~36 min (faixa 35–40). Estimativa de planejamento, não validada com alunos.
+
+**Alternativas descartadas:** *coluna própria para as hipóteses* (migration no banco do piloto em plena preparação; o pedido foi reaproveitar a persistência existente); *manter `ia-criar-01` condicionado ao modo da aula* (exigiria mudar a regra de avaliação, o painel do professor e os testes do fluxo de avaliação); *corrigir o tempo na heurística geral* (mudaria a estimativa de todas as Missões, inclusive a 02).
+
+**Impacto futuro:** A revisão só chega à turma com novo deploy, que exige aprovação explícita. O gerador do ensaio hospedado passou a enviar as duas competências; contra um deploy anterior a esta revisão, as devolutivas sintéticas seriam recusadas — rodar o ensaio contra a mesma versão que será usada na aula. Avaliações sintéticas já gravadas (com `ia-criar-01` e os critérios antigos) ficam no banco como estão.

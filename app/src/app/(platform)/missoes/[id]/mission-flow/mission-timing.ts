@@ -5,6 +5,10 @@
  * validada. Serve só como sinalização de progresso para o aluno
  * durante o percurso — nunca como promessa de tempo (ver risco
  * registrado em docs/STATUS.md sobre a meta de demonstração).
+ *
+ * Uma Missão pode trazer a sua própria estimativa por etapa
+ * (`Mission.stepMinutes`, D-057); ela substitui só os minutos — o número
+ * de etapas continua o do fluxo.
  */
 const STEP_MINUTES: Record<number, number> = {
   1: 0, // Capa — decisão de começar, não leitura
@@ -30,22 +34,29 @@ const TWO_AXES_STEP_MINUTES: Record<number, number> = {
   10: STEP_MINUTES[9], // Reflexão Final
 };
 
-function minutesFor(twoAxes: boolean): Record<number, number> {
+function defaultMinutes(twoAxes: boolean): Record<number, number> {
   return twoAxes ? TWO_AXES_STEP_MINUTES : STEP_MINUTES;
 }
 
-export function totalSteps(twoAxes = false): number {
-  return Object.keys(minutesFor(twoAxes)).length;
+function minutesFor(twoAxes: boolean, stepMinutes?: number[]): Record<number, number> {
+  if (!stepMinutes) return defaultMinutes(twoAxes);
+  return Object.fromEntries(stepMinutes.map((minutes, i) => [i + 1, minutes]));
 }
 
-export function totalMissionMinutes(twoAxes = false): number {
-  return Math.round(Object.values(minutesFor(twoAxes)).reduce((sum, minutes) => sum + minutes, 0));
+export function totalSteps(twoAxes = false): number {
+  return Object.keys(defaultMinutes(twoAxes)).length;
+}
+
+export function totalMissionMinutes(twoAxes = false, stepMinutes?: number[]): number {
+  return Math.round(
+    Object.values(minutesFor(twoAxes, stepMinutes)).reduce((sum, minutes) => sum + minutes, 0),
+  );
 }
 
 export const TOTAL_MISSION_MINUTES = totalMissionMinutes(false);
 
-export function minutesRemainingFrom(step: number, twoAxes = false): number {
-  const table = minutesFor(twoAxes);
+export function minutesRemainingFrom(step: number, twoAxes = false, stepMinutes?: number[]): number {
+  const table = minutesFor(twoAxes, stepMinutes);
   let remaining = 0;
   for (let s = step; s <= totalSteps(twoAxes); s++) remaining += table[s] ?? 0;
   return Math.max(1, Math.round(remaining));

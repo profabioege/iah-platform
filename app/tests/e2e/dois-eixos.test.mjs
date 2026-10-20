@@ -39,14 +39,14 @@ const NIVEIS = {
   discipline: {
     level: "atingido",
     observedCriteria: [],
-    note: "Comparou as versões do fato com fonte e data.",
+    note: "Identificou autoria, origem e limites de cada item.",
     skillCode: "EM13CHS101",
   },
   ai: {
     level: "em_desenvolvimento",
     observedCriteria: [],
     note: "Registrou a resposta da IA; a verificação pode ir além da fonte.",
-    competencyIds: ["ia-compreender-01", "ia-avaliar-01", "ia-criar-01"],
+    competencyIds: ["ia-compreender-01", "ia-avaliar-01"],
   },
 };
 

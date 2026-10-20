@@ -717,9 +717,11 @@ async function main() {
     console.log("Fase 3: devolutivas do professor...");
     // Eixos da Missão 01 (src/content/missions/01-a-fabrica-de-noticias.ts);
     // o servidor confere contra o arquivo da missão e recusa se divergirem.
+    // Revisão de 20/10 (D-057): só compreender e avaliar. Um deploy anterior
+    // a ela ainda espera também "ia-criar-01".
     const axes = {
       discipline: { skill: { code: "EM13CHS101" } },
-      ai: { competencyIds: ["ia-compreender-01", "ia-avaliar-01", "ia-criar-01"] },
+      ai: { competencyIds: ["ia-compreender-01", "ia-avaliar-01"] },
     };
     const idsAlunos = new Map();
     if (amb.admin) {

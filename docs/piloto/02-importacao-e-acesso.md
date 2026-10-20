@@ -31,7 +31,7 @@ Aluno Sintético Um,aluno.sintetico.um@escola.example,1ª série A
 
 - Só essas três colunas. Coluna a mais (CPF, telefone, data de nascimento…) é **recusada** — não coletamos o que não é necessário.
 - Vírgula ou ponto e vírgula; com ou sem BOM (Excel "CSV UTF-8").
-- A configuração da turma (instituição, ano, turma, professor, gestor, **total esperado = 35** e **domínio institucional**) fica num JSON fora do repositório — modelo em `modelos/piloto-1a-config.modelo.json`.
+- A configuração da turma (instituição, ano, turma, professor, gestor, **total esperado = total oficial a confirmar (31 registros recebidos × 32 planejados)** e **domínio institucional**) fica num JSON fora do repositório — modelo em `modelos/piloto-1a-config.modelo.json`.
 
 ### Validação prévia (só lê; obrigatória antes de importar)
 
@@ -42,7 +42,7 @@ piloto-validar-turma.cmd C:\piloto\piloto-1a.json C:\piloto\alunos-1a.csv       
 ```
 
 O relatório mostra, citando **número da linha e e-mail mascarado** (nunca o nome):
-- total no arquivo × total da lista institucional (35);
+- total no arquivo × total da lista institucional (total oficial a confirmar);
 - quantos são da 1ª série A e quantos de outra turma (outra turma **bloqueia**: retire a linha);
 - e-mails ausentes, inválidos, repetidos ou fora do domínio da escola (**bloqueiam**);
 - domínios encontrados (para conferir o domínio institucional);
@@ -55,7 +55,7 @@ Resultado: `NÃO IMPORTAR` (há bloqueio) ou `apto para importar`. **Divergênci
 ### Importação
 
 ```
-piloto-importar-turma.cmd C:\piloto\piloto-1a.json C:\piloto\alunos-1a.csv inst-beryon 35 C:\piloto\credenciais-1a.csv fabio
+piloto-importar-turma.cmd C:\piloto\piloto-1a.json C:\piloto\alunos-1a.csv inst-beryon <total oficial> C:\piloto\credenciais-1a.csv fabio
 ```
 
 - Só roda com zero bloqueios, com o id da instituição e o **total conferido** digitados.
