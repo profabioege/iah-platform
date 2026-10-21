@@ -23,6 +23,7 @@ import {
   type MissionAxes,
 } from "@/modules/library";
 import { isRealModeClient } from "@/lib/auth-flags";
+import { formatSchoolDateTime } from "@/lib/school-time";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -188,7 +189,7 @@ export function ClassPanel({
                       ) : null}
                       <span className="w-40 text-right text-xs text-muted-foreground">
                         {s.lastAccessAt
-                          ? `Último acesso ${formatDateTime(s.lastAccessAt)}`
+                          ? `Último acesso ${formatSchoolDateTime(s.lastAccessAt)}`
                           : "Nunca acessou"}
                       </span>
                       {hasContent ? (
@@ -563,15 +564,6 @@ function FilterChip({
       {label}
     </button>
   );
-}
-
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 /**

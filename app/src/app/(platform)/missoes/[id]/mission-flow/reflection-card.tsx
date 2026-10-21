@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
+import { canReopenReflection } from "./flow-state";
 import type { WorkSaveStatus } from "./use-student-work";
 
 /**
@@ -30,6 +31,7 @@ export function ReflectionCard({
   transitionError,
   recorded,
   delivered,
+  reviewed = false,
   recordedAt,
   onRecord,
   onReopen,
@@ -48,6 +50,11 @@ export function ReflectionCard({
   transitionError: React.ReactNode;
   recorded: boolean;
   delivered: boolean;
+  /**
+   * Avaliação registrada: o servidor recusa reabrir a reflexão
+   * (`setReflectionRecorded`, "Entrega já avaliada"), então o botão some.
+   */
+  reviewed?: boolean;
   recordedAt: string | null;
   onRecord: () => void;
   onReopen: () => void;
@@ -84,10 +91,13 @@ export function ReflectionCard({
         />
         <div className="flex flex-wrap items-center gap-3">
           {recorded ? (
-            <Button variant="outline" size="sm" onClick={onReopen} disabled={reopening}>
-              <Undo2 className="size-4" />
-              {reopening ? "Reabrindo…" : "Reabrir para editar"}
-            </Button>
+            // Avaliada: o servidor recusa reabrir — a interface não oferece.
+            canReopenReflection({ recorded, reviewed }) ? (
+              <Button variant="outline" size="sm" onClick={onReopen} disabled={reopening}>
+                <Undo2 className="size-4" />
+                {reopening ? "Reabrindo…" : "Reabrir para editar"}
+              </Button>
+            ) : null
           ) : (
             <Button
               size="sm"
@@ -104,7 +114,9 @@ export function ReflectionCard({
             aria-live="polite"
             className={`text-xs ${!recorded && delivered && saveStatus === "error" ? "text-destructive" : "text-muted-foreground"}`}
           >
-            {recorded
+            {recorded && reviewed
+              ? "Avaliação concluída — reflexão preservada; não pode mais ser reaberta."
+              : recorded
               ? "Sua reflexão fica guardada no Diário do Auditor."
               : delivered
                 ? saveStatusLabel

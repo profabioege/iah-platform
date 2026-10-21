@@ -170,6 +170,9 @@ export async function startHttpHomologation(options = {}) {
       NEXT_PUBLIC_BUILD_BRANCH: "pilot/beryon-40-alunos",
       NEXT_PUBLIC_BUILD_ENVIRONMENT: "homologacao-local",
       NEXT_TELEMETRY_DISABLED: "1",
+      // Mesmo fuso do servidor hospedado (Vercel = UTC): horários exibidos
+      // têm de sair em Brasília mesmo assim (formatSchoolDateTime).
+      TZ: "UTC",
     };
 
     log("2/6 Missões no catálogo (sintética + Missões 01 e 02 da Trilha IA & Humanidades)...");

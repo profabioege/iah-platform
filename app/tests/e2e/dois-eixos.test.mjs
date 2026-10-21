@@ -151,6 +151,35 @@ test("5. aluno produz, registra o uso da IA, entrega e reflete — tudo persiste
   assert.ok(linha.recorded_at);
 });
 
+test("5b. produção reaberta com a reflexão registrada: o servidor devolve o estado verdadeiro", async () => {
+  const [antes] = await consultarBanco(
+    "select recorded_at, text from reflections where student_id = $1 and mission_id = $2",
+    [ALUNO.referencia, MISSAO_IA_ID],
+  );
+  const reaberta = await aluno.acao(PAGINA, acao("setProductionDeliveredAction"), [MISSAO_IA_ID, false]);
+  assert.equal(acaoRecusada(reaberta), false);
+
+  // Retomada (nova leitura): rascunho + reflexão ainda registrada — a
+  // interface usa este estado para voltar à Produção, não à "entrega".
+  const trabalho = valorDaAcao((await aluno.acao(PAGINA, acao("startMissionAction"), [MISSAO_IA_ID])).texto);
+  assert.equal(trabalho.productionDeliveredAt, null);
+  assert.ok(trabalho.reflectionRecordedAt);
+  const [linha] = await consultarBanco(
+    `select p.status, p.delivered_at, r.recorded_at, r.text
+       from productions p join reflections r on r.student_id = p.student_id and r.mission_id = p.mission_id
+      where p.student_id = $1 and p.mission_id = $2`,
+    [ALUNO.referencia, MISSAO_IA_ID],
+  );
+  assert.equal(linha.status, "draft");
+  assert.equal(linha.delivered_at, null);
+  assert.deepEqual(linha.recorded_at, antes.recorded_at, "a reflexão não é apagada nem desfeita");
+  assert.equal(linha.text, antes.text);
+
+  const entregue = await aluno.acao(PAGINA, acao("setProductionDeliveredAction"), [MISSAO_IA_ID, true]);
+  assert.equal(acaoRecusada(entregue), false);
+  assert.ok(valorDaAcao(entregue.texto).productionDeliveredAt);
+});
+
 test("6. professor vê o registro de IA separado e avalia os dois eixos", async () => {
   const turmas = `/professor/turmas?turma=${encodeURIComponent(TURMA.classroomId)}`;
   const { status, html } = await professor.html(turmas);
@@ -183,6 +212,40 @@ test("6. professor vê o registro de IA separado e avalia os dois eixos", async 
   assert.equal(gravado.discipline_skill, "EM13CHS101");
   assert.equal(gravado.ai_level, "em_desenvolvimento");
   assert.deepEqual(gravado.ai_competencies, NIVEIS.ai.competencyIds);
+});
+
+test("6b. depois da avaliação, reabrir reflexão ou produção é recusado e nada muda", async () => {
+  const consulta = `select p.status, p.delivered_at, r.recorded_at, m.reviewed_at
+       from productions p
+       join reflections r on r.student_id = p.student_id and r.mission_id = p.mission_id
+       join mission_reviews m on m.student_id = p.student_id and m.mission_id = p.mission_id
+      where p.student_id = $1 and p.mission_id = $2`;
+  const [antes] = await consultarBanco(consulta, [ALUNO.referencia, MISSAO_IA_ID]);
+
+  const reflexao = await aluno.acao(PAGINA, acao("setReflectionRecordedAction"), [MISSAO_IA_ID, false]);
+  assert.equal(acaoRecusada(reflexao), true, "reabrir a reflexão avaliada é recusado");
+  const producao = await aluno.acao(PAGINA, acao("setProductionDeliveredAction"), [MISSAO_IA_ID, false]);
+  assert.equal(acaoRecusada(producao), true, "reabrir a produção avaliada é recusado");
+
+  const [depois] = await consultarBanco(consulta, [ALUNO.referencia, MISSAO_IA_ID]);
+  assert.deepEqual(depois, antes);
+  assert.equal(depois.status, "delivered");
+});
+
+test("6c. 'Último acesso' no painel do professor sai em horário de Brasília (servidor em UTC)", async () => {
+  const [progresso] = await consultarBanco(
+    "select last_access_at from mission_progress where student_id = $1 and mission_id = $2",
+    [ALUNO.referencia, MISSAO_IA_ID],
+  );
+  const opcoes = { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" };
+  const instante = new Date(progresso.last_access_at);
+  const brasilia = instante.toLocaleString("pt-BR", { ...opcoes, timeZone: "America/Sao_Paulo" });
+  const utc = instante.toLocaleString("pt-BR", { ...opcoes, timeZone: "UTC" });
+  assert.notEqual(brasilia, utc);
+
+  const texto = textoVisivel((await professor.html(`/professor/turmas?turma=${encodeURIComponent(TURMA.classroomId)}`)).html);
+  assert.ok(texto.includes(`Último acesso ${brasilia}`), `esperado "Último acesso ${brasilia}" na renderização inicial`);
+  assert.equal(texto.includes(`Último acesso ${utc}`), false, "não pode sair em UTC");
 });
 
 test("7. aluno lê os dois eixos; o painel da trilha separa disciplina e IA", async () => {

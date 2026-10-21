@@ -35,12 +35,8 @@ import {
   splitQuestions,
 } from "./parse-mission-content";
 import { minutesRemainingFrom, totalMissionMinutes, totalSteps } from "./mission-timing";
-import {
-  hasReportContent,
-  initialReport,
-  readHypotheses,
-  setHypothesis,
-} from "./report-hypotheses";
+import { initialReport, readHypotheses, setHypothesis } from "./report-hypotheses";
+import { completionState, isReopenedWithRecordedReflection, resumeTarget } from "./flow-state";
 import { AiEvidenceForm, AxesObjectives, AxesReviewCards } from "./two-axes";
 import {
   useStudentWork,
@@ -103,24 +99,25 @@ export function MissionFlow({
   const [step, setStep] = React.useState<number | null>(null);
   const [evidenceIndex, setEvidenceIndex] = React.useState(0);
 
+  const flowState = { delivered, recorded, reviewed };
+  const completion = completionState(flowState);
+  const reopenedWithReflection = isReopenedWithRecordedReflection(flowState);
+
   // Retomada inteligente: deriva a etapa inicial do StudentWork que já
   // existe — sem persistir nenhum dado novo (só decisão de apresentação).
-  // Quem só registrou parte das hipóteses volta ao primeiro item sem
-  // hipótese; quem já escreveu o relatório volta à Produção.
+  // Produção em rascunho volta à Produção mesmo com a reflexão registrada;
+  // quem só registrou parte das hipóteses volta ao primeiro item sem hipótese.
   React.useEffect(() => {
     if (step !== null || !work) return;
-    if (recorded) setStep(S.reflection);
-    else if (delivered) setStep(S.delivery);
-    else if (hasReportContent(work.production, template)) setStep(S.production);
-    else if (template && work.production.trim().length > 0) {
-      const firstEmpty = readHypotheses(work.production, evidenceCount).findIndex((h) => !h.trim());
-      if (firstEmpty === -1) setStep(S.production);
-      else {
-        setStep(4);
-        setEvidenceIndex(firstEmpty + 1);
-      }
+    const target = resumeTarget({ delivered, recorded, reviewed }, work.production, template, evidenceCount);
+    if (target.kind === "reflection") setStep(S.reflection);
+    else if (target.kind === "delivery") setStep(S.delivery);
+    else if (target.kind === "production") setStep(S.production);
+    else if (target.kind === "investigation") {
+      setStep(4);
+      setEvidenceIndex(target.evidenceIndex);
     } else setStep(1);
-  }, [step, work, delivered, recorded, template, evidenceCount, S.reflection, S.delivery, S.production]);
+  }, [step, work, delivered, recorded, reviewed, template, evidenceCount, S.reflection, S.delivery, S.production]);
 
   if (step === null) return <FlowSkeleton />;
 
@@ -271,6 +268,7 @@ export function MissionFlow({
                 </p>
               </CardContent>
             </Card>
+            {reopenedWithReflection ? <ReopenedNotice /> : null}
             <MissionNavigation onBack={() => goTo(5)} onNext={() => goTo(S.production + 1)} />
           </MissionStep>
         )}
@@ -368,6 +366,7 @@ export function MissionFlow({
                 ) : null}
               </CardContent>
             </Card>
+            {reopenedWithReflection ? <ReopenedNotice /> : null}
             <MissionNavigation
               onBack={() => goTo(S.criteria)}
               onNext={() => goTo(S.reflection)}
@@ -410,6 +409,7 @@ export function MissionFlow({
               transitionError={<TransitionError transition={transition} kinds={["record", "reopenReflection"]} />}
               recorded={recorded}
               delivered={delivered}
+              reviewed={reviewed}
               recordedAt={work.reflectionRecordedAt}
               onRecord={() =>
                 update({ reflectionRecordedAt: new Date().toISOString() })
@@ -417,17 +417,17 @@ export function MissionFlow({
               onReopen={() => update({ reflectionRecordedAt: null })}
             />
 
-            {recorded ? (
+            {completion ? (
               <div className="flex items-center gap-3 rounded-xl border border-chart-2/50 bg-chart-2/10 p-4">
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-chart-2/20 text-chart-2">
                   <PartyPopper className="size-5" />
                 </span>
                 <div>
                   <p className="text-sm font-semibold text-foreground">
-                    {reviewed ? "Missão avaliada" : "Entrega em avaliação"}
+                    {completion === "reviewed" ? "Missão avaliada" : "Entrega em avaliação"}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    {reviewed
+                    {completion === "reviewed"
                       ? "A devolutiva do Professor já está disponível abaixo."
                       : "Você entregou sua produção e reflexão. Agora o Professor fará a devolutiva."}
                   </p>
@@ -655,6 +655,19 @@ function InvestigationStep({
 function formatDate(iso: string | null): string {
   if (!iso) return "";
   return new Date(iso).toLocaleDateString("pt-BR");
+}
+
+/**
+ * Estado verdadeiro de uma produção reaberta: rascunho, com a reflexão
+ * ainda registrada — a Missão não conta como entregue até nova entrega.
+ */
+function ReopenedNotice() {
+  return (
+    <p role="note" className="rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
+      Produção reaberta: o relatório está em rascunho e ainda não foi entregue. Sua reflexão continua
+      registrada; a missão volta a contar como concluída quando você entregar o relatório de novo.
+    </p>
+  );
 }
 
 const TRANSITION_ERROR: Record<TransitionKind, Record<"text" | "action", string>> = {
