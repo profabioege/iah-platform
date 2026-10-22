@@ -1,0 +1,16 @@
+# Fora da imagem: dependências e build locais, vínculo da Vercel, segredos,
+# testes, scripts administrativos e arquivos de operação do piloto.
+node_modules
+.next
+.vercel
+.env*
+!.env.example
+*.tsbuildinfo
+next-env.d.ts
+tests
+scripts
+db
+Dockerfile
+.dockerignore
+.git
+*.log

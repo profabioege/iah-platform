@@ -1,0 +1,4 @@
+# Arquivos lidos pelo Podman/Docker no Linux: sempre LF, mesmo com core.autocrlf=true
+# (CRLF quebra a continuação de linha do Dockerfile e os padrões do .dockerignore).
+Dockerfile text eol=lf
+.dockerignore text eol=lf

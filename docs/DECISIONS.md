@@ -787,3 +787,15 @@ atualizados.
 **Alternativas descartadas:** *esconder a Implantação no modo real* (perderia a leitura de turmas, professores e matrículas que o gestor precisa); *cadastro de equipe/alunos pela tela* (módulo novo; a importação oficial já existe); *mudar o status de progresso para separar pendências* (mexeria na regra de avaliação).
 
 **Impacto futuro:** sem mudança de schema, permissões, regra de avaliação ou escopo de acesso. Os registros do ambiente de homologação continuam sintéticos; "Dados da instituição" descreve a origem, não a natureza dos dados. A correção só chega ao piloto com nova publicação aprovada.
+
+## D-059 — Cloud Run em São Paulo como candidato a hospedar o piloto inteiro (22/10/2026)
+
+**Status:** Proposto ao Founder; preparação local concluída (imagem validada com Podman), nada contratado nem publicado. Pacote: `docs/piloto/09-hospedagem-cloud-run.md`.
+
+**Contexto e problema:** O ensaio de capacidade dos 32 alunos depende de autorização da Vercel (chamado sem resposta humana) e a aula real depende do ensaio. Um ensaio feito em outra hospedagem só comprova aquela hospedagem.
+
+**Decisão:** Preparar o Google Cloud Run em `southamerica-east1` para hospedar homologação, ensaio **e** aula — mesma região do banco (Supabase `sa-east-1`) e da escola; guia oficial de teste de carga sem autorização prévia dentro das cotas. Sem mudança em `app/src`: imagem com `next build` + `next start` (o mesmo caminho da homologação local), segredos só como *build secrets* e Secret Manager, `AUTH_URL` e `AUTH_SECRET` próprios do ambiente, mínimo de 0 instâncias fora das janelas. A Vercel não é alterada e fica só como contingência, com capacidade não comprovada.
+
+**Alternativas descartadas:** *Railway* (sem região na América do Sul; a latência até o banco tornaria o ensaio não representativo); *esperar a Vercel* (sem prazo).
+
+**Impacto futuro:** a resposta da Vercel deixa de ser dependência deste caminho. A aula só usa o Cloud Run se o ensaio for aprovado lá pelos critérios originais. O banco continua o mesmo; as condições do Supabase são avaliadas à parte (consulta escrita antes do ensaio).
