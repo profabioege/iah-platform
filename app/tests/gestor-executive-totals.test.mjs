@@ -56,5 +56,37 @@ test("nenhum aluno ativo — todos os totais zerados (baseline D0)", () => {
     deliveredStudents: 0,
     completedStudents: 0,
     reviewedStudents: 0,
+    pendingReviewStudents: 0,
   });
+});
+
+// REGISTRO 14, G2: "aguardam avaliação" eram todos os concluídos (inclusive
+// os já avaliados). Base da homologação de 22/10: 2 avaliados, 1 concluído
+// sem avaliação e a fixture F1 com a produção reaberta (produzindo).
+test("aguardam avaliação = concluíram e não foram avaliados (base da homologação → 1)", () => {
+  const studentRows = [
+    { status: "avaliado" },
+    { status: "concluiu" },
+    { status: "avaliado" },
+    { status: "produzindo" },
+  ];
+
+  const totals = computeExecutiveTotals(studentRows);
+
+  assert.equal(totals.pendingReviewStudents, 1, "só o concluído sem avaliação");
+  assert.equal(totals.completedStudents, 3, "o funil aprovado não muda");
+  assert.equal(totals.deliveredStudents, 3);
+  assert.equal(totals.reviewedStudents, 2);
+  assert.equal(totals.activeStudents, 4);
+});
+
+test("quem só entregou ou reabriu a produção não aguarda avaliação", () => {
+  const totals = computeExecutiveTotals([
+    { status: "entregue" },
+    { status: "reflexao" },
+    { status: "produzindo" },
+    { status: "rascunho" },
+  ]);
+
+  assert.equal(totals.pendingReviewStudents, 0);
 });

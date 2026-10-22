@@ -5,6 +5,7 @@ import { getRequestRepositories } from "@/modules/platform/infrastructure/reques
 
 import { ExecutiveDashboard, type ExecutiveView } from "./executive-dashboard";
 import { computeExecutiveTotals } from "./executive-totals";
+import { buildTeacherLinks } from "./teacher-links";
 
 export const metadata: Metadata = {
   title: "Visão Executiva",
@@ -98,9 +99,13 @@ export default async function GestorPage({
     (total, classroom) => total + classroom.studentCount,
     0,
   );
-  const { activeStudents, deliveredStudents, completedStudents, reviewedStudents } =
-    computeExecutiveTotals(studentRows);
-  const teacher = teachers[0];
+  const {
+    activeStudents,
+    deliveredStudents,
+    completedStudents,
+    reviewedStudents,
+    pendingReviewStudents,
+  } = computeExecutiveTotals(studentRows);
 
   return (
     <ExecutiveDashboard
@@ -111,11 +116,7 @@ export default async function GestorPage({
       academicYear={context.schoolYear.label}
       managerName={context.user.name}
       subjectName={context.subjects[0]?.name ?? "Inteligência Artificial & Humanidades"}
-      teacher={{
-        name: teacher?.name ?? "Professor(a) responsável",
-        email: teacher?.email ?? "",
-        classroomCount: context.classrooms.length,
-      }}
+      teachers={buildTeacherLinks(teachers, context.classrooms)}
       classrooms={classroomRows}
       totals={{
         students: totalStudents,
@@ -123,6 +124,7 @@ export default async function GestorPage({
         deliveredStudents,
         completedStudents,
         reviewedStudents,
+        pendingReviewStudents,
       }}
       students={studentRows}
       assignments={assignmentRows}

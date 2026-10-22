@@ -18,6 +18,12 @@ export interface ExecutiveTotals {
   deliveredStudents: number;
   completedStudents: number;
   reviewedStudents: number;
+  /**
+   * Concluíram (produção entregue + reflexão registrada) e ainda não foram
+   * avaliados — o que de fato aguarda o professor. "avaliado" sai daqui;
+   * quem só entregou, ou reabriu a produção, ainda não concluiu.
+   */
+  pendingReviewStudents: number;
 }
 
 export function computeExecutiveTotals(
@@ -35,6 +41,15 @@ export function computeExecutiveTotals(
   const reviewedStudents = studentRows.filter(
     (item) => item.status === "avaliado",
   ).length;
+  const pendingReviewStudents = studentRows.filter(
+    (item) => item.status === "concluiu",
+  ).length;
 
-  return { activeStudents, deliveredStudents, completedStudents, reviewedStudents };
+  return {
+    activeStudents,
+    deliveredStudents,
+    completedStudents,
+    reviewedStudents,
+    pendingReviewStudents,
+  };
 }

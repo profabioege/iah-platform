@@ -20,6 +20,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
+import type { ImplementationData } from "./implementation-data";
+
 const STEPS = [
   "Boas-vindas",
   "Instituição",
@@ -31,23 +33,16 @@ const STEPS = [
   "Resumo",
 ] as const;
 
-export interface WizardClassroom {
-  id: string;
-  name: string;
-  grade: string | null;
-  studentCount: number;
-}
-
-export interface WizardData {
+export interface WizardData extends ImplementationData {
   institutionName: string;
   academicYear: string;
-  teacherName: string;
-  teacherEmail: string;
   adminName: string;
   institutionDomain: string;
-  classrooms: WizardClassroom[];
-  totalStudents: number;
 }
+
+/** Recurso que só existe na demonstração: dito com clareza no modo real. */
+const OFFICIAL_IMPORT_NOTE =
+  "Turmas, professores e alunos entram pelas rotinas oficiais de importação do piloto, conduzidas pela equipe responsável; esta tela só lê o que está registrado.";
 
 /**
  * Implantação Institucional — assistente de implantação do Método IAH®
@@ -55,14 +50,20 @@ export interface WizardData {
  * "onboarding" de cadastro de usuários (D-038).
  *
  * Honestidade dos dados (D-015): instituição, equipe, turmas e alunos
- * exibidos são os dados REAIS já existentes no ambiente de demonstração
- * do Instituto Horizonte (instituição fictícia, D-039 — mesma fonte
- * única de `modules/workspace`/`modules/platform`) — nada é fabricado.
- * Campos sem correspondente no modelo hoje (cidade, estado, segmentos,
- * logo, coordenador) ficam como entrada local não persistida ou
- * honestamente "em breve", nunca como dado inventado.
+ * exibidos vêm da página — no modo real, dos repositórios da instituição;
+ * na demonstração, do seed do Instituto Horizonte (D-039). Nada é
+ * fabricado. Campos sem correspondente no modelo hoje (cidade, estado,
+ * segmentos, logo, coordenador) são entrada local não persistida ou
+ * "em breve" na demonstração; no modo real ficam indisponíveis, com a
+ * explicação, porque nada ali seria gravado.
  */
-export function ImplementationWizard({ data }: { data: WizardData }) {
+export function ImplementationWizard({
+  data,
+  realMode,
+}: {
+  data: WizardData;
+  realMode: boolean;
+}) {
   const [step, setStep] = React.useState(0);
   const [city, setCity] = React.useState("");
   const [stateUf, setStateUf] = React.useState("");
@@ -103,7 +104,21 @@ export function ImplementationWizard({ data }: { data: WizardData }) {
             </Step>
           ) : null}
 
-          {step === 1 ? (
+          {step === 1 && realMode ? (
+            <Step icon={Building2} title="Dados da Instituição">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <SummaryTile label="Nome da Instituição" value={data.institutionName} />
+                <SummaryTile label="Ano letivo" value={data.academicYear} />
+              </div>
+              <UnavailableNote>
+                Cidade, estado e logo institucional não estão disponíveis neste
+                ambiente: o cadastro da instituição vem do registro oficial e
+                nada é alterado por esta tela.
+              </UnavailableNote>
+            </Step>
+          ) : null}
+
+          {step === 1 && !realMode ? (
             <Step icon={Building2} title="Dados da Instituição">
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Nome da Instituição">
@@ -141,7 +156,17 @@ export function ImplementationWizard({ data }: { data: WizardData }) {
             </Step>
           ) : null}
 
-          {step === 2 ? (
+          {step === 2 && realMode ? (
+            <Step icon={Layers} title="Estrutura Acadêmica">
+              <SummaryTile label="Turmas registradas" value={totalClassrooms} />
+              <UnavailableNote>
+                A seleção de segmentos é um recurso da demonstração e não está
+                disponível neste ambiente. {OFFICIAL_IMPORT_NOTE}
+              </UnavailableNote>
+            </Step>
+          ) : null}
+
+          {step === 2 && !realMode ? (
             <Step icon={Layers} title="Estrutura Acadêmica">
               <p className="text-sm text-muted-foreground">
                 Segmentos atendidos pela Instituição — estrutura preparada
@@ -168,27 +193,53 @@ export function ImplementationWizard({ data }: { data: WizardData }) {
 
           {step === 3 ? (
             <Step icon={UsersRound} title="Equipe">
-              <div className="grid gap-2 sm:grid-cols-3">
-                <TeamRow role="Gestores" count={1} names={[data.adminName]} />
-                <TeamRow
-                  role="Coordenadores"
-                  count={0}
-                  names={[]}
-                  empty="Nenhum coordenador cadastrado ainda"
-                />
-                <TeamRow
-                  role="Professores"
-                  count={1}
-                  names={[data.teacherName]}
-                />
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Cadastro adicional de equipe por planilha ou convite por
-                e-mail institucional{" "}
-                <Badge variant="outline" className="text-muted-foreground">
-                  Em breve
-                </Badge>
-              </p>
+              {realMode ? (
+                <>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <TeamRow role="Gestão (esta sessão)" names={[data.adminName]} />
+                    <TeamRow
+                      role="Professores"
+                      count={data.teachers.length}
+                      names={data.teachers.map(
+                        (teacher) =>
+                          `${teacher.name} — ${
+                            teacher.classrooms.map((c) => c.name).join(", ") ||
+                            "sem turma vinculada"
+                          }`,
+                      )}
+                      empty="Nenhum professor vinculado"
+                    />
+                  </div>
+                  <UnavailableNote>
+                    Coordenação e convite de equipe não estão disponíveis neste
+                    ambiente. {OFFICIAL_IMPORT_NOTE}
+                  </UnavailableNote>
+                </>
+              ) : (
+                <>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    <TeamRow role="Gestores" count={1} names={[data.adminName]} />
+                    <TeamRow
+                      role="Coordenadores"
+                      count={0}
+                      names={[]}
+                      empty="Nenhum coordenador cadastrado ainda"
+                    />
+                    <TeamRow
+                      role="Professores"
+                      count={data.teachers.length}
+                      names={data.teachers.map((teacher) => teacher.name)}
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Cadastro adicional de equipe por planilha ou convite por
+                    e-mail institucional{" "}
+                    <Badge variant="outline" className="text-muted-foreground">
+                      Em breve
+                    </Badge>
+                  </p>
+                </>
+              )}
             </Step>
           ) : null}
 
@@ -202,20 +253,28 @@ export function ImplementationWizard({ data }: { data: WizardData }) {
                   >
                     <span className="font-medium">{classroom.name}</span>
                     <span className="text-xs text-muted-foreground">
-                      {classroom.grade} · {data.teacherName} ·{" "}
+                      {classroom.grade} ·{" "}
+                      {classroom.teacherNames.join(", ") || "sem professor vinculado"} ·{" "}
                       {classroom.studentCount}{" "}
                       {classroom.studentCount === 1 ? "aluno" : "alunos"}
                     </span>
                   </div>
                 ))}
               </div>
-              <p className="text-sm text-muted-foreground">
-                Importação de turmas do Google Classroom disponível em{" "}
-                <Link href="/professor/importar" className="underline">
-                  Importar turmas
-                </Link>
-                .
-              </p>
+              {realMode ? (
+                <UnavailableNote>
+                  A importação do Google Classroom não está disponível neste
+                  ambiente. {OFFICIAL_IMPORT_NOTE}
+                </UnavailableNote>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Importação de turmas do Google Classroom disponível em{" "}
+                  <Link href="/professor/importar" className="underline">
+                    Importar turmas
+                  </Link>
+                  .
+                </p>
+              )}
             </Step>
           ) : null}
 
@@ -223,10 +282,14 @@ export function ImplementationWizard({ data }: { data: WizardData }) {
             <Step icon={UsersRound} title="Alunos">
               <div className="grid gap-3 sm:grid-cols-3">
                 <SummaryTile label="Total de alunos" value={data.totalStudents} />
-                <SummaryTile label="Turmas com alunos" value={totalClassrooms} />
+                <SummaryTile label="Turmas com alunos" value={data.classroomsWithStudents} />
                 <SummaryTile
                   label="E-mail institucional válido"
-                  value="100%"
+                  value={
+                    data.institutionalEmailShare === null
+                      ? "—"
+                      : `${data.institutionalEmailShare}%`
+                  }
                   hint={`@${data.institutionDomain}`}
                 />
               </div>
@@ -274,15 +337,19 @@ export function ImplementationWizard({ data }: { data: WizardData }) {
               <div className="grid gap-3 sm:grid-cols-2">
                 <SummaryTile label="Instituição" value={data.institutionName} />
                 <SummaryTile label="Ano letivo" value={data.academicYear} />
-                <SummaryTile label="Professores" value={1} />
+                <SummaryTile label="Professores" value={data.teachers.length} />
                 <SummaryTile label="Turmas" value={totalClassrooms} />
                 <SummaryTile label="Alunos" value={data.totalStudents} />
                 <SummaryTile label="Currículo" value="Método IAH®" />
               </div>
-              <div className="flex items-center gap-2 rounded-lg border border-chart-2/40 bg-chart-2/10 px-4 py-3 text-sm">
-                <CheckCircle2 className="size-4 shrink-0 text-chart-2" />
-                <span className="font-medium">Tudo pronto.</span>
-              </div>
+              {/* "Tudo pronto" é o desfecho fixo da demonstração; no modo
+                  real o resumo é só o que está registrado. */}
+              {realMode ? null : (
+                <div className="flex items-center gap-2 rounded-lg border border-chart-2/40 bg-chart-2/10 px-4 py-3 text-sm">
+                  <CheckCircle2 className="size-4 shrink-0 text-chart-2" />
+                  <span className="font-medium">Tudo pronto.</span>
+                </div>
+              )}
               <Link
                 href="/gestor"
                 className={cn(buttonVariants({ size: "default" }), "w-fit")}
@@ -410,6 +477,14 @@ function SegmentToggle({
   );
 }
 
+function UnavailableNote({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
+      {children}
+    </p>
+  );
+}
+
 function TeamRow({
   role,
   count,
@@ -417,7 +492,8 @@ function TeamRow({
   empty,
 }: {
   role: string;
-  count: number;
+  /** Sem contagem quando o número não tem fonte (ex.: só a própria sessão). */
+  count?: number;
   names: string[];
   empty?: string;
 }) {
@@ -426,7 +502,9 @@ function TeamRow({
       <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
         {role}
       </span>
-      <span className="text-lg font-semibold tabular-nums">{count}</span>
+      {count === undefined ? null : (
+        <span className="text-lg font-semibold tabular-nums">{count}</span>
+      )}
       {names.length ? (
         <span className="text-xs text-muted-foreground">
           {names.join(", ")}

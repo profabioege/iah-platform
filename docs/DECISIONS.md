@@ -770,3 +770,20 @@ atualizados.
 - **Retomada e conclusão** (`mission-flow/flow-state.ts`): produção em rascunho volta à Produção mesmo com a reflexão registrada, com aviso do estado verdadeiro ("Produção reaberta… ainda não foi entregue"); o cartão "Entrega em avaliação" só aparece com produção entregue **e** reflexão registrada; com avaliação, a Reflexão e a devolutiva continuam sendo a tela de retomada. Nenhum dado é apagado ou regravado.
 - **Último acesso** (`lib/school-time.ts`): exibido em `America/Sao_Paulo` já na renderização do servidor (antes, UTC no servidor e Brasília no navegador); os timestamps armazenados não mudam. A homologação local roda o servidor com `TZ=UTC`, como a Vercel.
 - **Reabrir a reflexão** depois da avaliação: o servidor já recusava ("Entrega já avaliada"); a interface deixa de oferecer o botão e diz que a reflexão está preservada. A regra de avaliação não muda.
+
+## D-058 — Perfil de gestor no modo real: dados da instituição, não do seed (22/10/2026)
+
+**Status:** Implementado na branch `pilot/beryon-1a-2026` (não publicado; o deploy do piloto continua em `bb7c83e`). Origem: homologação do perfil de gestor de 22/10 (registro do ensaio, seção 14, pendências G1–G4).
+
+**Contexto e problema:** No modo real, o Painel do Gestor e a Implantação Institucional misturavam dados do banco com textos e números da demonstração: a Implantação lia professor e matrículas do seed (`WORKSPACE_TEACHER`, `WORKSPACE_ENROLLMENTS`) e mostrava "0 alunos" e "Professor(a) de demonstração"; "entregas aguardam avaliação" contava todos os concluídos, inclusive os já avaliados; o painel mostrava "Professor vinculado 1" fixo e só o primeiro professor, com todas as turmas atribuídas a ele; o cabeçalho e as abas diziam "dados simulados".
+
+**Decisão:**
+
+1. **Implantação** (`gestor/implantacao/page.tsx`, `implementation-data.ts`): no modo real, professores, vínculos (`Classroom.teacherIds`) e matrículas ativas vêm dos repositórios da instituição — os mesmos do painel. Cidade/UF/logo, segmentos, coordenação, convite de equipe, Google Classroom e o desfecho "Tudo pronto" são da demonstração e ficam indisponíveis, com a explicação de que o cadastro entra pelas rotinas oficiais de importação. A demonstração segue sobre o seed, como antes.
+2. **Pendências de avaliação** (`executive-totals.ts`): `pendingReviewStudents` = alunos com status `concluiu` (produção entregue + reflexão registrada, sem avaliação), no escopo instituição → turma → missão publicada mais recente. O funil (ativos, entregaram, concluíram, avaliados) não muda. "Operação sem pendências" só sem alunos inativos **e** sem entregas aguardando.
+3. **Professores** (`teacher-links.ts`): cada professor com as turmas que de fato conduz; contagem pelo número de professores da instituição. Vínculo com professor ou turma fora das listas da instituição é ignorado.
+4. **Rótulos** (`executive-dashboard.tsx`): textos de demonstração só no modo demonstração; no modo real, "Dados da instituição" e descrições do que está registrado. Marcos "Fundação/Configuração concluídos", "Currículo: Configurado" e "Situação: Em operação" saem do modo real (sem registro que os sustente).
+
+**Alternativas descartadas:** *esconder a Implantação no modo real* (perderia a leitura de turmas, professores e matrículas que o gestor precisa); *cadastro de equipe/alunos pela tela* (módulo novo; a importação oficial já existe); *mudar o status de progresso para separar pendências* (mexeria na regra de avaliação).
+
+**Impacto futuro:** sem mudança de schema, permissões, regra de avaliação ou escopo de acesso. Os registros do ambiente de homologação continuam sintéticos; "Dados da instituição" descreve a origem, não a natureza dos dados. A correção só chega ao piloto com nova publicação aprovada.

@@ -42,6 +42,8 @@ import {
   type MissionAssignment,
 } from "@/modules/platform";
 
+import { countLinkedClassrooms, type TeacherLink } from "./teacher-links";
+
 export type ExecutiveView =
   | "overview"
   | "implementation"
@@ -66,11 +68,8 @@ interface ExecutiveDashboardProps {
   academicYear: string;
   managerName: string;
   subjectName: string;
-  teacher: {
-    name: string;
-    email: string;
-    classroomCount: number;
-  };
+  /** Professores da instituição com as turmas que de fato conduzem. */
+  teachers: TeacherLink[];
   classrooms: ClassroomRow[];
   totals: {
     students: number;
@@ -78,6 +77,8 @@ interface ExecutiveDashboardProps {
     deliveredStudents: number;
     completedStudents: number;
     reviewedStudents: number;
+    /** Concluíram e ainda não foram avaliados. */
+    pendingReviewStudents: number;
   };
   students: Array<{
     id: string;
@@ -102,6 +103,33 @@ const IMPLEMENTATION_PROGRESS = 75;
  * demonstração; no modo real os indicadores vêm das entregas gravadas.
  */
 const REAL_MODE = isRealModeClient();
+
+/**
+ * Rótulos que dependem do modo. No modo real os dados vêm da instituição
+ * (podem ser sintéticos numa homologação, mas não são "simulados" pela
+ * tela); os textos de demonstração continuam valendo no modo demo.
+ */
+const COPY = REAL_MODE
+  ? {
+      dataBadge: "Dados da instituição",
+      engagement: "Participação na missão publicada mais recentemente em cada turma.",
+      footerDetail: "Dados da instituição registrados na plataforma.",
+    }
+  : {
+      dataBadge: "Ambiente de demonstração · dados simulados",
+      engagement: "Participação na Mission ativa da demonstração.",
+      footerDetail: "Dados simulados para demonstração comercial.",
+    };
+
+function teacherCountLabel(count: number): string {
+  return `${count} ${count === 1 ? "professor vinculado" : "professores vinculados"}`;
+}
+
+function teacherClassroomsLabel(link: TeacherLink): string {
+  return link.classrooms.length > 0
+    ? link.classrooms.map((classroom) => classroom.name).join(", ")
+    : "Sem turma vinculada";
+}
 
 const VIEW_LABEL: Record<ExecutiveView, string> = {
   overview: "Visão geral",
@@ -128,7 +156,7 @@ export function ExecutiveDashboard({
   academicYear,
   managerName,
   subjectName,
-  teacher,
+  teachers,
   classrooms,
   totals: initialTotals,
   students,
@@ -178,6 +206,9 @@ export function ExecutiveDashboard({
       const reviewedStudents = studentStates.filter(
         (student) => student.status === "reviewed",
       ).length;
+      const pendingReviewStudents = studentStates.filter(
+        (student) => student.status === "submitted",
+      ).length;
       const classroomRows = classrooms.map((classroom) => {
         const classroomStudents = studentStates.filter(
           (student) => student.classroomId === classroom.id,
@@ -198,12 +229,11 @@ export function ExecutiveDashboard({
           deliveredStudents,
           completedStudents: deliveredStudents,
           reviewedStudents,
+          pendingReviewStudents,
         },
         classrooms: classroomRows,
         stats: {
-          pendingReviews: studentStates.filter(
-            (student) => student.status === "submitted",
-          ).length,
+          pendingReviews: pendingReviewStudents,
           reviewedStudents,
           publishedLessons: new Set(
             mergedAssignments
@@ -232,7 +262,9 @@ export function ExecutiveDashboard({
   const totals = liveCycle?.totals ?? initialTotals;
   const classroomRows = liveCycle?.classrooms ?? classrooms;
   const cycleStats = liveCycle?.stats ?? {
-    pendingReviews: initialTotals.completedStudents,
+    // Concluíram e ainda não foram avaliados (antes: todos os concluídos,
+    // inclusive os já avaliados — REGISTRO 14, G2).
+    pendingReviews: initialTotals.pendingReviewStudents,
     reviewedStudents: initialTotals.reviewedStudents,
     publishedLessons: new Set(
       assignments.map((item) => item.lessonId).filter(Boolean),
@@ -250,24 +282,37 @@ export function ExecutiveDashboard({
 
   const executiveMessage = useMemo(() => {
     if (view === "implementation") {
-      return "A fundação institucional está concluída e a operação acompanhada já começou.";
+      return REAL_MODE
+        ? `${classroomRows.length} turmas, ${totals.students} alunos matriculados e ${teacherCountLabel(teachers.length)} registrados na plataforma.`
+        : "A fundação institucional está concluída e a operação acompanhada já começou.";
     }
     if (view === "teachers") {
-      return "O professor responsável está vinculado e conduz todas as turmas da demonstração.";
+      return REAL_MODE
+        ? `${teacherCountLabel(teachers.length)}, cada um com as turmas que conduz.`
+        : "O professor responsável está vinculado e conduz todas as turmas da demonstração.";
     }
     if (view === "students") {
-      return `${totals.activeStudents} de ${totals.students} alunos já participaram da Mission ativa.`;
+      return REAL_MODE
+        ? `${totals.activeStudents} de ${totals.students} alunos já iniciaram a missão publicada.`
+        : `${totals.activeStudents} de ${totals.students} alunos já participaram da Mission ativa.`;
     }
     if (view === "classes") {
       return `${classroomRows.length} turmas estão configuradas e acompanhadas no ciclo institucional.`;
     }
     if (view === "discipline") {
-      return "A disciplina está configurada, com currículo, Lessons e Mission Flow conectados.";
+      return REAL_MODE
+        ? "Missões publicadas para as turmas da instituição."
+        : "A disciplina está configurada, com currículo, Lessons e Mission Flow conectados.";
+    }
+    if (REAL_MODE) {
+      return inactiveStudents > 0
+        ? `${inactiveStudents} alunos ainda não iniciaram a missão publicada.`
+        : "Todos os alunos matriculados já iniciaram a missão publicada.";
     }
     return inactiveStudents > 0
       ? `A implantação avança bem; ${inactiveStudents} alunos ainda precisam iniciar a Mission.`
       : "A implantação está saudável e todas as turmas já iniciaram a operação.";
-  }, [classroomRows.length, inactiveStudents, totals.activeStudents, totals.students, view]);
+  }, [classroomRows.length, inactiveStudents, teachers.length, totals.activeStudents, totals.students, view]);
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
@@ -278,7 +323,7 @@ export function ExecutiveDashboard({
               Executive Experience
             </Badge>
             <span className="text-xs text-muted-foreground">
-              Ambiente de demonstração · dados simulados
+              {COPY.dataBadge}
             </span>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
@@ -333,7 +378,7 @@ export function ExecutiveDashboard({
         <Overview
           institutionName={institutionName}
           subjectName={subjectName}
-          teacher={teacher}
+          teachers={teachers}
           classrooms={classroomRows}
           totals={totals}
           cycleStats={cycleStats}
@@ -347,7 +392,7 @@ export function ExecutiveDashboard({
           view={view}
           institutionName={institutionName}
           subjectName={subjectName}
-          teacher={teacher}
+          teachers={teachers}
           classrooms={classroomRows}
           totals={totals}
           cycleStats={cycleStats}
@@ -363,7 +408,7 @@ export function ExecutiveDashboard({
 function Overview({
   institutionName,
   subjectName,
-  teacher,
+  teachers,
   classrooms,
   totals,
   activeRate,
@@ -381,6 +426,11 @@ function Overview({
   inactiveStudents: number;
   cycleStats: LearningCycleStats;
 }) {
+  const linkedClassrooms = countLinkedClassrooms(teachers);
+  // Cada item de atenção conta uma vez: alunos sem acesso e entregas
+  // aguardando avaliação. "Sem pendências" só quando nenhum dos dois.
+  const attentionPoints =
+    (inactiveStudents > 0 ? 1 : 0) + (cycleStats.pendingReviews > 0 ? 1 : 0);
   return (
     <div className="flex flex-col gap-5">
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(18rem,0.75fr)]">
@@ -388,15 +438,16 @@ function Overview({
           <CardHeader className="gap-4 sm:grid-cols-[1fr_auto]">
             <div className="flex flex-col gap-2">
               <Badge className="bg-primary/15 text-primary" variant="secondary">
-                Implantação em andamento
+                {REAL_MODE ? "Dados da instituição" : "Implantação em andamento"}
               </Badge>
               <div>
                 <CardTitle className="text-xl md:text-2xl">
-                  Disciplina pronta para consolidar
+                  {REAL_MODE ? "Estrutura registrada na plataforma" : "Disciplina pronta para consolidar"}
                 </CardTitle>
                 <CardDescription className="mt-1 max-w-2xl">
-                  Instituição, estrutura acadêmica, equipe, turmas, alunos e currículo
-                  estão configurados. A operação acompanhada já começou.
+                  {REAL_MODE
+                    ? `${classrooms.length} turmas, ${totals.students} alunos matriculados e ${teacherCountLabel(teachers.length)}.`
+                    : "Instituição, estrutura acadêmica, equipe, turmas, alunos e currículo estão configurados. A operação acompanhada já começou."}
                 </CardDescription>
               </div>
             </div>
@@ -413,12 +464,15 @@ function Overview({
             {REAL_MODE ? null : (
               <ProgressBar value={IMPLEMENTATION_PROGRESS} label="Progresso da implantação" />
             )}
-            <div className="grid gap-2 sm:grid-cols-4">
-              <Milestone index="01" label="Fundação" status="done" />
-              <Milestone index="02" label="Configuração" status="done" />
-              <Milestone index="03" label="Operação" status="current" />
-              <Milestone index="04" label="Consolidação" status="next" />
-            </div>
+            {/* Marcos fixos da narrativa de demonstração: sem fonte no banco. */}
+            {REAL_MODE ? null : (
+              <div className="grid gap-2 sm:grid-cols-4">
+                <Milestone index="01" label="Fundação" status="done" />
+                <Milestone index="02" label="Configuração" status="done" />
+                <Milestone index="03" label="Operação" status="current" />
+                <Milestone index="04" label="Consolidação" status="next" />
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -428,8 +482,8 @@ function Overview({
               Atenção executiva
             </p>
             <CardTitle>
-              {inactiveStudents > 0
-                ? `${inactiveStudents} ${inactiveStudents === 1 ? "ponto" : "pontos"} para acompanhar`
+              {attentionPoints > 0
+                ? `${attentionPoints} ${attentionPoints === 1 ? "ponto" : "pontos"} para acompanhar`
                 : "Operação sem pendências"}
             </CardTitle>
           </CardHeader>
@@ -450,8 +504,8 @@ function Overview({
             />
             <AttentionItem
               icon={UserRoundCheck}
-              title="Professor em operação"
-              description={`${teacher.classroomCount} turmas vinculadas ao responsável.`}
+              title={teacherCountLabel(teachers.length)}
+              description={`${linkedClassrooms} de ${classrooms.length} turmas com professor vinculado.`}
             />
             <AttentionItem
               icon={cycleStats.pendingReviews > 0 ? CircleAlert : CheckCircle2}
@@ -476,7 +530,7 @@ function Overview({
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Indicadores principais">
         <MetricCard icon={Route} label="Implantação" value={REAL_MODE ? "Piloto" : `${IMPLEMENTATION_PROGRESS}%`} detail="Operação acompanhada" />
-        <MetricCard icon={GraduationCap} label="Professor vinculado" value="1" detail={`${teacher.classroomCount} turmas sob condução`} />
+        <MetricCard icon={GraduationCap} label="Professores vinculados" value={`${teachers.length}`} detail={`${linkedClassrooms} de ${classrooms.length} turmas com professor`} />
         <MetricCard icon={Users} label="Alunos ativos" value={`${totals.activeStudents}`} detail={`${activeRate}% de ${totals.students} matriculados`} />
         <MetricCard
           icon={BookOpenCheck}
@@ -492,7 +546,7 @@ function Overview({
             <div>
               <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Alunos</p>
               <CardTitle className="mt-1">Engajamento por turma</CardTitle>
-              <CardDescription>Participação na Mission ativa da demonstração.</CardDescription>
+              <CardDescription>{COPY.engagement}</CardDescription>
             </div>
             <Badge variant="outline">Média institucional · {activeRate}%</Badge>
           </CardHeader>
@@ -514,22 +568,30 @@ function Overview({
               <CardTitle className="mt-1">Prontidão da equipe</CardTitle>
               <CardDescription>Vínculo e responsabilidade institucional.</CardDescription>
             </div>
-            <Badge className="bg-chart-2/10 text-chart-2" variant="secondary">Em operação</Badge>
+            {REAL_MODE ? (
+              <Badge variant="outline">{teacherCountLabel(teachers.length)}</Badge>
+            ) : (
+              <Badge className="bg-chart-2/10 text-chart-2" variant="secondary">Em operação</Badge>
+            )}
           </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-3 border-b border-border pb-4">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-primary">
-                {initials(teacher.name)}
+          <CardContent className="flex flex-col divide-y divide-border">
+            {teachers.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum professor vinculado.</p>
+            ) : null}
+            {teachers.map((link) => (
+              <div key={link.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-primary">
+                  {initials(link.name)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">{link.name}</p>
+                  <p className="truncate text-xs text-muted-foreground">{link.email}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Turmas: {teacherClassroomsLabel(link)}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium">{teacher.name}</p>
-                <p className="truncate text-xs text-muted-foreground">{teacher.email}</p>
-              </div>
-            </div>
-            <dl className="mt-4 grid grid-cols-2 gap-4 text-sm">
-              <div><dt className="text-xs text-muted-foreground">Turmas</dt><dd className="mt-1 text-lg font-semibold">{teacher.classroomCount}</dd></div>
-              <div><dt className="text-xs text-muted-foreground">Disciplina</dt><dd className="mt-1 font-medium">IA &amp; Humanidades</dd></div>
-            </dl>
+            ))}
           </CardContent>
         </Card>
       </div>
@@ -567,7 +629,7 @@ function Overview({
           <CardContent className="flex flex-col gap-3 text-sm">
             <StructureItem icon={School} label={`${classrooms.length} turmas configuradas`} />
             <StructureItem icon={Users} label={`${totals.students} alunos matriculados`} />
-            <StructureItem icon={GraduationCap} label="Professor responsável vinculado" />
+            <StructureItem icon={GraduationCap} label={teacherCountLabel(teachers.length)} />
             <StructureItem icon={BookOpenCheck} label={subjectName} />
           </CardContent>
         </Card>
@@ -591,7 +653,7 @@ function FocusedView({
   view,
   institutionName,
   subjectName,
-  teacher,
+  teachers,
   classrooms,
   totals,
   activeRate,
@@ -611,27 +673,37 @@ function FocusedView({
   const content = {
     implementation: {
       badge: REAL_MODE ? "Implantação · piloto" : `Implantação · ${IMPLEMENTATION_PROGRESS}%`,
-      title: "Do Setup à operação acompanhada",
-      description: "O que foi concluído, o que está em operação e qual é o próximo marco institucional.",
-      rows: [
-        ["Instituição e ano letivo", "Concluído"],
-        ["Equipe e professor responsável", "Concluído"],
-        ["Turmas e matrículas", `${classrooms.length} turmas · ${totals.students} alunos`],
-        ["Operação acompanhada", "Em curso"],
-        ["Consolidação e relatório inicial", "Próxima etapa"],
-      ],
+      title: REAL_MODE ? "Estrutura registrada na plataforma" : "Do Setup à operação acompanhada",
+      description: REAL_MODE
+        ? "Instituição, professores, turmas e matrículas como estão registrados."
+        : "O que foi concluído, o que está em operação e qual é o próximo marco institucional.",
+      // No modo real, só o que tem registro; as etapas "Concluído/Em curso"
+      // são a narrativa fixa da demonstração.
+      rows: REAL_MODE
+        ? [
+            ["Instituição", institutionName],
+            ["Professores vinculados", String(teachers.length)],
+            ["Turmas e matrículas", `${classrooms.length} turmas · ${totals.students} alunos`],
+          ]
+        : [
+            ["Instituição e ano letivo", "Concluído"],
+            ["Equipe e professor responsável", "Concluído"],
+            ["Turmas e matrículas", `${classrooms.length} turmas · ${totals.students} alunos`],
+            ["Operação acompanhada", "Em curso"],
+            ["Consolidação e relatório inicial", "Próxima etapa"],
+          ],
       href: "/gestor/implantacao",
       action: "Abrir Implantação Institucional",
     },
     teachers: {
-      badge: "Professor · Em operação",
+      badge: REAL_MODE ? `Professores · ${teachers.length}` : "Professor · Em operação",
       title: "Prontidão e capacidade de condução",
       description: "Uma leitura institucional do vínculo docente, sem vigilância de produtividade individual.",
+      // Um professor por linha, com as turmas que de fato conduz.
       rows: [
-        ["Professor responsável", teacher.name],
-        ["Turmas vinculadas", String(teacher.classroomCount)],
+        ...teachers.map((link) => [link.name, teacherClassroomsLabel(link)]),
         ["Disciplina", subjectName],
-        ["Situação", "Em operação"],
+        ...(REAL_MODE ? [] : [["Situação", "Em operação"]]),
       ],
       href: null,
       action: null,
@@ -664,14 +736,18 @@ function FocusedView({
       action: null,
     },
     discipline: {
-      badge: "Disciplina · Em operação",
+      badge: REAL_MODE ? "Disciplina" : "Disciplina · Em operação",
       title: "Currículo em movimento",
-      description: "Currículo, Lesson Composer, Mission Flow e acompanhamento conectados numa mesma proposta pedagógica.",
+      description: REAL_MODE
+        ? "Missões e aulas publicadas para as turmas da instituição."
+        : "Currículo, Lesson Composer, Mission Flow e acompanhamento conectados numa mesma proposta pedagógica.",
       rows: [
         ["Disciplina", subjectName],
-        ["Currículo", "Configurado"],
+        // "Configurado" é texto fixo da demonstração; no modo real não há
+        // registro de currículo que o sustente.
+        ...(REAL_MODE ? [] : [["Currículo", "Configurado"]]),
         ["Lessons publicadas", String(cycleStats.publishedLessons)],
-        ["Missions em andamento", String(cycleStats.missionsInProgress)],
+        [REAL_MODE ? "Publicações de missão nas turmas" : "Missions em andamento", String(cycleStats.missionsInProgress)],
         ["Turmas alcançadas", String(classrooms.length)],
       ],
       href: null,
@@ -702,7 +778,7 @@ function FocusedView({
         ))}
       </CardContent>
       <div className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
-        {institutionName} · Dados simulados para demonstração comercial.
+        {institutionName} · {COPY.footerDetail}
       </div>
     </Card>
   );
