@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Esqueci minha senha | IAH Educacional",
+  title: "Esqueci minha senha",
   description: "Como recuperar o acesso à plataforma.",
 };
 

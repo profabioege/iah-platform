@@ -167,4 +167,24 @@ test("'Esqueci minha senha' leva à orientação de recuperação assistida, sem
   assert.doesNotMatch(html, /<form|<input/);
   assert.doesNotMatch(texto, /enviamos|enviaremos|link de redefinição|verifique (seu|sua caixa)/i);
   assert.match(html, /<a[^>]+href="\/entrar"[^>]*>[\s\S]*?Voltar para o login<\/a>/);
+  // O layout acrescenta "IAH Educacional" uma única vez.
+  assert.match(html, /<title>Esqueci minha senha \| IAH Educacional<\/title>/);
+});
+
+/** Título do documento — sem os <title> de SVG (o do logotipo é o rótulo acessível dele). */
+function titulosDoDocumento(html) {
+  return html.replace(/<svg[\s\S]*?<\/svg>/g, "").match(/<title>[^<]*<\/title>/g);
+}
+
+test("títulos das páginas de senha com 'IAH Educacional' uma única vez", async () => {
+  const anonimo = new SessaoHttp(BASE_URL);
+  const esqueci = await (await anonimo.get("/entrar/esqueci-senha")).text();
+  assert.deepEqual(titulosDoDocumento(esqueci), ["<title>Esqueci minha senha | IAH Educacional</title>"]);
+
+  // A troca de senha só abre com sessão: entra (sem trocar nada nesta leitura) e lê o título.
+  const sessao = await autenticar(conta(OUTRA_TURMA, "aluno", 2));
+  const { resposta, caminhoFinal } = await sessao.navegar("/entrar/nova-senha");
+  assert.equal(caminhoFinal, "/entrar/nova-senha");
+  const novaSenha = await resposta.text();
+  assert.deepEqual(titulosDoDocumento(novaSenha), ["<title>Trocar senha | IAH Educacional</title>"]);
 });

@@ -9,7 +9,7 @@ import { getAuthMode } from "@/lib/auth-flags";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Trocar senha | IAH Educacional",
+  title: "Trocar senha",
   description: "Defina sua senha pessoal antes de continuar.",
 };
 
