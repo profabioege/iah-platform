@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { ArrowRight } from "lucide-react";
@@ -127,11 +128,26 @@ export default async function EntrarPage({
               placeholder="voce@suaescola.edu.br"
             />
           </label>
-          <label className="flex flex-col gap-2">
-            <span className="text-xs font-medium text-muted-foreground">
-              Senha
-            </span>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-baseline justify-between gap-3">
+              <label
+                htmlFor="entrar-senha"
+                className="text-xs font-medium text-muted-foreground"
+              >
+                Senha
+              </label>
+              {/* Recuperação assistida (sem autoatendimento): só no modo real. */}
+              {realMode ? (
+                <Link
+                  href="/entrar/esqueci-senha"
+                  className="rounded-sm text-xs font-medium text-primary underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  Esqueci minha senha
+                </Link>
+              ) : null}
+            </div>
             <Input
+              id="entrar-senha"
               type="password"
               name="password"
               required
@@ -139,7 +155,7 @@ export default async function EntrarPage({
               className="h-11 rounded-xl px-3.5"
               placeholder="••••••••"
             />
-          </label>
+          </div>
           {errorMessage ? (
             <p
               role="alert"

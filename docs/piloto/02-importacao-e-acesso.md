@@ -78,6 +78,7 @@ Não depende de integração com a API do Classroom. **Não colocar senha no Cla
 ## 4. Recuperação e troca de aluno
 
 - **Recuperar acesso**: `piloto-recuperar-acesso.cmd <email-institucional> <operador> "pedido do professor em DD/MM"`. A senha provisória aparece só na janela do operador; o aluno troca no primeiro acesso.
+- **"Esqueci minha senha"** (tela `/entrar`, modo real): leva a `/entrar/esqueci-senha`, que só orienta — alunos procuram o professor; professores e gestores acionam o responsável pela operação do piloto, que usa o comando acima. Não há recuperação automática nem envio de e-mail, e a tela avisa que ninguém pede a senha por mensagem.
 - **Troca de aluno no mesmo computador**: aluno A clica em **Sair** → aluno B entra com a própria conta. Verificado no ensaio: depois de sair, a sessão anterior não acessa nada; B vê apenas o trabalho de B.
 
 ## 5. Variáveis de ambiente (operador)

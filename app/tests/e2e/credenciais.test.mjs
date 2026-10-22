@@ -143,3 +143,28 @@ test("sondagem e DocentIAH continuam fora do modo real", async () => {
     "no modo real o DocentIAH precisa se declarar indisponível",
   );
 });
+
+test("'Esqueci minha senha' leva à orientação de recuperação assistida, sem autoatendimento", async () => {
+  const anonimo = new SessaoHttp(BASE_URL);
+
+  const entrar = await anonimo.get("/entrar");
+  assert.equal(entrar.status, 200);
+  const login = await entrar.text();
+  assert.match(login, /<a[^>]+href="\/entrar\/esqueci-senha"[^>]*>Esqueci minha senha<\/a>/);
+  // O link fica fora do <label>: o rótulo continua apontando para o campo.
+  assert.match(login, /<label[^>]+for="entrar-senha"[^>]*>Senha<\/label>/);
+  assert.match(login, /<input[^>]+id="entrar-senha"[^>]+type="password"|<input[^>]+type="password"[^>]+id="entrar-senha"/);
+
+  const pagina = await anonimo.get("/entrar/esqueci-senha");
+  assert.equal(pagina.status, 200, "a orientação é pública, como o login");
+  const html = await pagina.text();
+  const texto = html.replace(/<script[\s\S]*?<\/script>/g, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
+  assert.match(texto, /Alunos: procurem o professor da turma/);
+  assert.match(texto, /Professores e gestores: acionem o responsável pela operação do piloto/);
+  assert.match(texto, /Não há envio de e-mail de recuperação/);
+  assert.match(texto, /Ninguém da escola ou da plataforma pede a sua senha/);
+  // Nada a preencher e nenhuma promessa de envio.
+  assert.doesNotMatch(html, /<form|<input/);
+  assert.doesNotMatch(texto, /enviamos|enviaremos|link de redefinição|verifique (seu|sua caixa)/i);
+  assert.match(html, /<a[^>]+href="\/entrar"[^>]*>[\s\S]*?Voltar para o login<\/a>/);
+});
