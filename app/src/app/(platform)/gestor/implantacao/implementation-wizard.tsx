@@ -284,7 +284,7 @@ export function ImplementationWizard({
                 <SummaryTile label="Total de alunos" value={data.totalStudents} />
                 <SummaryTile label="Turmas com alunos" value={data.classroomsWithStudents} />
                 <SummaryTile
-                  label="E-mail institucional válido"
+                  label="E-mails no domínio cadastrado"
                   value={
                     data.institutionalEmailShare === null
                       ? "—"
