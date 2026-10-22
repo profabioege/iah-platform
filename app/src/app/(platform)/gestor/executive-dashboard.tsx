@@ -42,6 +42,7 @@ import {
   type MissionAssignment,
 } from "@/modules/platform";
 
+import { pendingReviewsLabel } from "./executive-totals";
 import { countLinkedClassrooms, type TeacherLink } from "./teacher-links";
 
 export type ExecutiveView =
@@ -511,7 +512,7 @@ function Overview({
               icon={cycleStats.pendingReviews > 0 ? CircleAlert : CheckCircle2}
               title={
                 cycleStats.pendingReviews > 0
-                  ? `${cycleStats.pendingReviews} entregas aguardam avaliação`
+                  ? pendingReviewsLabel(cycleStats.pendingReviews)
                   : "Entregas avaliadas"
               }
               description="Pendências pedagógicas do ciclo de aprendizagem atual."

@@ -22,6 +22,11 @@ function textoVisivel(html) {
     .replace(/\s+/g, " ");
 }
 
+/** Mensagem esperada no item de atenção, com concordância. */
+function mensagemPendencias(n) {
+  return n === 1 ? "1 entrega aguarda avaliação" : `${n} entregas aguardam avaliação`;
+}
+
 async function esperadoDoBanco(turma) {
   const [matriculas] = await consultarBanco(
     `select count(*)::int as n from enrollments
@@ -90,14 +95,18 @@ for (const turma of [TURMA, OUTRA_TURMA]) {
     if (esperado.pendentes === null) {
       t.diagnostic("turma sem missão publicada: contagem de pendências não conferida");
     } else if (esperado.pendentes > 0) {
-      assert.match(texto, new RegExp(`\\b${esperado.pendentes} entregas aguardam avaliação`));
+      assert.match(texto, new RegExp(`\\b${mensagemPendencias(esperado.pendentes)}`));
+      // Contagem exata, qualquer que seja a concordância exibida.
+      const exibidas = [...texto.matchAll(/\b(\d+) entregas? aguardam? avaliação/g)].map((m) => Number(m[1]));
+      assert.deepEqual(exibidas, [esperado.pendentes]);
     } else {
       assert.match(texto, /Entregas avaliadas/);
+      assert.doesNotMatch(texto, /\d+ entregas? aguardam? avaliação/);
     }
     if (esperado.concluiram !== null && esperado.concluiram !== esperado.pendentes) {
       assert.doesNotMatch(
         texto,
-        new RegExp(`\\b${esperado.concluiram} entregas aguardam avaliação`),
+        new RegExp(`\\b${mensagemPendencias(esperado.concluiram)}`),
         "avaliados não contam como pendentes",
       );
     }

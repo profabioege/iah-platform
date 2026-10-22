@@ -53,3 +53,10 @@ export function computeExecutiveTotals(
     pendingReviewStudents,
   };
 }
+
+/** Texto do item de atenção com concordância: "1 entrega aguarda", "N entregas aguardam". */
+export function pendingReviewsLabel(count: number): string {
+  return count === 1
+    ? "1 entrega aguarda avaliação"
+    : `${count} entregas aguardam avaliação`;
+}

@@ -13,7 +13,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { computeExecutiveTotals } from "../src/app/(platform)/gestor/executive-totals.ts";
+import {
+  computeExecutiveTotals,
+  pendingReviewsLabel,
+} from "../src/app/(platform)/gestor/executive-totals.ts";
 
 test("funil cumulativo: avaliado conta como entregue, concluído e avaliado", () => {
   const studentRows = [
@@ -89,4 +92,10 @@ test("quem só entregou ou reabriu a produção não aguarda avaliação", () =>
   ]);
 
   assert.equal(totals.pendingReviewStudents, 0);
+});
+
+test("mensagem de pendências concorda com a quantidade", () => {
+  assert.equal(pendingReviewsLabel(1), "1 entrega aguarda avaliação");
+  assert.equal(pendingReviewsLabel(2), "2 entregas aguardam avaliação");
+  assert.equal(pendingReviewsLabel(31), "31 entregas aguardam avaliação");
 });
