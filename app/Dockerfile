@@ -1,4 +1,5 @@
 # Imagem do piloto para o Cloud Run (southamerica-east1).
+# Base fixada por digest (node 24.22.1, publicada em 21/10/2026): build reproduzivel; atualizar so com novo teste.
 #
 # Mesmo caminho já validado na homologação local: `next build` + `next start`
 # em Node, servidor em UTC. Nada de `app/src` muda para rodar aqui.
@@ -8,14 +9,11 @@
 # SUPABASE_JWT_SECRET presentes), então eles chegam só ao passo de build como
 # build secrets (`--secret id=...`) e, em execução, pelo Secret Manager.
 #
-#   podman build -f Dockerfile \
-#     --secret id=auth_secret,env=AUTH_SECRET \
-#     --secret id=service_role,env=SUPABASE_SERVICE_ROLE_KEY \
-#     --secret id=jwt_secret,env=SUPABASE_JWT_SECRET \
-#     --build-arg NEXT_PUBLIC_SUPABASE_URL=... --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=... \
-#     --build-arg NEXT_PUBLIC_BUILD_COMMIT=<sha> ... -t <imagem> .
+# Build oficial: `scripts/windows/piloto-cloudrun.ps1 -Etapa Imagem` (roda o
+# podman build DENTRO da maquina do Podman, com --secret id=...,src=<arquivo>,
+# porque o cliente Windows falha ao gravar o temporario dos build secrets).
 
-FROM docker.io/library/node:24-bookworm-slim AS build
+FROM docker.io/library/node:24-bookworm-slim@sha256:2dd9a4f758e173b65fee15388f7706af6fb01ef50cf7a2c0538711d67a6981ae AS build
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
@@ -43,7 +41,7 @@ RUN --mount=type=secret,id=auth_secret,required=true \
     npm run build
 
 # Só o necessário para `next start`, sem dependências de desenvolvimento.
-FROM docker.io/library/node:24-bookworm-slim AS runtime
+FROM docker.io/library/node:24-bookworm-slim@sha256:2dd9a4f758e173b65fee15388f7706af6fb01ef50cf7a2c0538711d67a6981ae AS runtime
 WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
