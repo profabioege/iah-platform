@@ -55,13 +55,17 @@ export type IssueKind =
   | "nome_repetido"
   | "conta_outra_instituicao"
   | "conta_outro_papel"
-  | "conta_inativa";
+  | "conta_inativa"
+  | "conta_sem_perfil_ativo"
+  | "email_repetido_entre_papeis";
 
 export interface ImportIssue {
   kind: IssueKind;
   /** Bloqueia a importação? Avisos (ex.: homônimos) não bloqueiam. */
   blocking: boolean;
   lines: number[];
+  /** Participantes fora do CSV ("professor", "gestor 1"…), quando houver. */
+  refs?: string[];
   message: string;
 }
 
@@ -310,7 +314,8 @@ export type ExistingAccountState =
   | "existente_sem_registro_de_aluno"
   | "outro_papel"
   | "outra_instituicao"
-  | "inativa";
+  | "inativa"
+  | "sem_perfil_ativo";
 
 export interface DatabasePrecheck {
   byState: Record<ExistingAccountState, number[]>;
@@ -320,10 +325,243 @@ export interface DatabasePrecheck {
   alreadyLinked: number;
 }
 
+/** Papel que cada participante deve ter na instituição. */
+export type ParticipantRole = "aluno" | "professor" | "administrador";
+
+/** Professor ou gestor da configuração (fora do CSV). */
+export interface StaffParticipant {
+  kind: "professor" | "gestor";
+  /** Rótulo neutro para relatório: "professor", "gestor 1", "gestor 2"… */
+  reference: string;
+  role: Exclude<ParticipantRole, "aluno">;
+  email: string;
+}
+
+export type StaffAccountState =
+  | "nova"
+  | "existente_compativel"
+  | "outra_instituicao"
+  | "inativa"
+  | "sem_perfil_ativo"
+  | "outro_papel";
+
+export interface StaffPrecheckEntry {
+  kind: StaffParticipant["kind"];
+  reference: string;
+  role: StaffParticipant["role"];
+  state: StaffAccountState;
+}
+
+export interface RoleCounts {
+  total: number;
+  novas: number;
+  /** Já existem com perfil ativo compatível (alunos: vinculadas ou a vincular). */
+  compativeis: number;
+  bloqueadas: number;
+}
+
+export interface RosterDatabasePrecheck {
+  students: DatabasePrecheck;
+  staff: StaffPrecheckEntry[];
+  byRole: Record<ParticipantRole, RoleCounts>;
+  issues: ImportIssue[];
+  blocking: boolean;
+}
+
+/** Professor e gestores da configuração, com o papel esperado de cada um. */
+export function staffFromConfig(config: {
+  teacher: { email: string };
+  managers: Array<{ email: string }>;
+}): StaffParticipant[] {
+  return [
+    { kind: "professor", reference: "professor", role: "professor", email: normalizeEmail(config.teacher.email) },
+    ...config.managers.map((m, i) => ({
+      kind: "gestor" as const,
+      reference: `gestor ${i + 1}`,
+      role: "administrador" as const,
+      email: normalizeEmail(m.email),
+    })),
+  ];
+}
+
 /**
- * Confere, só lendo, o que já existe no banco para cada e-mail do arquivo.
- * Conta de outra instituição, de outro papel ou inativa é divergência
- * bloqueante — nunca é "reaproveitada" em silêncio.
+ * E-mail repetido entre professor, gestores e alunos (ou entre dois
+ * gestores). Puro — vale também no modo offline. Cada pessoa precisa de
+ * conta e credencial próprias, num único papel.
+ */
+export function precheckParticipantEmails(rows: CsvStudentRow[], staff: StaffParticipant[]): ImportIssue[] {
+  const owners = new Map<string, { lines: number[]; refs: string[] }>();
+  const add = (email: string, line: number | null, ref: string | null) => {
+    if (!email) return;
+    const o = owners.get(email) ?? { lines: [], refs: [] };
+    if (line != null) o.lines.push(line);
+    if (ref != null) o.refs.push(ref);
+    owners.set(email, o);
+  };
+  for (const s of staff) add(normalizeEmail(s.email), null, s.reference);
+  for (const r of rows) add(r.email, r.line, null);
+  const lines: number[] = [];
+  const refs: string[] = [];
+  for (const o of owners.values()) {
+    // Repetição só entre alunos já é "email_repetido" (precheckClassRows).
+    if (o.refs.length === 0) continue;
+    if (o.refs.length + o.lines.length > 1) {
+      lines.push(...o.lines);
+      refs.push(...o.refs);
+    }
+  }
+  if (lines.length === 0 && refs.length === 0) return [];
+  return [
+    {
+      kind: "email_repetido_entre_papeis",
+      blocking: true,
+      lines: lines.sort((a, b) => a - b),
+      refs,
+      message: "O mesmo e-mail aparece para mais de um participante (professor, gestor ou aluno) — cada pessoa precisa de conta própria.",
+    },
+  ];
+}
+
+interface AccountSnapshot {
+  users: Map<string, { id: string; institution_id: string; status: string }>;
+  /** Papéis com perfil ATIVO na instituição-alvo, por user_id. */
+  activeRoles: Map<string, Set<string>>;
+}
+
+/** Só leitura: contas e perfis (de qualquer status) dos e-mails informados. */
+async function readAccounts(db: SupabaseClient, emails: string[], institutionId: string): Promise<AccountSnapshot> {
+  const users = new Map<string, { id: string; institution_id: string; status: string }>();
+  for (let i = 0; i < emails.length; i += 100) {
+    const { data, error } = await db
+      .from("users")
+      .select("id, email, institution_id, status")
+      .in("email", emails.slice(i, i + 100));
+    if (error) throw new Error(`users: ${error.message}`);
+    for (const u of data ?? []) users.set(String(u.email).toLowerCase(), u as never);
+  }
+  const activeRoles = new Map<string, Set<string>>();
+  const userIds = [...users.values()].map((u) => u.id);
+  for (let i = 0; i < userIds.length; i += 100) {
+    const { data, error } = await db
+      .from("profiles")
+      .select("user_id, role, status")
+      .eq("institution_id", institutionId)
+      .in("user_id", userIds.slice(i, i + 100));
+    if (error) throw new Error(`profiles: ${error.message}`);
+    for (const row of data ?? []) {
+      if (String(row.status) !== "active") continue;
+      const set = activeRoles.get(String(row.user_id)) ?? new Set<string>();
+      set.add(String(row.role));
+      activeRoles.set(String(row.user_id), set);
+    }
+  }
+  return { users, activeRoles };
+}
+
+/** Classificação comum: instituição → conta ativa → perfil ativo do papel esperado. */
+function classifyAccount(
+  snap: AccountSnapshot,
+  email: string,
+  institutionId: string,
+  role: ParticipantRole,
+): "nova" | "outra_instituicao" | "inativa" | "sem_perfil_ativo" | "outro_papel" | "compativel" {
+  const u = snap.users.get(email);
+  if (!u) return "nova";
+  if (u.institution_id !== institutionId) return "outra_instituicao";
+  if (u.status !== "active") return "inativa";
+  const roles = snap.activeRoles.get(u.id);
+  if (!roles || roles.size === 0) return "sem_perfil_ativo";
+  if (roles.size !== 1 || !roles.has(role)) return "outro_papel";
+  return "compativel";
+}
+
+const STAFF_BLOCKS: Record<Exclude<StaffAccountState, "nova" | "existente_compativel">, [IssueKind, string]> = {
+  outra_instituicao: ["conta_outra_instituicao", "E-mail já usado por conta de OUTRA instituição."],
+  inativa: ["conta_inativa", "Conta existente desativada — reativar exige decisão da escola."],
+  sem_perfil_ativo: ["conta_sem_perfil_ativo", "Conta existente sem perfil ativo nesta instituição — não é completada automaticamente."],
+  outro_papel: ["conta_outro_papel", "Conta existente com outro papel nesta instituição — papel não é trocado automaticamente."],
+};
+
+/**
+ * Prévia completa com banco, SÓ LEITURA: alunos (papel aluno), professor
+ * (papel professor) e gestores (papel administrador), todos na instituição
+ * configurada. Conflito de instituição, conta inativa, falta de perfil ativo
+ * compatível ou outro papel bloqueiam — nada é corrigido automaticamente.
+ * Inclui o cruzamento de e-mails entre papéis.
+ */
+export async function precheckRosterAgainstDatabase(
+  db: SupabaseClient,
+  rows: CsvStudentRow[],
+  staff: StaffParticipant[],
+  target: { institutionId: string; classroomId: string },
+): Promise<RosterDatabasePrecheck> {
+  const students = await precheckAgainstDatabase(db, rows, target);
+  const snap = await readAccounts(db, [...new Set(staff.map((s) => normalizeEmail(s.email)))], target.institutionId);
+
+  const entries: StaffPrecheckEntry[] = staff.map((s) => {
+    const c = classifyAccount(snap, normalizeEmail(s.email), target.institutionId, s.role);
+    return { kind: s.kind, reference: s.reference, role: s.role, state: c === "compativel" ? "existente_compativel" : c };
+  });
+
+  const issues: ImportIssue[] = [...precheckParticipantEmails(rows, staff), ...students.issues];
+  for (const [state, [kind, message]] of Object.entries(STAFF_BLOCKS) as Array<
+    [keyof typeof STAFF_BLOCKS, [IssueKind, string]]
+  >) {
+    const refs = entries.filter((e) => e.state === state).map((e) => e.reference);
+    if (refs.length > 0) issues.push({ kind, blocking: true, lines: [], refs, message: `${message} (professor/gestor)` });
+  }
+
+  const st = students.byState;
+  const blockedStudents =
+    st.outra_instituicao.length + st.inativa.length + st.outro_papel.length + st.sem_perfil_ativo.length;
+  const countStaff = (role: StaffParticipant["role"]): RoleCounts => {
+    const list = entries.filter((e) => e.role === role);
+    return {
+      total: list.length,
+      novas: list.filter((e) => e.state === "nova").length,
+      compativeis: list.filter((e) => e.state === "existente_compativel").length,
+      bloqueadas: list.filter((e) => e.state !== "nova" && e.state !== "existente_compativel").length,
+    };
+  };
+  return {
+    students,
+    staff: entries,
+    byRole: {
+      aluno: {
+        total: rows.filter((r) => r.email).length,
+        novas: st.nova.length,
+        compativeis: students.toLink + students.alreadyLinked,
+        bloqueadas: blockedStudents,
+      },
+      professor: countStaff("professor"),
+      administrador: countStaff("administrador"),
+    },
+    issues,
+    blocking: issues.some((i) => i.blocking),
+  };
+}
+
+/**
+ * Execução protegida: repete a prévia completa IMEDIATAMENTE antes de gravar
+ * e só chama `provision` (o primeiro upsert) se não houver bloqueio. Com
+ * bloqueio, a importação inteira é recusada e nada é escrito.
+ */
+export async function importAfterPrecheck<R>(
+  db: SupabaseClient,
+  rows: CsvStudentRow[],
+  staff: StaffParticipant[],
+  target: { institutionId: string; classroomId: string },
+  provision: () => Promise<R>,
+): Promise<{ precheck: RosterDatabasePrecheck; result: R | null }> {
+  const precheck = await precheckRosterAgainstDatabase(db, rows, staff, target);
+  if (precheck.blocking) return { precheck, result: null };
+  return { precheck, result: await provision() };
+}
+
+/**
+ * Confere, só lendo, o que já existe no banco para cada e-mail de ALUNO do
+ * arquivo. Conta de outra instituição, de outro papel, inativa ou sem perfil
+ * ativo é divergência bloqueante — nunca é "reaproveitada" em silêncio.
  */
 export async function precheckAgainstDatabase(
   db: SupabaseClient,
@@ -338,62 +576,38 @@ export async function precheckAgainstDatabase(
     outro_papel: [],
     outra_instituicao: [],
     inativa: [],
+    sem_perfil_ativo: [],
   };
   const emails = [...new Set(rows.map((r) => r.email).filter(Boolean))];
-  const users = new Map<string, { id: string; institution_id: string; status: string }>();
-  for (let i = 0; i < emails.length; i += 100) {
-    const { data, error } = await db
-      .from("users")
-      .select("id, email, institution_id, status")
-      .in("email", emails.slice(i, i + 100));
-    if (error) throw new Error(`users: ${error.message}`);
-    for (const u of data ?? []) users.set(String(u.email), u as never);
-  }
-  const userIds = [...users.values()].map((u) => u.id);
-  const profiles = new Map<string, string>();
+  const snap = await readAccounts(db, emails, target.institutionId);
   const students = new Map<string, string>();
-  if (userIds.length > 0) {
-    const { data: p, error: pe } = await db
-      .from("profiles")
-      .select("user_id, role")
-      .eq("institution_id", target.institutionId)
-      .eq("status", "active")
-      .in("user_id", userIds);
-    if (pe) throw new Error(`profiles: ${pe.message}`);
-    for (const row of p ?? []) profiles.set(String(row.user_id), String(row.role));
-  }
-  if (emails.length > 0) {
+  for (let i = 0; i < emails.length; i += 100) {
     const { data: s, error: se } = await db
       .from("students")
       .select("id, email")
       .eq("institution_id", target.institutionId)
-      .in("email", emails);
+      .in("email", emails.slice(i, i + 100));
     if (se) throw new Error(`students: ${se.message}`);
-    for (const row of s ?? []) students.set(String(row.email), String(row.id));
+    for (const row of s ?? []) students.set(String(row.email).toLowerCase(), String(row.id));
   }
   const enrolled = new Set<string>();
   const studentIds = [...students.values()];
-  if (studentIds.length > 0) {
+  for (let i = 0; i < studentIds.length; i += 100) {
     const { data: e, error: ee } = await db
       .from("enrollments")
       .select("student_id")
       .eq("institution_id", target.institutionId)
       .eq("classroom_id", target.classroomId)
-      .in("student_id", studentIds);
+      .in("student_id", studentIds.slice(i, i + 100));
     if (ee) throw new Error(`enrollments: ${ee.message}`);
     for (const row of e ?? []) enrolled.add(String(row.student_id));
   }
 
   for (const r of rows) {
     if (!r.email) continue;
-    const u = users.get(r.email);
-    if (!u) {
-      byState.nova.push(r.line);
-      continue;
-    }
-    if (u.institution_id !== target.institutionId) byState.outra_instituicao.push(r.line);
-    else if (u.status !== "active") byState.inativa.push(r.line);
-    else if (profiles.get(u.id) && profiles.get(u.id) !== "aluno") byState.outro_papel.push(r.line);
+    const c = classifyAccount(snap, r.email, target.institutionId, "aluno");
+    if (c === "nova") byState.nova.push(r.line);
+    else if (c !== "compativel") byState[c].push(r.line);
     else if (!students.has(r.email)) byState.existente_sem_registro_de_aluno.push(r.line);
     else if (!enrolled.has(students.get(r.email) as string)) byState.existente_sem_matricula.push(r.line);
     else byState.existente_vinculada.push(r.line);
@@ -406,6 +620,11 @@ export async function precheckAgainstDatabase(
   block(byState.outra_instituicao, "conta_outra_instituicao", "E-mail já usado por conta de OUTRA instituição.");
   block(byState.outro_papel, "conta_outro_papel", "E-mail já usado por conta de professor ou gestor nesta instituição.");
   block(byState.inativa, "conta_inativa", "Conta existente desativada — reativar exige decisão da escola.");
+  block(
+    byState.sem_perfil_ativo,
+    "conta_sem_perfil_ativo",
+    "Conta existente sem perfil ativo de aluno nesta instituição — não é completada automaticamente.",
+  );
 
   return {
     byState,
@@ -423,4 +642,97 @@ export function toPilotStudents(rows: CsvStudentRow[], institutionId: string): P
     name: r.nome,
     email: r.email,
   }));
+}
+
+export interface ConfigIssue {
+  /** Caminho do campo na configuração (ex.: "teacher.email", "managers[0].name"). */
+  path: string;
+  message: string;
+}
+
+const PLACEHOLDER_RE = /preencher/i;
+
+/**
+ * Confere a configuração da turma ANTES de qualquer acesso ao banco.
+ *
+ * Recusa: objeto ou campo obrigatório ausente ou vazio; valor que ainda
+ * contém o marcador "PREENCHER" do modelo; e-mail inválido do professor ou
+ * de gestor; lista de gestores vazia; total esperado que não seja inteiro
+ * positivo. Devolve a lista de problemas (vazia = configuração completa).
+ * As mensagens citam só o caminho do campo, nunca o valor.
+ */
+export function validatePilotConfig(config: unknown): ConfigIssue[] {
+  const issues: ConfigIssue[] = [];
+  const isObj = (v: unknown): v is Record<string, unknown> =>
+    typeof v === "object" && v !== null && !Array.isArray(v);
+  const root = isObj(config) ? config : {};
+  if (!isObj(config)) issues.push({ path: "(raiz)", message: "a configuração precisa ser um objeto JSON." });
+
+  const text = (obj: Record<string, unknown>, key: string, path: string, kind: "texto" | "email" = "texto") => {
+    const v = obj[key];
+    if (typeof v !== "string" || v.trim() === "") {
+      issues.push({ path, message: "obrigatório e não pode ficar vazio." });
+      return;
+    }
+    if (PLACEHOLDER_RE.test(v)) {
+      issues.push({ path, message: 'ainda contém o marcador "PREENCHER" do modelo.' });
+      return;
+    }
+    if (kind === "email" && !EMAIL_RE.test(normalizeEmail(v))) {
+      issues.push({ path, message: "e-mail inválido." });
+    }
+  };
+  const section = (key: string, fields: Array<[string, "texto" | "email"]>) => {
+    const obj = root[key];
+    if (!isObj(obj)) {
+      issues.push({ path: key, message: "objeto obrigatório ausente." });
+      return;
+    }
+    for (const [f, kind] of fields) text(obj, f, `${key}.${f}`, kind);
+  };
+
+  section("institution", [["id", "texto"], ["name", "texto"], ["slug", "texto"]]);
+  if (isObj(root.institution) && root.institution.domain != null && root.institution.domain !== "") {
+    text(root.institution, "domain", "institution.domain");
+  }
+  section("academicYear", [["id", "texto"], ["label", "texto"], ["startsOn", "texto"], ["endsOn", "texto"]]);
+  section("classroom", [["id", "texto"], ["name", "texto"], ["grade", "texto"]]);
+  section("teacher", [["id", "texto"], ["name", "texto"], ["email", "email"]]);
+
+  const managers = root.managers;
+  if (!Array.isArray(managers) || managers.length === 0) {
+    issues.push({ path: "managers", message: "informe ao menos um gestor." });
+  } else {
+    managers.forEach((m, i) => {
+      if (!isObj(m)) {
+        issues.push({ path: `managers[${i}]`, message: "gestor precisa ser um objeto." });
+        return;
+      }
+      for (const [f, kind] of [["id", "texto"], ["name", "texto"], ["email", "email"]] as const) {
+        text(m, f, `managers[${i}].${f}`, kind);
+      }
+    });
+  }
+
+  const expected = root.expected;
+  if (!isObj(expected)) {
+    issues.push({ path: "expected", message: "objeto obrigatório ausente." });
+  } else {
+    text(expected, "className", "expected.className");
+    const t = expected.expectedTotal;
+    if (typeof t !== "number" || !Number.isInteger(t) || t < 1) {
+      issues.push({ path: "expected.expectedTotal", message: "precisa ser um inteiro positivo." });
+    }
+    const domains = expected.emailDomains;
+    if (!Array.isArray(domains) || domains.some((d) => typeof d !== "string")) {
+      issues.push({ path: "expected.emailDomains", message: "precisa ser uma lista de domínios." });
+    } else {
+      domains.forEach((d, i) => {
+        if (PLACEHOLDER_RE.test(d)) {
+          issues.push({ path: `expected.emailDomains[${i}]`, message: 'ainda contém o marcador "PREENCHER" do modelo.' });
+        }
+      });
+    }
+  }
+  return issues;
 }

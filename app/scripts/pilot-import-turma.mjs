@@ -28,11 +28,15 @@ import { dirname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  importAfterPrecheck,
   maskEmail,
   parseClassCsv,
-  precheckAgainstDatabase,
   precheckClassRows,
+  precheckParticipantEmails,
+  precheckRosterAgainstDatabase,
+  staffFromConfig,
   toPilotStudents,
+  validatePilotConfig,
 } from "../src/modules/identity/provisioning/class-csv-import.ts";
 
 function arg(name, fallback = null) {
@@ -65,8 +69,13 @@ try {
 } catch (error) {
   fail(`Não foi possível ler ${configPath}: ${error.message}`);
 }
-for (const key of ["institution", "academicYear", "classroom", "teacher", "managers", "expected"]) {
-  if (!config[key]) fail(`Configuração sem "${key}".`);
+// Configuração completa ANTES de qualquer acesso ao banco: campos obrigatórios
+// preenchidos, sem "PREENCHER" do modelo e e-mails válidos de professor e gestores.
+const configIssues = validatePilotConfig(config);
+if (configIssues.length > 0) {
+  console.error(`✖ Configuração incompleta ou inválida (${configIssues.length}) — nada foi consultado:`);
+  for (const issue of configIssues) console.error(`  - ${issue.path}: ${issue.message}`);
+  process.exit(1);
 }
 
 const parsed = parseClassCsv(readFileSync(csvPath, "utf8"));
@@ -79,6 +88,10 @@ console.log(`De outra turma:              ${report.outOfClass}`);
 console.log(
   `Domínios encontrados:        ${Object.entries(report.domainsFound).map(([d, n]) => `${d} (${n})`).join(", ") || "—"}`,
 );
+
+const staff = staffFromConfig(config);
+const staffEmail = new Map(staff.map((p) => [p.reference, p.email]));
+const target = { institutionId: config.institution.id, classroomId: config.classroom.id };
 
 let dbCheck = null;
 let db = null;
@@ -98,18 +111,29 @@ if (!offline) {
   console.log(`Destino:                     ${alvo.descricao}`);
   const { createClient } = await import("@supabase/supabase-js");
   db = createClient(url, serviceRole, { auth: { persistSession: false } });
-  dbCheck = await precheckAgainstDatabase(db, report.rows, {
-    institutionId: config.institution.id,
-    classroomId: config.classroom.id,
-  });
-  console.log(`Contas a criar:              ${dbCheck.toCreate}`);
-  console.log(`Existentes a vincular:       ${dbCheck.toLink}`);
-  console.log(`Já vinculadas à turma:       ${dbCheck.alreadyLinked}`);
+  dbCheck = await precheckRosterAgainstDatabase(db, report.rows, staff, target);
+  console.log(`Contas de aluno a criar:     ${dbCheck.students.toCreate}`);
+  console.log(`Alunos existentes a vincular:${String(dbCheck.students.toLink).padStart(2)}`);
+  console.log(`Alunos já vinculados:        ${dbCheck.students.alreadyLinked}`);
+  console.log("\nPor papel (instituição " + config.institution.id + "):");
+  console.log("  papel           total  novas  compatíveis  bloqueadas");
+  for (const papel of ["aluno", "professor", "administrador"]) {
+    const c = dbCheck.byRole[papel];
+    console.log(
+      `  ${papel.padEnd(14)}${String(c.total).padStart(6)}${String(c.novas).padStart(7)}` +
+        `${String(c.compativeis).padStart(13)}${String(c.bloqueadas).padStart(12)}`,
+    );
+  }
+  for (const e of dbCheck.staff) {
+    console.log(`  ${e.reference.padEnd(10)} (${e.role}) ${maskEmail(staffEmail.get(e.reference) ?? "")}: ${e.state}`);
+  }
 } else {
   console.log("Banco:                       não consultado (--offline) — contas existentes não verificadas.");
+  console.log(`Professor e gestores:        ${staff.length} na configuração (contas não verificadas no banco).`);
 }
 
-const issues = [...report.issues, ...(dbCheck?.issues ?? [])];
+// No modo com banco, o cruzamento de e-mails entre papéis já vem em dbCheck.issues.
+const issues = [...report.issues, ...(dbCheck ? dbCheck.issues : precheckParticipantEmails(report.rows, staff))];
 const rowByLine = new Map(report.rows.map((r) => [r.line, r]));
 if (issues.length === 0) {
   console.log("\nDivergências:                nenhuma.");
@@ -125,7 +149,10 @@ if (issues.length === 0) {
           })
           .join(", ")}`
       : "";
-    console.log(`  [${marca}] ${issue.message}${linhas}`);
+    const refs = issue.refs?.length
+      ? ` — ${issue.refs.map((r) => `${r} (${maskEmail(staffEmail.get(r) ?? "")})`).join(", ")}`
+      : "";
+    console.log(`  [${marca}] ${issue.message}${linhas}${refs}`);
   }
 }
 const blocking = issues.some((i) => i.blocking);
@@ -164,10 +191,19 @@ const roster = {
   managers: config.managers,
   students: toPilotStudents(report.rows, config.institution.id),
 };
-const result = await provisionPilotClass(db, roster, {
-  dryRun: false,
-  actor: String(arg("actor", "cli:operador-nao-identificado")),
-});
+// A prévia completa (alunos, professor e gestores) é repetida imediatamente
+// antes da primeira gravação; com qualquer bloqueio, nada é escrito.
+const guarded = await importAfterPrecheck(db, report.rows, staff, target, () =>
+  provisionPilotClass(db, roster, {
+    dryRun: false,
+    actor: String(arg("actor", "cli:operador-nao-identificado")),
+  }),
+);
+if (guarded.result === null) {
+  for (const issue of guarded.precheck.issues.filter((i) => i.blocking)) console.error(`  [BLOQUEIA] ${issue.message}`);
+  fail("Importação recusada inteira: a prévia repetida antes da gravação encontrou bloqueio. Nada foi escrito.");
+}
+const result = guarded.result;
 
 console.log(`\n== Importação concluída`);
 console.log(
