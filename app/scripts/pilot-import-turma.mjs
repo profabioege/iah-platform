@@ -50,11 +50,7 @@ function arg(name, fallback = null) {
 // de ambiente, alvo não autorizado); qualquer outro não zero = falha técnica.
 const EXIT_CONFIG = 3;
 
-function fail(message) {
-  console.error(`✖ ${message}`);
-  process.exit(1);
-}
-
+// process.exit() só ANTES de qualquer acesso ao banco (ver o fim do arquivo).
 function failConfig(message) {
   console.error(`✖ ${message}`);
   process.exit(EXIT_CONFIG);
@@ -180,78 +176,97 @@ if (issues.length === 0) {
 }
 const blocking = issues.some((i) => i.blocking);
 
+// Daqui em diante o banco pode já ter sido consultado: o encerramento é por
+// process.exitCode, nunca process.exit(). No Windows (Node 24),
+// process.exit() logo depois de uma requisição HTTPS aborta o processo
+// (assert do libuv em win/async.c) e o código 0/2 se perde.
 if (!execute) {
   console.log(
     blocking
       ? "\nResultado: NÃO IMPORTAR — corrija as divergências com a escola e valide de novo."
       : "\nResultado: apto para importar (nada foi escrito).",
   );
-  process.exit(blocking ? 2 : 0);
+  process.exitCode = blocking ? 2 : 0;
+} else {
+  process.exitCode = await executar();
+}
+
+/** Recusa da execução depois da prévia: mensagem e código 1, sem process.exit(). */
+function recusa(message) {
+  console.error(`✖ ${message}`);
+  return 1;
 }
 
 // ---------------------------------------------------------------- execução
-if (blocking) fail("Importação recusada: há divergências bloqueantes.");
-if (arg("confirm-institution") !== config.institution.id) {
-  fail(`Execução exige --confirm-institution=${config.institution.id}.`);
-}
-if (Number(arg("confirm-total")) !== report.total) {
-  fail(`Execução exige --confirm-total=${report.total} (o total que você conferiu com a escola).`);
-}
-const credentialsOut = arg("credentials-out");
-if (!credentialsOut || credentialsOut === true) fail("Informe --credentials-out=<arquivo fora do repositório>.");
-if (insideRepo(credentialsOut)) fail("--credentials-out precisa ficar FORA do repositório (dados reais não entram no Git).");
-if (insideRepo(csvPath) || insideRepo(configPath)) {
-  fail("A lista e a configuração reais precisam ficar FORA do repositório.");
-}
-if (existsSync(credentialsOut)) fail(`${credentialsOut} já existe — escolha outro nome (não sobrescrevo credenciais).`);
+async function executar() {
+  if (blocking) return recusa("Importação recusada: há divergências bloqueantes.");
+  if (arg("confirm-institution") !== config.institution.id) {
+    return recusa(`Execução exige --confirm-institution=${config.institution.id}.`);
+  }
+  if (Number(arg("confirm-total")) !== report.total) {
+    return recusa(`Execução exige --confirm-total=${report.total} (o total que você conferiu com a escola).`);
+  }
+  const credentialsOut = arg("credentials-out");
+  if (!credentialsOut || credentialsOut === true) return recusa("Informe --credentials-out=<arquivo fora do repositório>.");
+  if (insideRepo(credentialsOut)) return recusa("--credentials-out precisa ficar FORA do repositório (dados reais não entram no Git).");
+  if (insideRepo(csvPath) || insideRepo(configPath)) {
+    return recusa("A lista e a configuração reais precisam ficar FORA do repositório.");
+  }
+  if (existsSync(credentialsOut)) return recusa(`${credentialsOut} já existe — escolha outro nome (não sobrescrevo credenciais).`);
+  // As senhas iniciais só são gravadas DEPOIS das contas: sem a pasta, elas
+  // se perderiam com as contas já criadas.
+  if (!existsSync(dirname(resolve(credentialsOut)))) {
+    return recusa(`A pasta de ${credentialsOut} não existe — crie-a antes de importar.`);
+  }
 
-const { provisionPilotClass } = await import("../src/modules/identity/provisioning/pilot-provisioning.ts");
-const roster = {
-  institution: config.institution,
-  academicYear: config.academicYear,
-  classroom: config.classroom,
-  teacher: config.teacher,
-  managers: config.managers,
-  students: toPilotStudents(report.rows, config.institution.id),
-};
-// A prévia completa (alunos, professor e gestores) é repetida imediatamente
-// antes da primeira gravação; com qualquer bloqueio, nada é escrito.
-const guarded = await importAfterPrecheck(db, report.rows, staff, target, () =>
-  provisionPilotClass(db, roster, {
-    dryRun: false,
-    actor: String(arg("actor", "cli:operador-nao-identificado")),
-  }),
-);
-if (guarded.result === null) {
-  for (const issue of guarded.precheck.issues.filter((i) => i.blocking)) console.error(`  [BLOQUEIA] ${issue.message}`);
-  fail("Importação recusada inteira: a prévia repetida antes da gravação encontrou bloqueio. Nada foi escrito.");
-}
-const result = guarded.result;
-
-console.log(`\n== Importação concluída`);
-console.log(
-  `Contas: ${result.summary.created} criadas · ${result.summary.existing} já existentes · ${result.summary.failed} com falha`,
-);
-console.log(
-  `Matrículas na ${config.classroom.name}: ${result.enrollments.created} novas · ${result.enrollments.existing} existentes · ${result.enrollments.failed} com falha`,
-);
-for (const conta of result.accounts.filter((a) => a.outcome === "falhou")) {
-  console.error(`  ✖ ${conta.kind} ${maskEmail(conta.email)}: ${conta.error}`);
-}
-
-const criadas = result.accounts.filter((a) => a.temporaryPassword);
-if (criadas.length > 0) {
-  const nomePorEmail = new Map(report.rows.map((r) => [r.email, r.nome]));
-  const linhas = [
-    "perfil;nome;email;senha_inicial",
-    ...criadas.map(
-      (a) => `${a.kind};${nomePorEmail.get(a.email) ?? a.reference};${a.email};${a.temporaryPassword}`,
-    ),
-  ];
-  writeFileSync(credentialsOut, `\uFEFF${linhas.join("\n")}\n`, { encoding: "utf8", flag: "wx" });
-  console.log(
-    `\n${criadas.length} credencial(is) inicial(is) gravada(s) em ${credentialsOut}. ` +
-      "Imprima e recorte uma por aluno; apague o arquivo depois da aula. Troca obrigatória no primeiro acesso.",
+  const { provisionPilotClass } = await import("../src/modules/identity/provisioning/pilot-provisioning.ts");
+  const roster = {
+    institution: config.institution,
+    academicYear: config.academicYear,
+    classroom: config.classroom,
+    teacher: config.teacher,
+    managers: config.managers,
+    students: toPilotStudents(report.rows, config.institution.id),
+  };
+  // A prévia completa (alunos, professor e gestores) é repetida imediatamente
+  // antes da primeira gravação; com qualquer bloqueio, nada é escrito.
+  const guarded = await importAfterPrecheck(db, report.rows, staff, target, () =>
+    provisionPilotClass(db, roster, {
+      dryRun: false,
+      actor: String(arg("actor", "cli:operador-nao-identificado")),
+    }),
   );
+  if (guarded.result === null) {
+    for (const issue of guarded.precheck.issues.filter((i) => i.blocking)) console.error(`  [BLOQUEIA] ${issue.message}`);
+    return recusa("Importação recusada inteira: a prévia repetida antes da gravação encontrou bloqueio. Nada foi escrito.");
+  }
+  const result = guarded.result;
+
+  console.log(`\n== Importação concluída`);
+  console.log(
+    `Contas: ${result.summary.created} criadas · ${result.summary.existing} já existentes · ${result.summary.failed} com falha`,
+  );
+  console.log(
+    `Matrículas na ${config.classroom.name}: ${result.enrollments.created} novas · ${result.enrollments.existing} existentes · ${result.enrollments.failed} com falha`,
+  );
+  for (const conta of result.accounts.filter((a) => a.outcome === "falhou")) {
+    console.error(`  ✖ ${conta.kind} ${maskEmail(conta.email)}: ${conta.error}`);
+  }
+
+  const criadas = result.accounts.filter((a) => a.temporaryPassword);
+  if (criadas.length > 0) {
+    const nomePorEmail = new Map(report.rows.map((r) => [r.email, r.nome]));
+    const linhas = [
+      "perfil;nome;email;senha_inicial",
+      ...criadas.map(
+        (a) => `${a.kind};${nomePorEmail.get(a.email) ?? a.reference};${a.email};${a.temporaryPassword}`,
+      ),
+    ];
+    writeFileSync(credentialsOut, `\uFEFF${linhas.join("\n")}\n`, { encoding: "utf8", flag: "wx" });
+    console.log(
+      `\n${criadas.length} credencial(is) inicial(is) gravada(s) em ${credentialsOut}. ` +
+        "Imprima e recorte uma por aluno; apague o arquivo depois da aula. Troca obrigatória no primeiro acesso.",
+    );
+  }
+  return result.summary.failed > 0 ? 2 : 0;
 }
-if (result.summary.failed > 0) process.exitCode = 2;
