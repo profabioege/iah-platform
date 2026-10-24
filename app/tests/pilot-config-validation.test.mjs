@@ -118,8 +118,9 @@ function rodar(config, extra = [], env = {}) {
   const cfgPath = join(tmp, `cfg-${Math.random().toString(36).slice(2)}.json`);
   writeFileSync(cfgPath, JSON.stringify(config));
   const base = { ...process.env };
-  delete base.NEXT_PUBLIC_SUPABASE_URL;
-  delete base.SUPABASE_SERVICE_ROLE_KEY;
+  for (const k of ["NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "IAH_HOMOLOGATION_PROJECT_REF", "IAH_PROTECTED_PROJECT_REFS"]) {
+    delete base[k];
+  }
   return spawnSync(
     process.execPath,
     ["--experimental-strip-types", "--no-warnings", script, `--config=${cfgPath}`, `--csv=${csvPath}`, ...extra],
@@ -135,7 +136,7 @@ test("CLI: configuração incompleta para antes do banco, mesmo com variáveis d
     NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:9",
     SUPABASE_SERVICE_ROLE_KEY: "chave-sintetica-de-teste",
   });
-  assert.equal(r.status, 1, r.stderr);
+  assert.equal(r.status, 3, r.stderr);
   assert.match(r.stderr, /Configuração incompleta ou inválida \(1\) — nada foi consultado/);
   assert.match(r.stderr, /teacher\.email/);
   assert.doesNotMatch(r.stdout, /Validação prévia|Destino|Contas a criar/);
@@ -145,7 +146,7 @@ test("CLI: configuração incompleta também é recusada no modo --offline", () 
   const c = valida();
   c.managers = [];
   const r = rodar(c, ["--offline"]);
-  assert.equal(r.status, 1, r.stderr);
+  assert.equal(r.status, 3, r.stderr);
   assert.match(r.stderr, /managers: informe ao menos um gestor/);
 });
 
@@ -157,7 +158,7 @@ test("CLI: configuração sintética válida continua aceita (--offline)", () =>
 
 test("CLI: configuração válida passa do portão e chega à exigência das variáveis do banco", () => {
   const r = rodar(valida());
-  assert.equal(r.status, 1);
-  assert.match(r.stderr, /NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY precisam estar no ambiente/);
+  assert.equal(r.status, 3);
+  assert.match(r.stderr, /Variáveis de ambiente ausentes nesta janela — banco não consultado/);
   assert.doesNotMatch(r.stderr, /Configuração incompleta/);
 });

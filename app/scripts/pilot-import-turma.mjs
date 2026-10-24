@@ -45,10 +45,28 @@ function arg(name, fallback = null) {
   return process.argv.includes(`--${name}`) ? true : fallback;
 }
 
+// Códigos de saída da prévia: 0 = concluída e apta; 2 = bloqueios de dados ou
+// conflitos; 3 = configuração ausente ou inválida (argumentos, JSON, variáveis
+// de ambiente, alvo não autorizado); qualquer outro não zero = falha técnica.
+const EXIT_CONFIG = 3;
+
 function fail(message) {
   console.error(`✖ ${message}`);
   process.exit(1);
 }
+
+function failConfig(message) {
+  console.error(`✖ ${message}`);
+  process.exit(EXIT_CONFIG);
+}
+
+/** Variáveis exigidas pela prévia com banco (só os NOMES aparecem em mensagens). */
+const REQUIRED_ENV = [
+  "NEXT_PUBLIC_SUPABASE_URL",
+  "SUPABASE_SERVICE_ROLE_KEY",
+  "IAH_HOMOLOGATION_PROJECT_REF",
+  "IAH_PROTECTED_PROJECT_REFS",
+];
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 function insideRepo(path) {
@@ -60,14 +78,14 @@ const configPath = arg("config");
 const csvPath = arg("csv");
 const offline = arg("offline", false) === true;
 const execute = arg("execute", false) === true;
-if (!configPath || !csvPath) fail("Informe --config=<arquivo.json> e --csv=<arquivo.csv>.");
-if (offline && execute) fail("--offline não combina com --execute.");
+if (!configPath || !csvPath) failConfig("Informe --config=<arquivo.json> e --csv=<arquivo.csv>.");
+if (offline && execute) failConfig("--offline não combina com --execute.");
 
 let config;
 try {
   config = JSON.parse(readFileSync(configPath, "utf8"));
 } catch (error) {
-  fail(`Não foi possível ler ${configPath}: ${error.message}`);
+  failConfig(`Não foi possível ler ${configPath}: ${error.message}`);
 }
 // Configuração completa ANTES de qualquer acesso ao banco: campos obrigatórios
 // preenchidos, sem "PREENCHER" do modelo e e-mails válidos de professor e gestores.
@@ -75,7 +93,7 @@ const configIssues = validatePilotConfig(config);
 if (configIssues.length > 0) {
   console.error(`✖ Configuração incompleta ou inválida (${configIssues.length}) — nada foi consultado:`);
   for (const issue of configIssues) console.error(`  - ${issue.path}: ${issue.message}`);
-  process.exit(1);
+  process.exit(EXIT_CONFIG);
 }
 
 const parsed = parseClassCsv(readFileSync(csvPath, "utf8"));
@@ -96,17 +114,22 @@ const target = { institutionId: config.institution.id, classroomId: config.class
 let dbCheck = null;
 let db = null;
 if (!offline) {
+  // Antes de qualquer conexão: todas as variáveis presentes (só os nomes são exibidos).
+  const missingEnv = REQUIRED_ENV.filter((name) => !(process.env[name] ?? "").trim());
+  if (missingEnv.length > 0) {
+    console.error("✖ Variáveis de ambiente ausentes nesta janela — banco não consultado:");
+    for (const name of missingEnv) console.error(`  FALTA   ${name}`);
+    console.error("Defina-as na janela do operador e rode de novo (ou use --offline).");
+    process.exit(EXIT_CONFIG);
+  }
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceRole) {
-    fail("NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY precisam estar no ambiente (ou use --offline).");
-  }
   const { assertAuthorizedTarget } = await import("./pilot-target-guard.mjs");
   let alvo;
   try {
     alvo = assertAuthorizedTarget(url, { confirmProject: arg("confirm-project"), operation: "importar a turma" });
   } catch (error) {
-    fail(error instanceof Error ? error.message : String(error));
+    failConfig(error instanceof Error ? error.message : String(error));
   }
   console.log(`Destino:                     ${alvo.descricao}`);
   const { createClient } = await import("@supabase/supabase-js");
