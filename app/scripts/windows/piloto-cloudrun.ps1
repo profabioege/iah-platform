@@ -5,7 +5,7 @@ Pacote completo: docs/piloto/09-hospedagem-cloud-run.md.
 Uso (sempre informe o projeto DUAS vezes; o script confere as duas e o projeto ativo do gcloud):
   .\piloto-cloudrun.ps1 -Etapa Projeto   -Projeto <id> -ConfirmarProjeto <id> -ContaFaturamento <XXXXXX-XXXXXX-XXXXXX>
   .\piloto-cloudrun.ps1 -Etapa Segredos  -Projeto <id> -ConfirmarProjeto <id>
-  .\piloto-cloudrun.ps1 -Etapa Imagem    -Projeto <id> -ConfirmarProjeto <id> -Sha <commit-40>
+  .\piloto-cloudrun.ps1 -Etapa Imagem    -Projeto <id> -ConfirmarProjeto <id> -Sha <commit-40> [-Worktree <raiz do checkout limpo>]
   .\piloto-cloudrun.ps1 -Etapa Publicar  -Projeto <id> -ConfirmarProjeto <id> -Sha <commit-40>
   .\piloto-cloudrun.ps1 -Etapa Conferir  -Projeto <id> -ConfirmarProjeto <id>
   .\piloto-cloudrun.ps1 -Etapa Janela    -Projeto <id> -ConfirmarProjeto <id>   (aula/ensaio: publico + 1 instancia minima)
@@ -24,7 +24,9 @@ param(
   [Parameter(Mandatory = $true)][ValidatePattern('^[a-z][a-z0-9-]{4,28}[a-z0-9]$')][string]$Projeto,
   [Parameter(Mandatory = $true)][string]$ConfirmarProjeto,
   [string]$ContaFaturamento,
-  [ValidatePattern('^[0-9a-f]{40}$')][string]$Sha
+  [ValidatePattern('^[0-9a-f]{40}$')][string]$Sha,
+  # Worktree de onde a imagem sai (raiz do checkout). Padrao: o worktree original do piloto.
+  [string]$Worktree = 'C:\Users\profabio77\iah-piloto-1a'
 )
 
 Set-StrictMode -Version Latest
@@ -36,7 +38,6 @@ $Servico     = 'iah-piloto'
 $Repositorio = 'iah-piloto'
 $ContaServ   = "iah-piloto-run@$Projeto.iam.gserviceaccount.com"
 $PastaSeg    = 'C:\piloto\restrito\cloudrun'
-$Worktree    = 'C:\Users\profabio77\iah-piloto-1a'
 $SupabaseUrl = 'https://feyfodhcvytcxtjjlarj.supabase.co'
 $Segredos    = [ordered]@{ AUTH_SECRET = 'iah-auth-secret'; SUPABASE_SERVICE_ROLE_KEY = 'iah-service-role'; SUPABASE_JWT_SECRET = 'iah-jwt-secret' }
 $Arquivos    = [ordered]@{ AUTH_SECRET = 'auth_secret'; SUPABASE_SERVICE_ROLE_KEY = 'service_role'; SUPABASE_JWT_SECRET = 'jwt_secret' }
@@ -145,6 +146,9 @@ switch ($Etapa) {
   'Imagem' {
     if (-not $Sha) { throw "Informe -Sha (commit de 40 caracteres)." }
     ExigirArquivosSegredo
+    if (-not (Test-Path -LiteralPath $Worktree -PathType Container)) { throw "Worktree inexistente: $Worktree" }
+    $raiz = Saida 'git' @('-C', $Worktree, 'rev-parse', '--show-toplevel')
+    if ((Resolve-Path -LiteralPath $raiz).Path -ne (Resolve-Path -LiteralPath $Worktree).Path) { throw "$Worktree nao e a raiz de um worktree Git (raiz: $raiz)." }
     $head = Saida 'git' @('-C', $Worktree, 'rev-parse', 'HEAD')
     if ($head -ne $Sha) { throw "O worktree esta em $head, nao em $Sha." }
     $sujo = Saida 'git' @('-C', $Worktree, 'status', '--porcelain')

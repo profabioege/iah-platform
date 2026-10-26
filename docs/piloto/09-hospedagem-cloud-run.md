@@ -13,7 +13,7 @@
 | Versão a publicar | o commit desta revisão do pacote (SHA no `REGISTRO.md`); a imagem sai **exatamente** dele (o script recusa worktree sujo ou outro SHA) |
 | `app/Dockerfile` | 2 estágios em `node:24-bookworm-slim`: `npm ci` + `next build` (segredos só como *build secrets*) → `npm ci --omit=dev` + `next start` na porta `$PORT` (8080), usuário `node`, `TZ=UTC`, rótulo `org.opencontainers.image.revision` |
 | `app/.dockerignore` / `app/.gitattributes` | fora da imagem: `node_modules`, `.next`, `.vercel`, `.env*`, `tests`, `scripts`, `db`; os dois arquivos sempre em LF |
-| `app/scripts/windows/piloto-cloudrun.ps1` | etapas `Projeto`, `Segredos`, `Imagem`, `Publicar`, `Conferir`, `Janela`, `Retomar`, `Desativar`, `Encerrar` |
+| `app/scripts/windows/piloto-cloudrun.ps1` | etapas `Projeto`, `Segredos`, `Imagem`, `Publicar`, `Conferir`, `Janela`, `Retomar`, `Desativar`, `Encerrar`; `-Worktree` opcional na etapa `Imagem` (seção 5) |
 | Evidências locais | seção 9 deste documento e `REGISTRO.md` (seções 21 e 22) |
 
 ## 2. Recursos, cobrança e segurança
@@ -99,15 +99,20 @@ Pré-requisitos na janela: `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `
 (o script confere a presença sem exibir valores). Em todas as etapas o projeto vai **duas vezes** e o script confere o
 projeto ativo do `gcloud`, a conta logada e para no primeiro erro (inclusive de comando externo).
 
+A imagem sai de um **worktree separado e limpo** (`C:\Users\profabio77\iah-piloto-1a-cloudrun`), para que alterações locais
+do worktree original não travem nem entrem no build. `-Worktree` é opcional: sem ele, vale o worktree original, como antes. As
+travas continuam: raiz de um worktree Git, HEAD igual ao `-Sha` e nenhuma alteração não commitada.
+
 ```powershell
-Set-Location C:\Users\profabio77\iah-piloto-1a\app\scripts\windows
+Set-Location C:\Users\profabio77\iah-piloto-1a-cloudrun\app\scripts\windows
+$W = 'C:\Users\profabio77\iah-piloto-1a-cloudrun'
 $P = '<id-do-projeto>'          # ex.: iah-piloto-beryon-1a
 # [Fabio] projeto, faturamento, serviços, alerta, repositório e conta de serviço
 .\piloto-cloudrun.ps1 -Etapa Projeto  -Projeto $P -ConfirmarProjeto $P -ContaFaturamento '<XXXXXX-XXXXXX-XXXXXX>'
 # [Fabio] segredos (AUTH_SECRET novo; os demais vêm das variáveis da janela)
 .\piloto-cloudrun.ps1 -Etapa Segredos -Projeto $P -ConfirmarProjeto $P
 # [Claude Code] imagem a partir do SHA exato e envio ao Artifact Registry
-.\piloto-cloudrun.ps1 -Etapa Imagem   -Projeto $P -ConfirmarProjeto $P -Sha '<sha-40>'
+.\piloto-cloudrun.ps1 -Etapa Imagem   -Projeto $P -ConfirmarProjeto $P -Sha '<sha-40>' -Worktree $W
 # [Claude Code] publicação (cobrança por requisição, autoescala 0..3) e conferência
 .\piloto-cloudrun.ps1 -Etapa Publicar -Projeto $P -ConfirmarProjeto $P -Sha '<sha-40>'
 .\piloto-cloudrun.ps1 -Etapa Conferir -Projeto $P -ConfirmarProjeto $P
