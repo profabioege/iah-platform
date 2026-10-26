@@ -76,7 +76,8 @@ preço ativo" e não confirmei que cubra o tempo ocioso.
 < 1 GiB); disponibilidade da franquia na conta do Fabio (se a conta de faturamento já usar Cloud Run, a franquia pode
 estar consumida — por isso o cenário "sem franquia").
 
-**Alerta ≠ limite.** O orçamento de US$ 5 só envia e-mail: "doesn't automatically cap … usage or spending"; os custos
+**Alerta ≠ limite.** O orçamento (valor em reais informado pelo operador em `-Orcamento`, porque a conta de faturamento é em
+BRL; um orçamento `iah-piloto` já existente nunca é sobrescrito — o script mostra o atual e o pedido e segue sem alterá-lo) só envia e-mail: "doesn't automatically cap … usage or spending"; os custos
 chegam ao faturamento com atraso e o primeiro aviso pode levar horas ([Budgets](https://docs.cloud.google.com/billing/docs/how-to/budgets)).
 Não há garantia de aviso antecipado. Proteção real: máximo de 3 instâncias + estado **Desativado** fora do uso.
 **Opção (decisão do Fabio):** *spend cap* do Cloud Run no projeto ([Spend caps](https://docs.cloud.google.com/billing/docs/how-to/budgets-spend-caps),
@@ -86,7 +87,7 @@ são cobrados e uma pausa **durante a aula** derrubaria o acesso; configuração
 ## 4. Decisões e intervenções do Fabio
 
 1. **Decisão financeira:** cadastrar cartão numa conta de faturamento Google Cloud e aceitar:
-   gasto estimado **≈ R$ 2,50–7 no mês do piloto** (limite superior ~R$ 10 com margem), riscos da seção 3, alerta de US$ 5
+   gasto estimado **≈ R$ 2,50–7 no mês do piloto** (limite superior ~R$ 10 com margem), riscos da seção 3, alerta em reais (valor dele)
    (só aviso) e, se quiser, *spend cap* (com o risco de pausa).
 2. **Decisão à parte:** Supabase Free × Pro (US$ 25/mês ≈ R$ 130; sem pausa por inatividade e com chamado de suporte).
 3. Instalar o Google Cloud CLI e rodar `gcloud auth login`.
@@ -108,7 +109,8 @@ Set-Location C:\Users\profabio77\iah-piloto-1a-cloudrun\app\scripts\windows
 $W = 'C:\Users\profabio77\iah-piloto-1a-cloudrun'
 $P = '<id-do-projeto>'          # ex.: iah-piloto-beryon-1a
 # [Fabio] projeto, faturamento, serviços, alerta, repositório e conta de serviço
-.\piloto-cloudrun.ps1 -Etapa Projeto  -Projeto $P -ConfirmarProjeto $P -ContaFaturamento '<XXXXXX-XXXXXX-XXXXXX>'
+# -Orcamento: valor do ALERTA em reais escolhido pelo Fabio (ex.: '30BRL'); NAO e limite de cobranca
+.\piloto-cloudrun.ps1 -Etapa Projeto  -Projeto $P -ConfirmarProjeto $P -ContaFaturamento '<XXXXXX-XXXXXX-XXXXXX>' -Orcamento '<valor>BRL'
 # [Fabio] segredos (AUTH_SECRET novo; os demais vêm das variáveis da janela)
 .\piloto-cloudrun.ps1 -Etapa Segredos -Projeto $P -ConfirmarProjeto $P
 # [Claude Code] imagem a partir do SHA exato e envio ao Artifact Registry

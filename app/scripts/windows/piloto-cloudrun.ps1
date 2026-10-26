@@ -3,7 +3,8 @@ Piloto IAH no Cloud Run (southamerica-east1) - comandos do operador (PowerShell 
 Pacote completo: docs/piloto/09-hospedagem-cloud-run.md.
 
 Uso (sempre informe o projeto DUAS vezes; o script confere as duas e o projeto ativo do gcloud):
-  .\piloto-cloudrun.ps1 -Etapa Projeto   -Projeto <id> -ConfirmarProjeto <id> -ContaFaturamento <XXXXXX-XXXXXX-XXXXXX>
+  .\piloto-cloudrun.ps1 -Etapa Projeto   -Projeto <id> -ConfirmarProjeto <id> -ContaFaturamento <XXXXXX-XXXXXX-XXXXXX> -Orcamento <valor>BRL
+     (orcamento de ALERTA em reais, valor escolhido pelo operador; NAO e limite de cobranca)
   .\piloto-cloudrun.ps1 -Etapa Segredos  -Projeto <id> -ConfirmarProjeto <id>
   .\piloto-cloudrun.ps1 -Etapa Imagem    -Projeto <id> -ConfirmarProjeto <id> -Sha <commit-40> [-Worktree <raiz do checkout limpo>]
   .\piloto-cloudrun.ps1 -Etapa Publicar  -Projeto <id> -ConfirmarProjeto <id> -Sha <commit-40>
@@ -24,6 +25,8 @@ param(
   [Parameter(Mandatory = $true)][ValidatePattern('^[a-z][a-z0-9-]{4,28}[a-z0-9]$')][string]$Projeto,
   [Parameter(Mandatory = $true)][string]$ConfirmarProjeto,
   [string]$ContaFaturamento,
+  # Etapa Projeto: orcamento de ALERTA em reais (ex.: '30BRL' ou '30.50BRL'), escolhido pelo operador. NAO e limite.
+  [string]$Orcamento,
   [ValidatePattern('^[0-9a-f]{40}$')][string]$Sha,
   # Worktree de onde a imagem sai (raiz do checkout). Padrao: o worktree original do piloto.
   [string]$Worktree = 'C:\Users\profabio77\iah-piloto-1a'
@@ -88,6 +91,16 @@ function Imagem([string]$Commit) { return "$Regiao-docker.pkg.dev/$Projeto/$Repo
 
 # ----------------------------------------------------- conferencia do destino
 if ($Projeto -cne $ConfirmarProjeto) { throw "Projeto e ConfirmarProjeto diferentes: nada foi feito." }
+if ($Etapa -eq 'Projeto') {
+  # Antes de qualquer chamada ao gcloud: a conta de faturamento e em reais; o valor e decisao do operador.
+  if ([string]::IsNullOrWhiteSpace($Orcamento)) {
+    throw "Informe -Orcamento com o valor do alerta em reais (ex.: '30BRL'). O valor e escolha do operador. Nada foi feito."
+  }
+  if ($Orcamento -cnotmatch '^(0|[1-9][0-9]{0,6})(\.[0-9]{1,2})?BRL$' -or
+      [decimal]::Parse(($Orcamento -replace 'BRL$', ''), [Globalization.CultureInfo]::InvariantCulture) -le 0) {
+    throw "-Orcamento invalido ('$Orcamento'): use valor positivo em reais, ponto decimal e sufixo BRL (ex.: '30BRL' ou '30.50BRL'). Outra moeda e recusada. Nada foi feito."
+  }
+}
 if (-not (Get-Command gcloud -ErrorAction SilentlyContinue)) { throw "gcloud nao encontrado. Instale o Google Cloud CLI e rode 'gcloud auth login'." }
 $conta = Saida 'gcloud' @('config', 'get-value', 'account')
 if ([string]::IsNullOrWhiteSpace($conta)) { throw "Nenhuma conta ativa no gcloud ('gcloud auth login')." }
@@ -105,9 +118,20 @@ switch ($Etapa) {
     Executar 'gcloud' @('config', 'set', 'project', $Projeto)
     Executar 'gcloud' @('billing', 'projects', 'link', $Projeto, "--billing-account=$ContaFaturamento")
     Executar 'gcloud' @('services', 'enable', 'run.googleapis.com', 'artifactregistry.googleapis.com', 'secretmanager.googleapis.com', 'billingbudgets.googleapis.com')
-    # Alerta (e-mail aos administradores da conta de faturamento). NAO e limite de gasto.
-    Executar 'gcloud' @('billing', 'budgets', 'create', "--billing-account=$ContaFaturamento", '--display-name=iah-piloto', '--budget-amount=5USD',
-      '--threshold-rule=percent=0.5', '--threshold-rule=percent=0.9', '--threshold-rule=percent=1.0', "--filter-projects=projects/$Projeto")
+    # Orcamento de ALERTA (e-mail aos administradores da conta de faturamento). NAO e limite: nao pausa nem bloqueia cobranca.
+    # Um orcamento 'iah-piloto' ja existente nunca e sobrescrito: mostra o atual e o pedido, e segue sem altera-lo.
+    $filtroOrc = @("--billing-account=$ContaFaturamento", '--filter=displayName=iah-piloto')
+    $orcExistente = Saida 'gcloud' (@('billing', 'budgets', 'list') + $filtroOrc + @('--format=value(name)'))
+    if ($orcExistente) {
+      Write-Host "Ja existe orcamento 'iah-piloto' nesta conta de faturamento. Atual:"
+      Executar 'gcloud' (@('billing', 'budgets', 'list') + $filtroOrc + @('--format=yaml(displayName,amount.specifiedAmount,thresholdRules,budgetFilter.projects)'))
+      Write-Host "Pedido agora: $Orcamento; alertas em 50%, 90% e 100%; filtro projects/$Projeto."
+      Write-Warning "Orcamento existente NAO alterado. Para muda-lo, compare acima e altere pelo console de faturamento."
+    } else {
+      Executar 'gcloud' @('billing', 'budgets', 'create', "--billing-account=$ContaFaturamento", '--display-name=iah-piloto', "--budget-amount=$Orcamento",
+        '--threshold-rule=percent=0.5', '--threshold-rule=percent=0.9', '--threshold-rule=percent=1.0', "--filter-projects=projects/$Projeto")
+      Write-Host "Orcamento de ALERTA criado: $Orcamento (e-mail em 50%, 90% e 100%). NAO e limite: a cobranca continua acima dele."
+    }
     if (-not (Existe 'gcloud' @('artifacts', 'repositories', 'describe', $Repositorio, "--location=$Regiao"))) {
       Executar 'gcloud' @('artifacts', 'repositories', 'create', $Repositorio, '--repository-format=docker', "--location=$Regiao")
     }
