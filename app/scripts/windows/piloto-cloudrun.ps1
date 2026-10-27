@@ -102,6 +102,29 @@ function UrlDoServico {
   return "https://$Servico-$num.$Regiao.run.app"
 }
 function Imagem([string]$Commit) { return "$Regiao-docker.pkg.dev/$Projeto/$Repositorio/app:$Commit" }
+function ConferirUrlPublicada([string]$Esperada) {
+  # O Cloud Run atribui mais de uma URL ao servico (a deterministica <servico>-<numero>.<regiao>.run.app e a antiga
+  # *.a.run.app) e status.url pode trazer a antiga. A URL esperada so e aceita com duas provas: estar na lista de
+  # URLs atribuidas a ESTE servico (anotacao run.googleapis.com/urls) e ser exatamente o AUTH_URL publicado.
+  $svc = (Saida 'gcloud' @('run', 'services', 'describe', $Servico, "--region=$Regiao", '--format=json')) | ConvertFrom-Json
+  $urls = @()
+  $anotacoes = $svc.metadata.PSObject.Properties['annotations']
+  if ($anotacoes -and $anotacoes.Value.PSObject.Properties['run.googleapis.com/urls']) {
+    # ForEach-Object enumera: no PowerShell 5.1 o ConvertFrom-Json devolve a lista JSON como um unico objeto.
+    $urls = @($anotacoes.Value.PSObject.Properties['run.googleapis.com/urls'].Value | ConvertFrom-Json | ForEach-Object { $_ })
+  }
+  $authUrl = @($svc.spec.template.spec.containers[0].env | Where-Object { $_.name -eq 'AUTH_URL' } | ForEach-Object { $_.value }) -join ','
+  $statusUrl = if ($svc.status.PSObject.Properties['url']) { $svc.status.url } else { '' }
+  $problemas = @()
+  if ($urls -notcontains $Esperada) { $problemas += "a URL esperada ($Esperada) nao esta entre as URLs deste servico ($($urls -join ', '))" }
+  if ($authUrl -cne $Esperada) { $problemas += "AUTH_URL publicado ($authUrl) diferente da URL esperada" }
+  if ($statusUrl -and $urls -notcontains $statusUrl) { $problemas += "status.url ($statusUrl) fora das URLs deste servico" }
+  if ($problemas.Count -gt 0) {
+    throw ("ATENCAO: a conferencia da URL falhou. Se o deploy ja rodou, o servico PODE JA ESTAR PUBLICADO E PUBLICO. " +
+      "Problemas: $($problemas -join '; '). Confira com -Etapa Conferir e, se nao for usar agora, rode -Etapa Desativar.")
+  }
+  Write-Host "URL conferida: $Esperada (atribuida a este servico; AUTH_URL igual). status.url: $statusUrl"
+}
 
 # ----------------------------------------------------- conferencia do destino
 if ($Projeto -cne $ConfirmarProjeto) { throw "Projeto e ConfirmarProjeto diferentes: nada foi feito." }
@@ -221,8 +244,8 @@ switch ($Etapa) {
       '--allow-unauthenticated', '--port=8080', '--min-instances=0') + $Recursos + @(
       "--set-env-vars=IAH_AUTH_MODE=supabase,AUTH_TRUST_HOST=true,AUTH_URL=$url,NEXT_TELEMETRY_DISABLED=1",
       "--set-secrets=$segredosArg"))
-    $publicada = Saida 'gcloud' @('run', 'services', 'describe', $Servico, "--region=$Regiao", '--format=value(status.url)')
-    if ($publicada -ne $url) { throw "URL publicada ($publicada) diferente da esperada ($url): AUTH_URL ficaria errado." }
+    Write-Host "Deploy concluido (o servico ja pode estar publico). Conferindo a URL..."
+    ConferirUrlPublicada $url
     Write-Host "Publicado em $url. Confira com -Etapa Conferir."
   }
 
@@ -231,6 +254,7 @@ switch ($Etapa) {
     $ref = Saida 'gcloud' @('run', 'services', 'describe', $Servico, "--region=$Regiao", '--format=value(spec.template.spec.containers[0].env)')
     foreach ($nome in $Segredos.Keys) { if ($ref -notmatch $Segredos[$nome]) { throw "Segredo $nome nao referenciado no servico." } }
     Write-Host "Segredos referenciados pelo nome (valores nao exibidos): $($Segredos.Values -join ', ')."
+    ConferirUrlPublicada (UrlDoServico)
     $publico = Saida 'gcloud' @('run', 'services', 'get-iam-policy', $Servico, "--region=$Regiao", '--format=value(bindings.members)')
     Write-Host ("Acesso publico (allUsers invoker): " + ($(if ($publico -match 'allUsers') { 'SIM' } else { 'NAO' })))
   }

@@ -29,7 +29,7 @@
 | Acesso | público (`allUsers` com `run.invoker`) enquanto ativo; a autenticação é a da aplicação | alunos entram pelo navegador |
 | Conta de serviço | `iah-piloto-run`, só `secretmanager.secretAccessor` nos 3 segredos | menor privilégio |
 | Segredos (Secret Manager, `southamerica-east1`) | `iah-auth-secret` (**novo**, só deste ambiente), `iah-service-role`, `iah-jwt-secret` | nunca como variável comum nem na imagem |
-| Variáveis comuns | `IAH_AUTH_MODE=supabase`, `AUTH_TRUST_HOST=true`, `AUTH_URL=<URL do serviço>`, `NEXT_TELEMETRY_DISABLED=1` | `AUTH_URL` **não** pode ser o da Vercel; o script confere a URL publicada |
+| Variáveis comuns | `IAH_AUTH_MODE=supabase`, `AUTH_TRUST_HOST=true`, `AUTH_URL=<URL do serviço>`, `NEXT_TELEMETRY_DISABLED=1` | `AUTH_URL` **não** pode ser o da Vercel; o script confere a URL publicada (seção 5) |
 
 **Estados do serviço — mínimo 0 não é "desligado":**
 
@@ -122,7 +122,14 @@ $P = '<id-do-projeto>'          # ex.: iah-piloto-beryon-1a
 .\piloto-cloudrun.ps1 -Etapa Desativar -Projeto $P -ConfirmarProjeto $P
 ```
 
-Conferências após publicar (como nas seções 16 e 19 do registro): URL igual à esperada; imagem e *digest* publicados =
+**URL do serviço.** O Cloud Run atribui duas URLs ao serviço: a determinística
+`https://iah-piloto-<número do projeto>.southamerica-east1.run.app` (a usada em `AUTH_URL` e no build) e a antiga `*.a.run.app`,
+que pode aparecer em `status.url`. `Publicar` e `Conferir` aceitam a diferença **só** se a URL determinística estiver na lista de
+URLs atribuídas a este serviço (anotação `run.googleapis.com/urls`) e for exatamente o `AUTH_URL` publicado; senão param com erro.
+Se `Publicar` falhar nessa conferência, o deploy **já rodou**: o serviço pode estar publicado e público — rode `Conferir` e, se não
+for usar agora, `Desativar`. Para a escola, a URL oficial é a determinística (as páginas protegidas redirecionam para ela).
+
+Conferências após publicar (como nas seções 16 e 19 do registro): URL esperada atribuída ao serviço e igual ao `AUTH_URL`; imagem e *digest* publicados =
 enviados; rótulo `revision` = SHA; `/api/versao` com sessão de gestor → SHA, `modo supabase`, `ambiente cloudrun-sao-paulo`;
 região; segredos referenciados só pelo nome.
 
