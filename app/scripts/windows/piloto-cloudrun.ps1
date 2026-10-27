@@ -61,9 +61,23 @@ function Saida {
   return ($r | Out-String).Trim()
 }
 function Existe {
-  param([Parameter(Mandatory = $true)][string]$Exe, [string[]]$Argumentos)
-  & $Exe @Argumentos *> $null
-  return ($LASTEXITCODE -eq 0)
+  # Pergunta "o recurso existe?" com tres respostas:
+  #   $true  = comando concluido (codigo 0), mesmo com mensagens no stderr;
+  #   $false = ausencia COMPROVADA ($Ausente: NOT_FOUND ou a mensagem propria do comando);
+  #   erro   = qualquer outra falha (permissao, autenticacao, rede, API desativada, resposta ambigua).
+  # No PowerShell 5.1 o gcloud e um script (gcloud.ps1) que escreve no stderr: aqui o stderr e lido como
+  # resposta (Continue so nesta funcao), nunca como "nao existe". "Sem permissao (ou nao existe)" e erro.
+  param([Parameter(Mandatory = $true)][string]$Exe, [string[]]$Argumentos, [string]$Ausente = '\bNOT_FOUND\b')
+  $ErrorActionPreference = 'Continue'
+  $saida = & $Exe @Argumentos 2>&1
+  $codigo = $LASTEXITCODE
+  if ($codigo -eq 0) { return $true }
+  $texto = ($saida | ForEach-Object { "$_" }) -join ' '
+  $falha = 'PERMISSION_DENIED|does not have permission|may not exist|UNAUTHENTICATED|SERVICE_DISABLED|has not been used|' +
+    'is disabled|reauthenticat|credential|Unable to|connect|timed out|UNAVAILABLE|DEADLINE_EXCEEDED|INTERNAL'
+  if ($texto -notmatch $falha -and $texto -match $Ausente) { return $false }
+  $erro = @($saida | ForEach-Object { "$_" } | Where-Object { $_ -match 'ERROR' }) | Select-Object -First 1
+  throw "Nao foi possivel confirmar se o recurso existe (codigo $codigo): $Exe $($Argumentos[0..([Math]::Min(2, $Argumentos.Count - 1))] -join ' '). Nada foi criado nem alterado por esta verificacao. gcloud: $erro"
 }
 function ExigirVariaveis([string[]]$Nomes) {
   foreach ($n in $Nomes) {
@@ -235,7 +249,7 @@ switch ($Etapa) {
 
   'Desativar' {
     Executar 'gcloud' @('run', 'services', 'update', $Servico, "--region=$Regiao", '--min-instances=0')
-    if (Existe 'gcloud' @('run', 'services', 'remove-iam-policy-binding', $Servico, "--region=$Regiao", '--member=allUsers', '--role=roles/run.invoker')) {
+    if (Existe 'gcloud' @('run', 'services', 'remove-iam-policy-binding', $Servico, "--region=$Regiao", '--member=allUsers', '--role=roles/run.invoker') 'Policy bindings? with the specified principal.*not found') {
       Write-Host "Acesso publico removido."
     } else { Write-Host "Acesso publico ja estava removido." }
     $publico = Saida 'gcloud' @('run', 'services', 'get-iam-policy', $Servico, "--region=$Regiao", '--format=value(bindings.members)')
@@ -246,7 +260,7 @@ switch ($Etapa) {
   'Encerrar' {
     $resp = Read-Host "Digite o id do projeto para APAGAR servico, imagens e segredos"
     if ($resp -cne $Projeto) { throw "Confirmacao diferente: nada foi apagado." }
-    if (Existe 'gcloud' @('run', 'services', 'describe', $Servico, "--region=$Regiao")) { Executar 'gcloud' @('run', 'services', 'delete', $Servico, "--region=$Regiao", '--quiet') }
+    if (Existe 'gcloud' @('run', 'services', 'describe', $Servico, "--region=$Regiao") 'Cannot find service \[') { Executar 'gcloud' @('run', 'services', 'delete', $Servico, "--region=$Regiao", '--quiet') }
     if (Existe 'gcloud' @('artifacts', 'repositories', 'describe', $Repositorio, "--location=$Regiao")) { Executar 'gcloud' @('artifacts', 'repositories', 'delete', $Repositorio, "--location=$Regiao", '--quiet') }
     foreach ($id in $Segredos.Values) { if (Existe 'gcloud' @('secrets', 'describe', $id)) { Executar 'gcloud' @('secrets', 'delete', $id, '--quiet') } }
     Write-Host "Removidos servico, repositorio de imagens e segredos. Para parar toda cobranca: gcloud billing projects unlink $Projeto"
