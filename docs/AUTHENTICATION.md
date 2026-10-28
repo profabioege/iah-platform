@@ -88,6 +88,12 @@ Nenhum papel enxerga outra instituição: `institution_id` é filtro obrigatóri
 
 Botão "Sair" no header da Plataforma, renderizado apenas com sessão ativa. Encerra a sessão e volta a `/entrar`.
 
+No modo real, o botão (`SignOutButton`, componente de cliente) usa o `signOut` de `next-auth/react`: busca o token CSRF e faz
+`POST /api/auth/signout`, rota que fica **fora** do middleware; depois o navegador recarrega `/entrar`. Não use Server Action para
+sair numa página privada: a requisição passaria pelo middleware, que renova o cookie da sessão na mesma resposta em que o
+`signOut` o apaga — no Cloud Run a renovação prevaleceu e a sessão continuou ativa (registro do piloto, 27/10/2026). O teste
+`tests/e2e/credenciais.test.mjs` confere o botão renderizado e o efeito das requisições que ele faz.
+
 ## Limites honestos do modo demonstração
 
 Sem as três variáveis, a sessão é um cookie com o id do usuário em texto puro e a senha é uma constante versionada, exibida na tela de login. Isso é uma **barreira de apresentação, não autenticação**. Qualquer ambiente que possa receber uma pessoa de fora — inclusive o ambiente demonstrativo publicado — deve rodar em modo real.

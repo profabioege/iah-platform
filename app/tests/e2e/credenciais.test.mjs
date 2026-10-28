@@ -1,6 +1,6 @@
 /**
  * Credenciais pela rede: recuperação assistida, invalidação de sessão,
- * limitador de login e identificação do ambiente.
+ * limitador de login, identificação do ambiente e "Sair".
  *
  * A recuperação é feita pela CLI administrativa — a mesma que a
  * coordenação usaria — e o efeito é conferido por HTTP.
@@ -187,4 +187,53 @@ test("títulos das páginas de senha com 'IAH Educacional' uma única vez", asyn
   assert.equal(caminhoFinal, "/entrar/nova-senha");
   const novaSenha = await resposta.text();
   assert.deepEqual(titulosDoDocumento(novaSenha), ["<title>Trocar senha | IAH Educacional</title>"]);
+});
+
+/** Nome e efeito de cada Set-Cookie da resposta (sem valores). */
+function cookiesDaResposta(resposta) {
+  return (resposta.headers.getSetCookie?.() ?? []).map((bruto) => {
+    const [par] = bruto.split(";");
+    const nome = par.slice(0, par.indexOf("=")).trim();
+    const apaga = par.slice(par.indexOf("=") + 1).trim() === "" || /max-age=0|1970/i.test(bruto);
+    return { nome, apaga };
+  });
+}
+
+test("'Sair' encerra a sessão pelo endpoint do Auth.js, fora do middleware", async () => {
+  for (const [registro, area] of [
+    [conta(TURMA, "professor", 0), "/professor"],
+    [conta(TURMA, "aluno", 40), "/dashboard"], // 40: conta que nenhuma outra suíte usa
+  ]) {
+    const sessao = await autenticar(registro);
+    const html = await (await sessao.get(area)).text();
+
+    // O botão da interface é o do endpoint — não um formulário de Server Action na página privada,
+    // cuja resposta passaria pelo middleware, que renova o cookie da sessão (seções 37–38 do REGISTRO).
+    assert.match(html, /<button[^>]*data-sair="auth-endpoint"[^>]*>/, `${area}: botão Sair do endpoint`);
+    const formularios = html.split(/<form\b/).slice(1).map((trecho) => trecho.split("</form>")[0]);
+    assert.equal(
+      formularios.some((f) => f.includes("Sair da plataforma")),
+      false,
+      `${area}: "Sair" não pode ser formulário de Server Action`,
+    );
+
+    // As mesmas requisições que o botão faz (`signOut` de next-auth/react): CSRF e POST /api/auth/signout.
+    const { csrfToken } = await (await sessao.get("/api/auth/csrf")).json();
+    const saida = await sessao.requisitar("/api/auth/signout", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded", "x-auth-return-redirect": "1" },
+      body: new URLSearchParams({ csrfToken, callbackUrl: "/entrar" }).toString(),
+    });
+    assert.equal(saida.status, 200);
+    assert.match((await saida.json()).url, /\/entrar$/);
+    const sessaoNaResposta = cookiesDaResposta(saida).filter((c) => c.nome.includes("session-token"));
+    assert.ok(sessaoNaResposta.length > 0, "a resposta apaga o cookie da sessão");
+    assert.ok(sessaoNaResposta.every((c) => c.apaga), "a resposta do Sair não regrava a sessão");
+
+    assert.equal(sessao.temSessao, false);
+    assert.equal(await (await sessao.get("/api/auth/session")).json(), null);
+    const depois = await sessao.get(area);
+    assert.equal(depois.status, 307);
+    assert.match(depois.headers.get("location") ?? "", /\/entrar/);
+  }
 });
