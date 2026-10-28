@@ -129,6 +129,11 @@ URLs atribuídas a este serviço (anotação `run.googleapis.com/urls`) e for ex
 Se `Publicar` falhar nessa conferência, o deploy **já rodou**: o serviço pode estar publicado e público — rode `Conferir` e, se não
 for usar agora, `Desativar`. Para a escola, a URL oficial é a determinística (as páginas protegidas redirecionam para ela).
 
+**Credencial do registro.** `Imagem` não usa `podman login`: no Windows (podman 5.8.5) o `--password-stdin` recusa o token do
+`gcloud` mesmo com os bytes exatos, e `-p` deixaria o token na linha de comando (registro, seção 42). O envio usa
+`podman push --authfile` com um arquivo de credencial criado em `%TEMP%` só para esse envio e apagado logo depois, inclusive em
+caso de falha. Nenhum login fica guardado no podman.
+
 Conferências após publicar (como nas seções 16 e 19 do registro): URL esperada atribuída ao serviço e igual ao `AUTH_URL`; imagem e *digest* publicados =
 enviados; rótulo `revision` = SHA; `/api/versao` com sessão de gestor → SHA, `modo supabase`, `ambiente cloudrun-sao-paulo`;
 região; segredos referenciados só pelo nome.

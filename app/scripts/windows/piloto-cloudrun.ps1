@@ -102,6 +102,21 @@ function UrlDoServico {
   return "https://$Servico-$num.$Regiao.run.app"
 }
 function Imagem([string]$Commit) { return "$Regiao-docker.pkg.dev/$Projeto/$Repositorio/app:$Commit" }
+function ComCredencialRegistro([scriptblock]$Acao) {
+  # Roda $Acao com um arquivo de credencial do registro (para --authfile), criado so para ela e apagado em seguida.
+  # Nao usa "podman login": no Windows (podman 5.8.5) o --password-stdin recusa o token mesmo com os bytes exatos,
+  # sem quebra de linha, e -p deixaria o token na linha de comando. O token nao e impresso.
+  $arq = Join-Path $env:TEMP ('iah-registro-' + [guid]::NewGuid().ToString('N') + '.json')
+  try {
+    $par = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes('oauth2accesstoken:' + (Saida 'gcloud' @('auth', 'print-access-token'))))
+    [IO.File]::WriteAllText($arq, "{`"auths`":{`"$Regiao-docker.pkg.dev`":{`"auth`":`"$par`"}}}", (New-Object System.Text.UTF8Encoding($false)))
+    Remove-Variable par
+    & $Acao $arq
+  } finally {
+    Remove-Item -LiteralPath $arq -Force -ErrorAction SilentlyContinue
+    if (Test-Path -LiteralPath $arq) { Write-Warning "Apague $arq (credencial temporaria do registro)." }
+  }
+}
 function ConferirUrlPublicada([string]$Esperada) {
   # O Cloud Run atribui mais de uma URL ao servico (a deterministica <servico>-<numero>.<regiao>.run.app e a antiga
   # *.a.run.app) e status.url pode trazer a antiga. A URL esperada so e aceita com duas provas: estar na lista de
@@ -225,11 +240,7 @@ switch ($Etapa) {
     # Fora do repositorio: o "podman machine ssh" pode gravar a chave publica do host num arquivo "NUL" na pasta atual.
     Push-Location $env:TEMP
     try { Executar 'podman' @('machine', 'ssh', $cmd) } finally { Pop-Location }
-    $token = Saida 'gcloud' @('auth', 'print-access-token')
-    $token | podman login -u oauth2accesstoken --password-stdin "$Regiao-docker.pkg.dev" | Out-Null
-    if ($LASTEXITCODE -ne 0) { throw "podman login falhou." }
-    Remove-Variable token
-    Executar 'podman' @('push', $img)
+    ComCredencialRegistro { param($auth) Executar 'podman' @('push', '--authfile', $auth, $img) }
     $digest = Saida 'gcloud' @('artifacts', 'docker', 'images', 'describe', $img, '--format=value(image_summary.digest)')
     Write-Host "Imagem enviada: $img"
     Write-Host "Digest: $digest"
