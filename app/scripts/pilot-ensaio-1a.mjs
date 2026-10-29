@@ -602,6 +602,10 @@ async function main() {
       { classroomId: amb.classroomId, missionId: MISSAO },
     ]);
     verificar("professor atribui a Missão 01 à 1ª A", atrib?.ok === true);
+    // Sem a missão publicada na turma nenhum aluno pode começar: a recusa (ok:false) para a rodada
+    // aqui, antes da recusa esperada na turma extra e de qualquer requisição de aluno.
+    if (atrib && atrib.ok !== true) registrarErro("professor", "atribuir", `recusada: ${atrib.error ?? "sem detalhe"}`);
+    checarParada();
     const extraAtrib = await comoRecusaEsperada(() =>
       sProf.acao(TRILHA, actions.assignAiMissionAction, [{ classroomId: amb.turmaExtra, missionId: MISSAO }]),
     );

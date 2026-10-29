@@ -126,6 +126,24 @@ test("operador (Ctrl+C): para os novos envios e gera relatório parcial", () => 
   assert.equal(r.resultado.totalErros, 0, "parada do operador não é erro");
 });
 
+test("atribuição recusada (ok:false): a rodada para antes de qualquer ação de aluno", () => {
+  const r = rodar("atribuicao-recusada", ["--timeout-ms=5000"]);
+  assertInterrompida(r, "erro inesperado");
+  assert.equal(r.resultado.parada.fase, "leitura das ações e atribuição");
+  assert.match(r.resultado.parada.detalhe, /professor · atribuir: recusada: Esta missão não faz parte/);
+  assert.ok(
+    r.resultado.verificacoes.some((v) => v.verificacao === "professor atribui a Missão 01 à 1ª A" && v.resultado === "FALHOU"),
+    "a verificação da atribuição fica registrada como falha",
+  );
+  // Depois da atribuição recusada não sai nenhuma requisição: nem a recusa esperada na turma extra,
+  // nem login ou página de aluno, nem ação da missão.
+  const atribuicoes = r.requisicoes.filter((q) => q.acao === "assignAiMissionAction");
+  assert.equal(atribuicoes.length, 1, "só a atribuição à turma da rodada saiu");
+  const depois = r.requisicoes.filter((q) => q.t > atribuicoes[0].t);
+  assert.deepEqual(depois, [], `requisições depois da recusa: ${JSON.stringify(depois)}`);
+  assert.equal(r.requisicoes.filter((q) => q.caminho.startsWith("/missoes/") || q.caminho === "/dashboard").length, 0);
+});
+
 test("sem falha: a rodada termina sem interrupção (reprovada só por falta de banco no simulado)", () => {
   const r = rodar("ok", ["--max-rps=50", "--rps-burst=5", "--timeout-ms=5000"]);
   assert.ok(r.resultado, `${r.stdout}\n${r.stderr}`);

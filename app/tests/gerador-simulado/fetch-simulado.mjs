@@ -10,7 +10,8 @@
  *   erro-500  a N-ésima gravação de rascunho (SIMULACAO_FALHA_EM, padrão 3) devolve 500;
  *   lento     toda resposta leva 300 ms;
  *   trava     GET /dashboard nunca responde (só o timeout do gerador encerra);
- *   operador  na N-ésima requisição (SIMULACAO_OPERADOR_EM) o "operador" aperta Ctrl+C.
+ *   operador  na N-ésima requisição (SIMULACAO_OPERADOR_EM) o "operador" aperta Ctrl+C;
+ *   atribuicao-recusada  a atribuição da Missão 01 à turma da rodada devolve ok:false.
  * SIMULACAO_LOG: arquivo onde cada requisição anota `instante;método;caminho;ação`.
  */
 import { appendFileSync } from "node:fs";
@@ -77,7 +78,9 @@ globalThis.fetch = async (entrada, opts = {}) => {
     }
     const args = JSON.parse(opts.body ?? "[]");
     if (acao === "assignAiMissionAction") {
-      return rsc(args[0]?.classroomId === "class-ensaio-extra" ? { ok: false, error: "Turma fora do seu alcance." } : { ok: true });
+      if (args[0]?.classroomId === "class-ensaio-extra") return rsc({ ok: false, error: "Turma fora do seu alcance." });
+      if (CENARIO === "atribuicao-recusada") return rsc({ ok: false, error: "Esta missão não faz parte da Trilha IA & Humanidades." });
+      return rsc({ ok: true });
     }
     return rsc({ production: "simulada", productionDeliveredAt: acao === "setProductionDeliveredAction" ? new Date().toISOString() : null });
   }
