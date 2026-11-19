@@ -31,6 +31,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
 import { reviewSubmissionAction } from "./actions";
+import { missingAxisLevels, missingLevelsMessage } from "./review-validation";
 
 /** Rótulo e marcador visual de cada estado (conforme especificação). */
 const STATUS_META: Record<
@@ -342,7 +343,21 @@ function ReviewForm({
     existing?.observedCriteria ?? [],
   );
   const [message, setMessage] = React.useState<string | null>(null);
+  // Erro em destaque (role="alert"); confirmação discreta (role="status").
+  const [messageIsError, setMessageIsError] = React.useState(false);
+  // Depois de uma tentativa sem nível, os quadros sem nível ficam destacados.
+  const [showMissingLevels, setShowMissingLevels] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
+
+  function showError(text: string) {
+    setMessage(text);
+    setMessageIsError(true);
+  }
+
+  function showInfo(text: string | null) {
+    setMessage(text);
+    setMessageIsError(false);
+  }
   const [disciplineAxis, setDisciplineAxis] = React.useState<Partial<AxisAssessment>>(
     existing?.axes?.discipline ?? { observedCriteria: [], note: "" },
   );
@@ -370,19 +385,20 @@ function ReviewForm({
 
   async function submitReview(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!grade.trim() || !feedback.trim()) {
-      setMessage("Informe o conceito e uma devolutiva antes de confirmar.");
-      return;
-    }
     const axesValue = axesReview();
     if (axes && !axesValue) {
-      setMessage("Escolha o nível observado nos dois eixos: disciplina e IA.");
+      setShowMissingLevels(true);
+      showError(missingLevelsMessage(missingAxisLevels(disciplineAxis.level, aiAxis.level)));
+      return;
+    }
+    if (!grade.trim() || !feedback.trim()) {
+      showError("Informe o conceito geral e a devolutiva para o aluno antes de confirmar.");
       return;
     }
 
     if (realMode) {
       setSubmitting(true);
-      setMessage(null);
+      showInfo(null);
       try {
         const reviewedWork = await reviewSubmissionAction({
           classroomId,
@@ -401,9 +417,9 @@ function ReviewForm({
           reflection: reviewedWork.reflection,
           review: reviewedWork.review,
         });
-        setMessage("Avaliação registrada e devolutiva liberada para o aluno.");
+        showInfo("Avaliação registrada e devolutiva liberada para o aluno.");
       } catch (error) {
-        setMessage(error instanceof Error ? error.message : "Não foi possível avaliar.");
+        showError(error instanceof Error ? error.message : "Não foi possível avaliar.");
       } finally {
         setSubmitting(false);
       }
@@ -444,9 +460,9 @@ function ReviewForm({
         reflection: reviewedWork.reflection,
         review: reviewedWork.review,
       });
-      setMessage("Avaliação registrada e devolutiva liberada para o aluno.");
+      showInfo("Avaliação registrada e devolutiva liberada para o aluno.");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Não foi possível avaliar.");
+      showError(error instanceof Error ? error.message : "Não foi possível avaliar.");
     }
   }
 
@@ -473,6 +489,7 @@ function ReviewForm({
             value={disciplineAxis}
             onChange={setDisciplineAxis}
             name={`disciplina-${student.studentId}`}
+            missingLevel={showMissingLevels && !disciplineAxis.level}
           />
           <AxisFieldset
             tone="chart-2"
@@ -483,6 +500,7 @@ function ReviewForm({
             value={aiAxis}
             onChange={setAiAxis}
             name={`ia-${student.studentId}`}
+            missingLevel={showMissingLevels && !aiAxis.level}
           />
         </div>
       ) : null}
@@ -530,7 +548,18 @@ function ReviewForm({
         />
       </label>
 
-      {message ? <p role="status" className="text-xs text-muted-foreground">{message}</p> : null}
+      {message ? (
+        messageIsError ? (
+          <p
+            role="alert"
+            className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive"
+          >
+            {message}
+          </p>
+        ) : (
+          <p role="status" className="text-xs text-muted-foreground">{message}</p>
+        )
+      ) : null}
 
       <Button type="submit" className="w-fit" disabled={submitting}>
         <CheckCircle2 className="size-4" />
@@ -579,6 +608,7 @@ function AxisFieldset({
   value,
   onChange,
   name,
+  missingLevel = false,
 }: {
   tone: "primary" | "chart-2";
   icon: React.ReactNode;
@@ -588,17 +618,29 @@ function AxisFieldset({
   value: Partial<AxisAssessment>;
   onChange: (next: Partial<AxisAssessment>) => void;
   name: string;
+  /** Tentou confirmar sem escolher o nível deste eixo. */
+  missingLevel?: boolean;
 }) {
   const color = tone === "primary" ? "text-primary" : "text-chart-2";
-  const border = tone === "primary" ? "border-primary/30" : "border-chart-2/40";
+  const border = missingLevel
+    ? "border-destructive ring-1 ring-destructive/40"
+    : tone === "primary"
+      ? "border-primary/30"
+      : "border-chart-2/40";
   const observed = value.observedCriteria ?? [];
   return (
-    <fieldset className={cn("flex flex-col gap-3 rounded-lg border p-3", border)}>
+    <fieldset
+      className={cn("flex flex-col gap-3 rounded-lg border p-3", border)}
+      aria-invalid={missingLevel || undefined}
+    >
       <legend className={cn("flex items-center gap-1.5 px-1 text-xs font-semibold", color)}>
         {icon}
         {title}
       </legend>
       <p className="text-[11px] leading-relaxed text-muted-foreground">{subtitle}</p>
+      {missingLevel ? (
+        <p className="text-xs font-medium text-destructive">Escolha um nível para este eixo:</p>
+      ) : null}
       <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-label={`Nível — ${title}`}>
         {AXIS_LEVELS.map((level) => (
           <label
